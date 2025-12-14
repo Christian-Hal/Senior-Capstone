@@ -1,0 +1,1 @@
+/usr/bin/c++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/SeniorCapstone.dir/src/main.cpp.o -o SeniorCapstone  external/glfw/src/libglfw3.a libglad.a libimgui.a -framework OpenGL external/glfw/src/libglfw3.a -framework Cocoa -framework IOKit -framework CoreFoundation -framework QuartzCore

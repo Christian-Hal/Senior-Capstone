@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/gavindominique/Documents/GitHub/Senior-Capstone/build/cmake_install.cmake",
+		"/Users/gavindominique/Documents/GitHub/Senior-Capstone/build/external/glfw/cmake_install.cmake",
+		"/Users/gavindominique/Documents/GitHub/Senior-Capstone/build/external/glfw/src/cmake_install.cmake",
+		"/Users/gavindominique/Documents/GitHub/Senior-Capstone/build/external/glfw/docs/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
