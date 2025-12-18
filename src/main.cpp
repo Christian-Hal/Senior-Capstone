@@ -1,7 +1,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include <iostream>
+#include <string>
 
 // Vertex Shader source
 const char* vertexShaderSource = R"(
@@ -27,6 +32,10 @@ void main()
 
 // Function prototypes
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+// global variables
+enum Mode { DRAW, ERASE };
+Mode drawState = DRAW;
 
 int main()
 {
@@ -64,6 +73,19 @@ int main()
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    // setup imgui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();  // or ImGui::StyleColorsClassic();
+
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 410 core"); // same as your shader version
+
+
     // vertex data
     float vertices[] = {
         -0.5f, -0.5f, 0.0f,  // left
@@ -87,7 +109,7 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    // compile shaders 
+    // compile shaders
     unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
     glCompileShader(vertexShader);
@@ -107,23 +129,58 @@ int main()
 
     // RENDER LOOP
     while (!glfwWindowShouldClose(window))
+{
+    glfwPollEvents();
+
+    // Start ImGui frame
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    // Your ImGui UI
+    ImGui::Begin("Side Panel");
+    switch (drawState)
     {
-        glfwPollEvents();
-
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        glUseProgram(myShader);
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        glfwSwapBuffers(window);
+        case DRAW:
+            ImGui::Text("Current State: Draw");
+            break;
+        case ERASE:
+            ImGui::Text("Current State: Erase");
+            break;
     }
+    if (ImGui::Button("Draw"))
+    {
+        drawState = DRAW;
+    }
+
+    if (ImGui::Button("Erase"))
+    {
+        drawState = ERASE;
+    }
+    ImGui::End();
+
+    // OpenGL rendering
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(myShader);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    // Render ImGui
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    glfwSwapBuffers(window);
+}
+
 
     // clean up step
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(myShader);
+
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwDestroyWindow(window);
     glfwTerminate();
