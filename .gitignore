@@ -1,11 +1,23 @@
-# CMake build output
+
+# CMake
 build/
+out/
 
 # CMake generated files
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
+
+# Visual Studio 
+.vs/ 
+CMakeSettings.json
+
+# XCode 
+*.xcodeproj
+*.xcworkspace
+DerivedData/
+
 
 # macOS
 .DS_Store

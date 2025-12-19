@@ -158,6 +158,8 @@ int main()
         drawState = ERASE;
     }
     ImGui::End();
+	
+
 
     // OpenGL rendering
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
