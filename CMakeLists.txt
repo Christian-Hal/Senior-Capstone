@@ -28,16 +28,25 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC glfw)
 
 # Executable
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} 
+    src/main.cpp
+    src/App.cpp 
+    src/Window.cpp 
+    src/Renderer.cpp 
+    src/UI.cpp 
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     external/glm
+    include/
+    
 )
 
 target_link_libraries(${PROJECT_NAME}
     glfw
     glad
     imgui
+    opengl32 
 )
 
 # macOS OpenGL
