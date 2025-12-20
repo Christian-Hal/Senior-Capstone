@@ -5,7 +5,13 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-// state 
+// initial pop up 
+static bool showPopup = true; 
+static int canvasWidth = 1920; 
+static int canvasHeight = 1080; 
+
+
+// state for draw erase button 
 
 enum Mode {
 	DRAW, 
@@ -29,9 +35,12 @@ void UI::init(GLFWwindow* window) {
 
 void UI::draw() {
 
+	// start ImGui frame before adding widgets 
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
+	// widgets 
 
 	ImGui::Begin("Side Panel");
 
@@ -52,8 +61,42 @@ void UI::draw() {
 
 	ImGui::End();
 
+	// initial popup 
+
+	if (showPopup) {
+		ImGui::OpenPopup("New Canvas"); // match name w/ BeginPopupModal
+		showPopup = false;
+	}
+
+	// specifying canvas size 
+	if (ImGui::BeginPopupModal("New Canvas", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+		
+		// canvas size inputs 
+		ImGui::InputInt("Width", &canvasWidth);
+		ImGui::InputInt("Height", &canvasHeight);
+
+		// if user creates a canvas, remove the popup 
+		if (ImGui::Button("Create")) {
+			showPopup = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel")) {
+			showPopup = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	}
+
+	
+
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	
+
 }
 
 void UI::shutdown() {
