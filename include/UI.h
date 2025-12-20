@@ -8,4 +8,8 @@ public:
 	void init(GLFWwindow* window);
 	void draw();
 	void shutdown();
+
+private: 
+	void drawPopup();
+	void drawDrawEraseButton();
 };

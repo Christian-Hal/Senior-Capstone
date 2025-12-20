@@ -26,6 +26,7 @@ bool App::init() {
 
 void App::run() {
 
+	// RENDER LOOP 
 	while (!window.shouldClose()) {
 		window.pollEvents();
 

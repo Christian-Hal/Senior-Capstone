@@ -2,15 +2,18 @@
 #include "Window.h"
 #include <iostream> 
 
+// window size 
 static void framebuffer_size_callback(GLFWwindow*, int w, int h) {
 	glViewport(0, 0, w, h);
 }
+
 
 bool Window::create(int w, int h, const char* title) {
 	if (!glfwInit()) {
 		return false;
 	}
 
+	// establishing openGL version 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -19,6 +22,7 @@ bool Window::create(int w, int h, const char* title) {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif 
 
+	// specifying and creating window 
 	m_window = glfwCreateWindow(w, h, title, nullptr, nullptr);
 	if (!m_window) {
 		return false; 
