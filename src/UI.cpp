@@ -22,6 +22,9 @@ enum Mode {
 
 static Mode drawState = DRAW;  
 
+// RBGA values for the color wheel 
+static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 
 // UI initialization 
 
@@ -46,11 +49,14 @@ void UI::draw() {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	// initial popup
+	drawPopup();
+
 	// draw erase button 
 	drawDrawEraseButton(); 
 
-	// initial popup
-	drawPopup();
+	// color wheel 
+	drawColorWheel(); 
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -108,6 +114,15 @@ void UI::drawPopup() {
 
 		ImGui::EndPopup();
 	}
+}
+
+void UI::drawColorWheel() {
+	ImGui::Begin("Color");
+
+	ImGui::ColorEdit4("Color Picker", color, ImGuiColorEditFlags_PickerHueWheel);
+	//ImGui::Text("RGBA: %.2f,%.2f,%.2f,%.2f", color[0], color[1], color[2], color[3]);
+
+	ImGui::End();
 }
 
 

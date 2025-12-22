@@ -12,4 +12,5 @@ public:
 private: 
 	void drawPopup();
 	void drawDrawEraseButton();
+	void drawColorWheel();
 };
