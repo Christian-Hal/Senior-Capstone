@@ -58,6 +58,7 @@ bool Renderer::init(GLFWwindow* window) {
 	};
 
 
+    // generate and bind the vbo and vao
 	glGenVertexArrays(1, &m_vao);
 	glGenBuffers(1, &m_vbo);
 
@@ -74,14 +75,17 @@ bool Renderer::init(GLFWwindow* window) {
 
 	// ----- Shaders -----
 
+    // compiles the shaders
 	unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
 	unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
+    // creates the shader program and attatches the shaders
 	m_shaderProgram = glCreateProgram();
 	glAttachShader(m_shaderProgram, vertexShader);
 	glAttachShader(m_shaderProgram, fragmentShader);
 	glLinkProgram(m_shaderProgram);
 
+    // removes the unneeded shader data
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
@@ -89,9 +93,11 @@ bool Renderer::init(GLFWwindow* window) {
 }
 
 void Renderer::beginFrame() {
+    // clears the screen
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+    // activates shader program and draws the traingle
 	glUseProgram(m_shaderProgram);
 	glBindVertexArray(m_vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -102,6 +108,7 @@ void Renderer::endFrame() {
 }
 
 void Renderer::shutdown() {
+    // delete the data no longer needed
 	glDeleteVertexArrays(1, &m_vao);
 	glDeleteBuffers(1, &m_vbo);
 	glDeleteProgram(m_shaderProgram);

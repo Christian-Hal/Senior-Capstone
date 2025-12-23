@@ -39,18 +39,42 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PUBLIC
     external/glm
     include/
-    
 )
 
-target_link_libraries(${PROJECT_NAME}
-    glfw
-    glad
-    imgui
-    opengl32 
-)
+# Link libraries differently depending on OS
+if(WIN32)
+    target_link_libraries(${PROJECT_NAME}
+        glfw
+        glad
+        imgui
+        opengl32
+    )
+elseif(APPLE)
+    find_library(COCOA Cocoa REQUIRED)
+    find_library(IOKIT IOKit REQUIRED)
+    find_library(COREVIDEO CoreVideo REQUIRED)
+    find_library(OPENGL OpenGL REQUIRED)
 
-# macOS OpenGL
-if (APPLE)
-    target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
+    target_link_libraries(${PROJECT_NAME}
+        glfw
+        glad
+        imgui
+        ${OPENGL}
+        ${COCOA}
+        ${IOKIT}
+        ${COREVIDEO}
+    )
+else()
+    # Linux
+    target_link_libraries(${PROJECT_NAME}
+        glfw
+        glad
+        imgui
+        GL
+        X11
+        pthread
+        Xrandr
+        Xi
+        dl
+    )
 endif()
-
