@@ -6,6 +6,13 @@
 #include "imgui_impl_opengl3.h"
 
 // variables to store info for UI declared up here 
+/// display size
+float w, h;
+/// panel sizes
+int TopSize = 0;
+int BotSize = 0;
+int LeftSize = 0;
+int RightSize = 0;
 
 // state initial pop up 
 static bool showPopup = true; 
@@ -27,7 +34,6 @@ static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 
 // UI initialization 
-
 void UI::init(GLFWwindow* window) {
 
 	IMGUI_CHECKVERSION();
@@ -39,31 +45,127 @@ void UI::init(GLFWwindow* window) {
 	ImGui_ImplOpenGL3_Init("#version 410 core");
 }
 
-
-// buttons are drawn here 
-
-void UI::draw() {
-
+void UI::draw() 
+{
 	// start ImGui frame before adding widgets 
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
+	// grab the window display size
+	ImGuiIO& io = ImGui::GetIO();
+	w = io.DisplaySize.x;
+	h = io.DisplaySize.y;
+
+	// compute the panel sizes
+	if (TopSize == 0) {TopSize = static_cast<int>(0.05 * h);}
+	if (BotSize == 0) {BotSize = static_cast<int>(0.05 * h);}
+	if (LeftSize == 0) {LeftSize = static_cast<int>(0.1 * w);}
+	if (RightSize == 0) {RightSize = static_cast<int>(0.1 * w);}
+
 	// initial popup
 	drawPopup();
 
-	// draw erase button 
-	drawDrawEraseButton(); 
+	// draw the four main menu panels
+	drawTopPanel();
+	drawLeftPanel();
+	drawRightPanel();
+	drawBottomPanel();
 
-	// color wheel 
-	drawColorWheel(); 
+	// draw the center canvas
+	drawCenterCanvas();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 
-// methods for drawing the individual widgets 
+// methods for drawing the individual menu panels
+void UI::drawTopPanel() {
+	// initialize the panel
+	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(w, TopSize), ImGuiCond_Always);
+	ImGui::Begin("Top Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+
+	// add widgets
+
+	// end step
+	ImGui::End();
+}
+
+void UI::drawLeftPanel() {
+	// initialize the panel
+	ImGui::SetNextWindowPos(ImVec2(0, TopSize), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(LeftSize, h), ImGuiCond_Once);
+	ImGui::Begin("Left Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+
+	/////// add widgets here ///////
+	//ImGui::Text("TopSize = %d", TopSize); // <- here for debug
+	// draw / erase buttons
+	if (drawState == DRAW) {
+		ImGui::Text("Current State: Draw");
+	}
+	else {
+		ImGui::Text("Current State: Erase");
+	}
+
+	if (ImGui::Button("Draw")) {
+		drawState = DRAW;
+	}
+
+	if (ImGui::Button("Erase")) {
+		drawState = ERASE;
+	}
+
+	// color wheel
+	ImGui::ColorEdit4("", color, ImGuiColorEditFlags_PickerHueWheel);
+
+	// end step
+	LeftSize = ImGui::GetWindowWidth();
+	ImVec2 size = ImGui::GetWindowSize();
+	ImGui::SetWindowSize(ImVec2(size.x, h)); // keeps its Y-value the same
+	ImGui::End();
+}
+
+void UI::drawRightPanel() {
+	// initialize the panel
+	ImGui::SetNextWindowPos(ImVec2(w - RightSize, TopSize), ImGuiCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(RightSize, h - TopSize), ImGuiCond_Once);
+	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+	
+	// add widgets
+
+	// end step
+	RightSize = ImGui::GetWindowWidth();
+	ImVec2 size = ImGui::GetWindowSize();
+	ImGui::SetWindowSize(ImVec2(size.x, h)); // keeps its Y-value the same
+	ImGui::End();
+}
+
+void UI::drawBottomPanel() {
+	// initialize the panel
+	ImGui::SetNextWindowPos(ImVec2(LeftSize, h - BotSize), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, BotSize), ImGuiCond_Always);
+	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+
+	// add widgets
+
+	// end step
+	ImGui::End();
+}
+
+void UI::drawCenterCanvas() {
+	// initialize the panel
+	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, h - TopSize - BotSize), ImGuiCond_Always);
+	ImGui::Begin("OpenGL Framebuffer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+	// add widgets
+
+	// end step
+	ImGui::End();
+}
+
 void UI::drawDrawEraseButton() {
 
 	ImGui::Begin("Side Panel");

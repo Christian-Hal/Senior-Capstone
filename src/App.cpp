@@ -10,7 +10,7 @@ static UI ui;
 
 bool App::init() {
 
-	if (!window.create(800, 600, "Capstone")) {
+	if (!window.create(1280, 720, "Capstone")) {
 		return false; 
 	}
 
