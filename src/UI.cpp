@@ -95,7 +95,7 @@ void UI::drawTopPanel() {
 void UI::drawLeftPanel() {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(0, TopSize), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(LeftSize, h), ImGuiCond_Once);
+	ImGui::SetNextWindowSize(ImVec2(LeftSize, h), ImGuiCond_Always);
 	ImGui::Begin("Left Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 
 	/////// add widgets here ///////
@@ -128,8 +128,8 @@ void UI::drawLeftPanel() {
 
 void UI::drawRightPanel() {
 	// initialize the panel
-	ImGui::SetNextWindowPos(ImVec2(w - RightSize, TopSize), ImGuiCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(RightSize, h - TopSize), ImGuiCond_Once);
+	ImGui::SetNextWindowPos(ImVec2(w - RightSize, TopSize), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(RightSize, h - TopSize), ImGuiCond_Always);
 	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 	
 	// add widgets
