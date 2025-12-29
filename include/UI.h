@@ -7,7 +7,7 @@ class UI {
 
 public: 
 	void init(GLFWwindow* window);
-	void draw();
+	void draw(unsigned int colorTexture);
 	void shutdown();
 
 private: 
@@ -18,7 +18,7 @@ private:
 	void drawRightPanel();
 	void drawTopPanel();
 	void drawBottomPanel();
-	void drawCenterCanvas();
+	void drawCenterCanvas(unsigned int colorTexture);
 
 	void drawDrawEraseButton();
 	void drawColorWheel();

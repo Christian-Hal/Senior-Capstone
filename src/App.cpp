@@ -8,13 +8,16 @@ static Window window;
 static Renderer renderer; 
 static UI ui; 
 
+static int SCR_WIDTH = 1280;
+static int SCR_HEIGHT = 720;
+
 bool App::init() {
 
-	if (!window.create(1280, 720, "Capstone")) {
+	if (!window.create(SCR_WIDTH, SCR_HEIGHT, "Capstone")) {
 		return false; 
 	}
 
-	if (!renderer.init(window.handle())) {
+	if (!renderer.init(window.handle(), SCR_WIDTH, SCR_HEIGHT)) {
 		return false; 
 	}
 
@@ -31,8 +34,8 @@ void App::run() {
 		window.pollEvents();
 
 		// order of these four methods must not change
-		renderer.beginFrame();
-		ui.draw();
+		unsigned int colorTexture = renderer.beginFrame();
+		ui.draw(colorTexture);
 		renderer.endFrame();
 
 		window.swapBuffers();

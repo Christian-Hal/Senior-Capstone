@@ -45,7 +45,7 @@ void UI::init(GLFWwindow* window) {
 	ImGui_ImplOpenGL3_Init("#version 410 core");
 }
 
-void UI::draw() 
+void UI::draw(unsigned int colorTexture) 
 {
 	// start ImGui frame before adding widgets 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -73,12 +73,11 @@ void UI::draw()
 	drawBottomPanel();
 
 	// draw the center canvas
-	drawCenterCanvas();
+	drawCenterCanvas(colorTexture);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-
 
 // methods for drawing the individual menu panels
 void UI::drawTopPanel() {
@@ -154,13 +153,24 @@ void UI::drawBottomPanel() {
 	ImGui::End();
 }
 
-void UI::drawCenterCanvas() {
+void UI::drawCenterCanvas(unsigned int colorTexture) {
+	// panel settings
+	int fbWidth = w - LeftSize - RightSize;
+	int fbHeight = h - TopSize - BotSize;
+
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, h - TopSize - BotSize), ImGuiCond_Always);
-	ImGui::Begin("OpenGL Framebuffer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+	ImGui::SetNextWindowSize(ImVec2(fbWidth, fbHeight), ImGuiCond_Always);
+	ImGui::Begin("OpenGL Framebuffer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar);
 
 	// add widgets
+	// Display framebuffer
+        ImGui::Image(
+            (void*)(intptr_t)colorTexture,
+            ImVec2((float)fbWidth, (float)fbHeight),
+            ImVec2(0, 1),
+            ImVec2(1, 0)
+        );
 
 	// end step
 	ImGui::End();
