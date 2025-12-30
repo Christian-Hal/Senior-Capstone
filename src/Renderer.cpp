@@ -160,18 +160,15 @@ void Renderer::shutdown() {
 }
 
 void Renderer::getFrameData(){
+	// bind to the framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+	// create a vector that can save all the pixel info
+    std::vector<unsigned char> pixels(fbWidth * fbHeight * 4); // length * width * RGBA
 
-    std::vector<unsigned char> pixels(fbWidth * fbHeight * 4); // RGBA
+	// read the pixels on the framebuffer and save them to vector
+    glReadPixels(0, 0, fbWidth, fbHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
 
-    glReadPixels(
-        0, 0,
-        fbWidth, fbHeight,
-        GL_RGBA,
-        GL_UNSIGNED_BYTE,
-        pixels.data()
-    );
-
+	// unbind the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	std::cout << "number of pixels: "<< pixels.size() << std::endl;
 
