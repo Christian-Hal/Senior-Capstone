@@ -12,10 +12,10 @@ public:
 	void getFrameData();
 
 private:
-	unsigned int m_vao = 0;
-	unsigned int m_vbo = 0;
-	unsigned int m_shaderProgram = 0; 
+	unsigned int vao = 0;
+	unsigned int vbo = 0;
+	unsigned int shaderProgram = 0; 
 
-	unsigned int m_fbo;
-	unsigned int m_colorTexture;
+	unsigned int fbo;
+	unsigned int colorTexture;
 };

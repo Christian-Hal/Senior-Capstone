@@ -10,7 +10,7 @@
 
 // shader sources 
 static const char* vertexShaderSource = R"(
-#version 410 core 
+#version 330 core 
 layout (location = 0) in vec3 aPos;
 
 void main(){
@@ -19,7 +19,7 @@ void main(){
 )";
 
 static const char* fragmentShaderSource = R"(
-#version 410 core 
+#version 330 core 
 out vec4 FragColor; 
 
 void main(){
@@ -67,12 +67,12 @@ bool Renderer::init(GLFWwindow* window, int W, int H)
 	};
 
     // generate and bind the vbo and vao
-	glGenVertexArrays(1, &m_vao);
-	glGenBuffers(1, &m_vbo);
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
 
-	glBindVertexArray(m_vao);
+	glBindVertexArray(vao);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -88,21 +88,21 @@ bool Renderer::init(GLFWwindow* window, int W, int H)
 	unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
     // creates the shader program and attatches the shaders
-	m_shaderProgram = glCreateProgram();
-	glAttachShader(m_shaderProgram, vertexShader);
-	glAttachShader(m_shaderProgram, fragmentShader);
-	glLinkProgram(m_shaderProgram);
+	shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
 
     // removes the unneeded shader data
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
 	// --- Framebuffer Setup ---
-    glGenFramebuffers(1, &m_fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    glGenTextures(1, &m_colorTexture);
-    glBindTexture(GL_TEXTURE_2D, m_colorTexture);
+    glGenTextures(1, &colorTexture);
+    glBindTexture(GL_TEXTURE_2D, colorTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, W, H, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -112,7 +112,7 @@ bool Renderer::init(GLFWwindow* window, int W, int H)
         GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0,
         GL_TEXTURE_2D,
-        m_colorTexture,
+        colorTexture,
         0
     );
 
@@ -127,25 +127,25 @@ unsigned int Renderer::beginFrame() {
 	glClear(GL_COLOR_BUFFER_BIT);
 
     // activates shader program and draws the traingle
-	glUseProgram(m_shaderProgram);
-	glBindVertexArray(m_vao);
+	glUseProgram(shaderProgram);
+	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3); */
 
 	// render the triangle into the framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glViewport(0, 0, fbWidth, fbHeight);
 
 	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glUseProgram(m_shaderProgram);
-	glBindVertexArray(m_vao);
+	glUseProgram(shaderProgram);
+	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	return m_colorTexture;
+	return colorTexture;
 }
 
 void Renderer::endFrame() {
@@ -154,14 +154,14 @@ void Renderer::endFrame() {
 
 void Renderer::shutdown() {
     // delete the data no longer needed
-	glDeleteVertexArrays(1, &m_vao);
-	glDeleteBuffers(1, &m_vbo);
-	glDeleteProgram(m_shaderProgram);
+	glDeleteVertexArrays(1, &vao);
+	glDeleteBuffers(1, &vbo);
+	glDeleteProgram(shaderProgram);
 }
 
 void Renderer::getFrameData(){
 	// bind to the framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	// create a vector that can save all the pixel info
     std::vector<unsigned char> pixels(fbWidth * fbHeight * 4); // length * width * RGBA
 
