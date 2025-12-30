@@ -5,6 +5,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include <iostream>
+
 // variables to store info for UI declared up here 
 /// display size
 float w, h;
@@ -28,13 +30,14 @@ enum Mode {
 };
 
 static Mode drawState = DRAW;  
+Renderer renderer;
 
 // RBGA values for the color wheel 
 static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-
 // UI initialization 
-void UI::init(GLFWwindow* window) {
+void UI::init(GLFWwindow* window, Renderer rendInst) {
+	renderer = rendInst;
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -114,6 +117,11 @@ void UI::drawLeftPanel() {
 
 	if (ImGui::Button("Erase")) {
 		drawState = ERASE;
+	}
+
+	// Save button
+	if (ImGui::Button("Save")){
+		renderer.getFrameData();
 	}
 
 	// color wheel

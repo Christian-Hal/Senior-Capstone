@@ -21,7 +21,7 @@ bool App::init() {
 		return false; 
 	}
 
-	ui.init(window.handle());
+	ui.init(window.handle(), renderer);
 	return true; 
 
 }

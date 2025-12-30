@@ -6,6 +6,7 @@
 
 #include "Renderer.h"
 #include <iostream>
+#include <vector>
 
 // shader sources 
 static const char* vertexShaderSource = R"(
@@ -156,4 +157,28 @@ void Renderer::shutdown() {
 	glDeleteVertexArrays(1, &m_vao);
 	glDeleteBuffers(1, &m_vbo);
 	glDeleteProgram(m_shaderProgram);
+}
+
+void Renderer::getFrameData(){
+	glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+
+    std::vector<unsigned char> pixels(fbWidth * fbHeight * 4); // RGBA
+
+    glReadPixels(
+        0, 0,
+        fbWidth, fbHeight,
+        GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        pixels.data()
+    );
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	std::cout << "number of pixels: "<< pixels.size() << std::endl;
+
+    // Example: print first pixel
+    std::cout << "First pixel RGBA: "
+              << (int)pixels[0] << ", "
+              << (int)pixels[1] << ", "
+              << (int)pixels[2] << ", "
+              << (int)pixels[3] << std::endl;
 }

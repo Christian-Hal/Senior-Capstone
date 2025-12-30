@@ -9,6 +9,7 @@ public:
 	unsigned int beginFrame();
 	void endFrame();
 	void shutdown();
+	void getFrameData();
 
 private:
 	unsigned int m_vao = 0;

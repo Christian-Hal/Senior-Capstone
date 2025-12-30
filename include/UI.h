@@ -6,7 +6,7 @@
 class UI {
 
 public: 
-	void init(GLFWwindow* window);
+	void init(GLFWwindow* window, Renderer renderer);
 	void draw(unsigned int colorTexture);
 	void shutdown();
 
