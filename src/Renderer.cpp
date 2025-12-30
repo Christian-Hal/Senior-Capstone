@@ -1,6 +1,4 @@
 
-
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -121,6 +119,11 @@ bool Renderer::init(GLFWwindow* window, int W, int H)
 	return true;
 }
 
+void Renderer::createFramebuffer() {
+
+
+}
+
 unsigned int Renderer::beginFrame() {
     /*/ clears the screen
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -135,12 +138,12 @@ unsigned int Renderer::beginFrame() {
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glViewport(0, 0, fbWidth, fbHeight);
 
-	glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(shaderProgram);
 	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

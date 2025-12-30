@@ -42,6 +42,7 @@ void App::run() {
 	}
 }
 
+
 void App::shutdown() {
 	ui.shutdown();
 	renderer.shutdown();

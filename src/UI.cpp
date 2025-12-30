@@ -19,8 +19,8 @@ int RightSize = 0;
 // state initial pop up 
 static bool showPopup = true; 
 // the init canvas values are displayed in the text boxes
-static int canvasWidth = 1920; 
-static int canvasHeight = 1080; 
+static int canvasWidth = 0; 
+static int canvasHeight = 0; 
 
 
 // state for draw erase button 
@@ -28,6 +28,7 @@ enum Mode {
 	DRAW, 
 	ERASE
 };
+
 
 static Mode drawState = DRAW;  
 Renderer renderer;
@@ -45,8 +46,9 @@ void UI::init(GLFWwindow* window, Renderer rendInst) {
 	ImGui::StyleColorsDark(); 
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 410 core");
+	ImGui_ImplOpenGL3_Init("#version 330 core");
 }
+
 
 void UI::draw(unsigned int colorTexture) 
 {
@@ -82,6 +84,7 @@ void UI::draw(unsigned int colorTexture)
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
+
 // methods for drawing the individual menu panels
 void UI::drawTopPanel() {
 	// initialize the panel
@@ -94,6 +97,7 @@ void UI::drawTopPanel() {
 	// end step
 	ImGui::End();
 }
+
 
 void UI::drawLeftPanel() {
 	// initialize the panel
@@ -134,6 +138,7 @@ void UI::drawLeftPanel() {
 	ImGui::End();
 }
 
+
 void UI::drawRightPanel() {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(w - RightSize, TopSize), ImGuiCond_Always);
@@ -149,6 +154,7 @@ void UI::drawRightPanel() {
 	ImGui::End();
 }
 
+
 void UI::drawBottomPanel() {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, h - BotSize), ImGuiCond_Always);
@@ -160,6 +166,7 @@ void UI::drawBottomPanel() {
 	// end step
 	ImGui::End();
 }
+
 
 void UI::drawCenterCanvas(unsigned int colorTexture) {
 	// panel settings
@@ -183,6 +190,7 @@ void UI::drawCenterCanvas(unsigned int colorTexture) {
 	// end step
 	ImGui::End();
 }
+
 
 void UI::drawDrawEraseButton() {
 
@@ -235,6 +243,7 @@ void UI::drawPopup() {
 		ImGui::EndPopup();
 	}
 }
+
 
 void UI::drawColorWheel() {
 	ImGui::Begin("Color");
