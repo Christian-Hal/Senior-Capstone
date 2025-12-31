@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Renderer.h"
+#include "Globals.h"
 #include <iostream>
 #include <vector>
 
@@ -26,9 +27,11 @@ void main(){
 }
 )";
 
+
+static Globals global;
+
 // Framebuffer Settings
 int fbWidth = 0, fbHeight = 0;
-
 
 static unsigned int compileShader(unsigned int type, const char* source) {
 	
@@ -46,18 +49,21 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 	return shader; 
 }
 
-bool Renderer::init(GLFWwindow* window, int W, int H) 
+bool Renderer::init(GLFWwindow* window, Globals g_inst) 
 {
-
-	fbWidth = W;
-	fbHeight = H;
+	global = g_inst;
+	fbWidth = global.get_canvas_x();
+	fbHeight = global.get_canvas_y();
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "Failed to initialize GLAD\n";
 		return false; 
 	}
 
-	// geometry 
+	// canvas geometry
+	float w = (float)fbWidth;
+	float h = (float)fbHeight; 
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		 0.5f, -0.5f, 0.0f,
@@ -80,7 +86,6 @@ bool Renderer::init(GLFWwindow* window, int W, int H)
 	glBindVertexArray(0);
 
 	// ----- Shaders -----
-
     // compiles the shaders
 	unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
 	unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
@@ -101,7 +106,7 @@ bool Renderer::init(GLFWwindow* window, int W, int H)
 
     glGenTextures(1, &colorTexture);
     glBindTexture(GL_TEXTURE_2D, colorTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, W, H, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fbWidth, fbHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -119,22 +124,22 @@ bool Renderer::init(GLFWwindow* window, int W, int H)
 	return true;
 }
 
-void Renderer::createFramebuffer() {
+/* void Renderer::createFramebuffer() {
 
 
-}
+} */
 
 unsigned int Renderer::beginFrame() {
-    /*/ clears the screen
+    // clears the screen
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
     // activates shader program and draws the traingle
 	glUseProgram(shaderProgram);
 	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, 3); */
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 
-	// render the triangle into the framebuffer
+	/*/ render the triangle into the framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glViewport(0, 0, fbWidth, fbHeight);
 
@@ -146,7 +151,7 @@ unsigned int Renderer::beginFrame() {
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	glBindVertexArray(0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); */
 
 	return colorTexture;
 }
@@ -162,7 +167,14 @@ void Renderer::shutdown() {
 	glDeleteProgram(shaderProgram);
 }
 
-void Renderer::getFrameData(){
+void Renderer::getFrameData()
+{
+	// checks if the buffer size is not 0
+	// when the app first runs these two are initialized to zero as a sort of "file is not open"
+	// so this is an easy fix until we get the state system fully set up and can know when a file is or isnt open
+	if (fbWidth == 0 || fbHeight == 0)
+        return;
+	
 	// bind to the framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	// create a vector that can save all the pixel info

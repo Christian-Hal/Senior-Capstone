@@ -3,10 +3,12 @@
 #include "Window.h"
 #include "Renderer.h"
 #include "UI.h"
+#include "Globals.h"
 
 static Window window; 
 static Renderer renderer; 
 static UI ui; 
+static Globals global;
 
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
@@ -17,17 +19,20 @@ bool App::init() {
 		return false; 
 	}
 
-	if (!renderer.init(window.handle(), SCR_WIDTH, SCR_HEIGHT)) {
+	ui.init(window.handle(), renderer, global);
+
+	if (!renderer.init(window.handle(), global)) {
 		return false; 
 	}
 
-	ui.init(window.handle(), renderer);
 	return true; 
 
 }
 
 
-void App::run() {
+void App::run() 
+{
+	// on start up
 
 	// RENDER LOOP 
 	while (!window.shouldClose()) {
@@ -35,7 +40,7 @@ void App::run() {
 
 		// order of these four methods must not change
 		unsigned int colorTexture = renderer.beginFrame();
-		ui.draw(colorTexture);
+		ui.draw();
 		renderer.endFrame();
 
 		window.swapBuffers();

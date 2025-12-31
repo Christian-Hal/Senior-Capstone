@@ -1,5 +1,6 @@
 
 #include "UI.h"
+#include "Globals.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -17,11 +18,13 @@ int LeftSize = 0;
 int RightSize = 0;
 
 // state initial pop up 
-static bool showPopup = true; 
+static bool showPopup = false; 
+
 // the init canvas values are displayed in the text boxes
 static int canvasWidth = 0; 
 static int canvasHeight = 0; 
 
+static Globals global;
 
 // state for draw erase button 
 enum Mode {
@@ -31,14 +34,15 @@ enum Mode {
 
 
 static Mode drawState = DRAW;  
-Renderer renderer;
+static Renderer renderer;
 
 // RBGA values for the color wheel 
 static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 // UI initialization 
-void UI::init(GLFWwindow* window, Renderer rendInst) {
+void UI::init(GLFWwindow* window, Renderer rendInst, Globals g_inst) {
 	renderer = rendInst;
+	global = g_inst;
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -50,7 +54,7 @@ void UI::init(GLFWwindow* window, Renderer rendInst) {
 }
 
 
-void UI::draw(unsigned int colorTexture) 
+void UI::draw() 
 {
 	// start ImGui frame before adding widgets 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -78,7 +82,7 @@ void UI::draw(unsigned int colorTexture)
 	drawBottomPanel();
 
 	// draw the center canvas
-	drawCenterCanvas(colorTexture);
+	// drawCenterCanvas(colorTexture);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -90,9 +94,13 @@ void UI::drawTopPanel() {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(w, TopSize), ImGuiCond_Always);
-	ImGui::Begin("Top Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+	ImGui::Begin("Top Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
+	// new canvas pop up
+	if (ImGui::Button("New File")) {
+		showPopup = true;
+	}
 
 	// end step
 	ImGui::End();
@@ -146,6 +154,12 @@ void UI::drawRightPanel() {
 	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
 	
 	// add widgets
+	if (global.is_file_open())
+	{
+		ImGui::Text("file is open");
+		ImGui::Text("file size is: ");
+		ImGui::Text("%dx%d", global.get_canvas_x(), global.get_canvas_y());
+	}
 
 	// end step
 	RightSize = ImGui::GetWindowWidth();
@@ -191,69 +205,41 @@ void UI::drawCenterCanvas(unsigned int colorTexture) {
 	ImGui::End();
 }
 
+void UI::drawPopup() 
+{
+	static int temp_w = 1920;
+	static int temp_h = 1080;
 
-void UI::drawDrawEraseButton() {
-
-	ImGui::Begin("Side Panel");
-
-	if (drawState == DRAW) {
-		ImGui::Text("Current State: Draw");
-	}
-	else {
-		ImGui::Text("Current State: Erase");
-	}
-
-	if (ImGui::Button("Draw")) {
-		drawState = DRAW;
-	}
-
-	if (ImGui::Button("Erase")) {
-		drawState = ERASE;
-	}
-
-	ImGui::End();
-}
-
-
-void UI::drawPopup() {
 	if (showPopup) {
-		ImGui::OpenPopup("New Canvas"); // match name w/ BeginPopupModal
-		showPopup = false;
-	}
+        ImGui::OpenPopup("New Canvas");
+    }
 
 	// specifying canvas size 
-	if (ImGui::BeginPopupModal("New Canvas", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (ImGui::BeginPopupModal("New Canvas", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-		// canvas size inputs 
-		ImGui::InputInt("Width", &canvasWidth);
-		ImGui::InputInt("Height", &canvasHeight);
+        ImGui::InputInt("Width", &temp_w);
+        ImGui::InputInt("Height", &temp_h);
 
 		// if user creates a canvas, remove the popup 
-		if (ImGui::Button("Create")) {
+        if (ImGui::Button("Create")) {
+            global.set_canvas_x(temp_w);
+            global.set_canvas_y(temp_h);
 			showPopup = false;
-			ImGui::CloseCurrentPopup();
-		}
+			global.set_fileOpen(true);
+            ImGui::CloseCurrentPopup();
+        }
 
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel")) {
+        ImGui::SameLine();
+
+        if (ImGui::Button("Cancel")) {
 			showPopup = false;
-			ImGui::CloseCurrentPopup();
-		}
+            ImGui::CloseCurrentPopup();
+        }
 
-		ImGui::EndPopup();
-	}
+        ImGui::EndPopup();
+    }
+
 }
-
-
-void UI::drawColorWheel() {
-	ImGui::Begin("Color");
-
-	ImGui::ColorEdit4("Color Picker", color, ImGuiColorEditFlags_PickerHueWheel);
-	//ImGui::Text("RGBA: %.2f,%.2f,%.2f,%.2f", color[0], color[1], color[2], color[3]);
-
-	ImGui::End();
-}
-
 
 // ending and cleanup 
 void UI::shutdown() {

@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME}
     src/Window.cpp 
     src/Renderer.cpp 
     src/UI.cpp 
+    src/Globals.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
