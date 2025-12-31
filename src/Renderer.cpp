@@ -131,13 +131,13 @@ bool Renderer::init(GLFWwindow* window, Globals g_inst)
 
 unsigned int Renderer::beginFrame() {
     // clears the screen
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
     // activates shader program and draws the traingle
 	glUseProgram(shaderProgram);
 	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	/*/ render the triangle into the framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
