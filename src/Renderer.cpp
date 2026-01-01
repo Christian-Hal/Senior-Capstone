@@ -27,12 +27,14 @@ void main(){
 }
 )";
 
-
+// making an instance of the Globals class 
 static Globals global;
 
 // Framebuffer Settings
 int fbWidth = 0, fbHeight = 0;
 
+
+// compile the vertex and fragment shaders 
 static unsigned int compileShader(unsigned int type, const char* source) {
 	
 	unsigned int shader = glCreateShader(type);
@@ -49,9 +51,12 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 	return shader; 
 }
 
+
+// 
 bool Renderer::init(GLFWwindow* window, Globals g_inst) 
 {
 	global = g_inst;
+	// fb size equal to user input x and y 
 	fbWidth = global.get_canvas_x();
 	fbHeight = global.get_canvas_y();
 
@@ -101,35 +106,46 @@ bool Renderer::init(GLFWwindow* window, Globals g_inst)
 	glDeleteShader(fragmentShader);
 
 	// --- Framebuffer Setup ---
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	Renderer::createFramebuffer(fbWidth, fbHeight);
 
-    glGenTextures(1, &colorTexture);
-    glBindTexture(GL_TEXTURE_2D, colorTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fbWidth, fbHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D,
-        colorTexture,
-        0
-    );
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	
 
 	return true;
 }
 
-/* void Renderer::createFramebuffer() {
+
+// creates the center framebuffer 
+bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
+	
+
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	glGenTextures(1, &colorTexture);
+	glBindTexture(GL_TEXTURE_2D, colorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fbWidth, fbHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glFramebufferTexture2D(
+		GL_FRAMEBUFFER,
+		GL_COLOR_ATTACHMENT0,
+		GL_TEXTURE_2D,
+		colorTexture,
+		0
+	);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return true; 
+
+} 
 
 
-} */
-
+//
 unsigned int Renderer::beginFrame() {
+
     // clears the screen
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);

@@ -117,10 +117,10 @@ void UI::drawLeftPanel() {
 	//ImGui::Text("TopSize = %d", TopSize); // <- here for debug
 	// draw / erase buttons
 	if (drawState == DRAW) {
-		ImGui::Text("Current State: Draw");
+		ImGui::Text("State: Draw");
 	}
 	else {
-		ImGui::Text("Current State: Erase");
+		ImGui::Text("State: Erase");
 	}
 
 	if (ImGui::Button("Draw")) {
@@ -205,10 +205,12 @@ void UI::drawCenterCanvas(unsigned int colorTexture) {
 	ImGui::End();
 }
 
+
+// canvas size popup 
 void UI::drawPopup() 
 {
-	static int temp_w = 1920;
-	static int temp_h = 1080;
+	static int temp_w = 0;
+	static int temp_h = 0;
 
 	if (showPopup) {
         ImGui::OpenPopup("New Canvas");

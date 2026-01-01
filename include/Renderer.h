@@ -11,6 +11,7 @@ public:
 	void endFrame();
 	void shutdown();
 	void getFrameData();
+	bool createFramebuffer(float fbWidth, float fbHeight);
 
 private:
 	int canvasWidth = 1920;
@@ -20,7 +21,7 @@ private:
 	unsigned int vbo = 0;
 	unsigned int shaderProgram = 0; 
 
-	unsigned int fbo;
+	unsigned int fbo = 0;
 	unsigned int colorTexture;
 
 	void newCanvas();

@@ -13,6 +13,8 @@ static Globals global;
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
 
+
+// create the window 
 bool App::init() {
 
 	if (!window.create(SCR_WIDTH, SCR_HEIGHT, "Capstone")) {
@@ -30,6 +32,7 @@ bool App::init() {
 }
 
 
+// run the render loop 
 void App::run() 
 {
 	// on start up
@@ -48,6 +51,7 @@ void App::run()
 }
 
 
+// shut down the ui, renderer, and the window 
 void App::shutdown() {
 	ui.shutdown();
 	renderer.shutdown();
