@@ -1,4 +1,4 @@
-
+﻿
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -32,6 +32,40 @@ static Globals global;
 
 // Framebuffer Settings
 int fbWidth = 0, fbHeight = 0;
+
+
+
+static Renderer* activeRenderer = nullptr;
+
+static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
+{
+	if (!activeRenderer) 
+	{
+		return;
+	}
+
+	if (button == GLFW_MOUSE_BUTTON_LEFT)
+	{
+		activeRenderer->isDrawing = (action == GLFW_PRESS);
+	}
+}
+
+static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
+	if (!activeRenderer || !activeRenderer->isDrawing)
+		return;
+
+	int w, h;
+	glfwGetFramebufferSize(window, &w, &h);
+
+	// Convert screen → NDC
+	float x = (xpos / w) * 2.0f - 1.0f;
+	float y = 1.0f - (ypos / h) * 2.0f;
+
+	
+	activeRenderer->drawVertices.push_back(x);
+	activeRenderer->drawVertices.push_back(y);
+	activeRenderer->drawVertices.push_back(0.0f);
+}
 
 
 // compile the vertex and fragment shaders 
@@ -82,7 +116,8 @@ bool Renderer::init(GLFWwindow* window, Globals g_inst)
 	glBindVertexArray(vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -107,6 +142,11 @@ bool Renderer::init(GLFWwindow* window, Globals g_inst)
 
 	// --- Framebuffer Setup ---
 	Renderer::createFramebuffer(fbWidth, fbHeight);
+
+
+	activeRenderer = this;
+	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
+	glfwSetCursorPosCallback(window, cursorPosCallback);
 
 	
 
@@ -153,6 +193,21 @@ unsigned int Renderer::beginFrame() {
     // activates shader program and draws the traingle
 	glUseProgram(shaderProgram);
 	glBindVertexArray(vao);
+
+
+	if (!drawVertices.empty())
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(
+			GL_ARRAY_BUFFER,
+			drawVertices.size() * sizeof(float),
+			drawVertices.data(),
+			GL_DYNAMIC_DRAW
+		);
+
+		glDrawArrays(GL_LINE_STRIP, 0, drawVertices.size() / 3);
+	}
+
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 
 	/*/ render the triangle into the framebuffer

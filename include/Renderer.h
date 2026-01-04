@@ -2,6 +2,7 @@
 #pragma once 
 //#include <glfw/glfw3.h>
 #include "Globals.h"
+#include <vector>
 
 class Renderer {
 
@@ -12,6 +13,13 @@ public:
 	void shutdown();
 	void getFrameData();
 	bool createFramebuffer(float fbWidth, float fbHeight);
+
+
+	//bool drawVertices = false;
+	std::vector<float> drawVertices;
+	bool isDrawing = false;
+
+
 
 private:
 	int canvasWidth = 1920;
