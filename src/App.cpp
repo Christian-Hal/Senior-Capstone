@@ -21,11 +21,11 @@ bool App::init() {
 		return false; 
 	}
 
-	ui.init(window.handle(), renderer, global);
-
 	if (!renderer.init(window.handle(), global)) {
 		return false; 
 	}
+
+	ui.init(window.handle(), renderer, global);
 
 	return true; 
 

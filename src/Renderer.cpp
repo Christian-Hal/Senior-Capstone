@@ -2,6 +2,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include "Renderer.h"
 #include "Globals.h"
 #include <iostream>
@@ -39,19 +43,22 @@ static Renderer* activeRenderer = nullptr;
 
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
-	if (!activeRenderer) 
+	// if no renderer    or imgui wants the mouse
+	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse) 
 	{
 		return;
 	}
 
-	if (button == GLFW_MOUSE_BUTTON_LEFT)
+	// if we have a button 				and im gui does NOT want the mouse
+	if (button == GLFW_MOUSE_BUTTON_LEFT && !ImGui::GetIO().WantCaptureMouse)
 	{
 		activeRenderer->isDrawing = (action == GLFW_PRESS);
 	}
 }
 
 static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
-	if (!activeRenderer || !activeRenderer->isDrawing)
+	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse
+	if (!activeRenderer || !activeRenderer->isDrawing || ImGui::GetIO().WantCaptureMouse)
 		return;
 
 	int w, h;
@@ -193,7 +200,6 @@ unsigned int Renderer::beginFrame() {
     // activates shader program and draws the traingle
 	glUseProgram(shaderProgram);
 	glBindVertexArray(vao);
-
 
 	if (!drawVertices.empty())
 	{
