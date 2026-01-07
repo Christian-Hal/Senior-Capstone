@@ -82,9 +82,6 @@ void UI::draw(CanvasManager& canvasManager)
 	drawRightPanel(canvasManager);
 	drawBottomPanel(canvasManager);
 
-	// draw the center canvas
-	// drawCenterCanvas(colorTexture);
-
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -181,31 +178,6 @@ void UI::drawBottomPanel(CanvasManager& canvasManager) {
 	// end step
 	ImGui::End();
 }
-
-
-void UI::drawCenterCanvas(unsigned int colorTexture) {
-	// panel settings
-	int fbWidth = w - LeftSize - RightSize;
-	int fbHeight = h - TopSize - BotSize;
-
-	// initialize the panel
-	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(fbWidth, fbHeight), ImGuiCond_Always);
-	ImGui::Begin("OpenGL Framebuffer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar| ImGuiWindowFlags_NoTitleBar);
-
-	// add widgets
-	// Display framebuffer
-        ImGui::Image(
-            (void*)(intptr_t)colorTexture,
-            ImVec2((float)fbWidth, (float)fbHeight),
-            ImVec2(0, 1),
-            ImVec2(1, 0)
-        );
-
-	// end step
-	ImGui::End();
-}
-
 
 // canvas size popup 
 void UI::drawPopup(CanvasManager& canvasManager) 

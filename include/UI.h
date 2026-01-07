@@ -20,7 +20,4 @@ private:
 	void drawRightPanel(CanvasManager& canvasManager);
 	void drawTopPanel(CanvasManager& canvasManager);
 	void drawBottomPanel(CanvasManager& canvasManager);
-
-
-	void drawCenterCanvas(unsigned int colorTexture);
 };

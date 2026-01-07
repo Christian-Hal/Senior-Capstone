@@ -184,7 +184,15 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	// ----- Old Shaders and VAO/VBO for gunters drawing code -----
+	// ----- Texture Setup -----
+    glGenTextures(0, &canvasTexture);
+    glBindTexture(GL_TEXTURE_2D, canvasTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	// --------------------------------- Old Shaders and VAO/VBO for gunters drawing code ---------------------------------
     // compiles the shaders
 	unsigned int oldVertexShader = compileShader(GL_VERTEX_SHADER, oldVertexShaderSource);
 	unsigned int oldFragmentShader = compileShader(GL_FRAGMENT_SHADER, oldFragmentShaderSource);
@@ -207,15 +215,6 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0); // x,y,z
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
-
-
-	// ----- Texture Setup -----
-    glGenTextures(0, &canvasTexture);
-    glBindTexture(GL_TEXTURE_2D, canvasTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	// --- Framebuffer Setup ---
 	Renderer::createFramebuffer(fbWidth, fbHeight);
@@ -267,12 +266,10 @@ void Renderer::beginFrame(CanvasManager& canvasManager) {
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-    // activates shader program and draws the traingle
-	// glUseProgram(shaderProgram);
-	// glBindVertexArray(vao);
-
+	// render the active canvas
 	renderCanvas(canvasManager.getActive());
 	
+	// gunters old drawing code
 	if (!drawVertices.empty())
 	{
 		glUseProgram(oldShaderProgram);
@@ -287,22 +284,6 @@ void Renderer::beginFrame(CanvasManager& canvasManager) {
 
 		glDrawArrays(GL_LINE_STRIP, 0, drawVertices.size() / 3);
 	}
-
-	//glDrawArrays(GL_TRIANGLES, 0, 3);
-
-	/*/ render the triangle into the framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	glViewport(0, 0, fbWidth, fbHeight);
-
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glUseProgram(shaderProgram);
-	glBindVertexArray(vao);
-	//glDrawArrays(GL_TRIANGLES, 0, 3);
-
-	glBindVertexArray(0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0); */
 }
 
 void Renderer::endFrame() {
@@ -344,7 +325,8 @@ void Renderer::getFrameData()
               << (int)pixels[3] << std::endl;
 }
 
-// Canvas Rendering functions
+///// Canvas Rendering functions
+// uploads the canvas pixel data to the quad texture
 void Renderer::uploadTexture(const Canvas& canvas) {
 	
 	// sets the active texture
@@ -355,6 +337,7 @@ void Renderer::uploadTexture(const Canvas& canvas) {
 
 }
 
+// renders the quad using the uploaded pixel data
 void Renderer::renderCanvas(const Canvas& canvas)
 {
 	// uplaod the canvas to the texture
