@@ -36,6 +36,25 @@ void main(){
 }
 )";
 
+// OLD SHADER CODE
+static const char* oldVertexShaderSource = R"(
+#version 330 core 
+layout (location = 0) in vec3 aPos;
+
+void main(){
+	gl_Position = vec4(aPos, 1.0);
+}
+)";
+
+static const char* oldFragmentShaderSource = R"(
+#version 330 core 
+out vec4 FragColor; 
+
+void main(){
+	FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+}
+)";
+
 // making an instances of classes
 static Globals global;
 
@@ -43,6 +62,10 @@ static Globals global;
 int fbWidth = 0, fbHeight = 0;
 
 
+
+
+GLuint lineVAO, lineVBO;
+unsigned int oldShaderProgram = 0;
 
 static Renderer* activeRenderer = nullptr;
 
@@ -161,6 +184,31 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
+	// ----- Old Shaders and VAO/VBO for gunters drawing code -----
+    // compiles the shaders
+	unsigned int oldVertexShader = compileShader(GL_VERTEX_SHADER, oldVertexShaderSource);
+	unsigned int oldFragmentShader = compileShader(GL_FRAGMENT_SHADER, oldFragmentShaderSource);
+
+    // creates the shader program and attatches the shaders
+	oldShaderProgram = glCreateProgram();
+	glAttachShader(oldShaderProgram, oldVertexShader);
+	glAttachShader(oldShaderProgram, oldFragmentShader);
+	glLinkProgram(oldShaderProgram);
+
+    // removes the unneeded shader data
+	glDeleteShader(oldVertexShader);
+	glDeleteShader(oldFragmentShader);
+
+	glGenVertexArrays(1, &lineVAO);
+	glGenBuffers(1, &lineVBO);
+
+	glBindVertexArray(lineVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0); // x,y,z
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+
+
 	// ----- Texture Setup -----
     glGenTextures(0, &canvasTexture);
     glBindTexture(GL_TEXTURE_2D, canvasTexture);
@@ -216,7 +264,7 @@ bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
 void Renderer::beginFrame(CanvasManager& canvasManager) {
 
     // clears the screen
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
     // activates shader program and draws the traingle
@@ -224,11 +272,12 @@ void Renderer::beginFrame(CanvasManager& canvasManager) {
 	// glBindVertexArray(vao);
 
 	renderCanvas(canvasManager.getActive());
-
-	/*
+	
 	if (!drawVertices.empty())
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glUseProgram(oldShaderProgram);
+		glBindVertexArray(lineVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
 		glBufferData(
 			GL_ARRAY_BUFFER,
 			drawVertices.size() * sizeof(float),
@@ -237,7 +286,7 @@ void Renderer::beginFrame(CanvasManager& canvasManager) {
 		);
 
 		glDrawArrays(GL_LINE_STRIP, 0, drawVertices.size() / 3);
-	} */
+	}
 
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 
