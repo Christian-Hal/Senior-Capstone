@@ -8,7 +8,7 @@ class Renderer {
 
 public:
 	bool init(GLFWwindow* window, Globals g_inst);
-	unsigned int beginFrame();
+	void beginFrame();
 	void endFrame();
 	void shutdown();
 	void getFrameData();
@@ -31,6 +31,4 @@ private:
 
 	unsigned int fbo = 0;
 	unsigned int colorTexture;
-
-	void newCanvas();
 };

@@ -1,5 +1,6 @@
 
 #pragma once
+#include "Canvas.h"
 
 class Globals {
 
@@ -19,6 +20,9 @@ public:
 
     int get_scr_width();
     int get_scr_height();
+
+    // other
+    void newCanvas();
 
 private:
     ////// all of the actual variables

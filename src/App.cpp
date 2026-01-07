@@ -42,7 +42,7 @@ void App::run()
 		window.pollEvents();
 
 		// order of these four methods must not change
-		unsigned int colorTexture = renderer.beginFrame();
+		renderer.beginFrame();
 		ui.draw();
 		renderer.endFrame();
 

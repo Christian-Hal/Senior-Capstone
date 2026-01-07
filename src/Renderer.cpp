@@ -191,7 +191,7 @@ bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
 
 
 //
-unsigned int Renderer::beginFrame() {
+void Renderer::beginFrame() {
 
     // clears the screen
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -229,8 +229,6 @@ unsigned int Renderer::beginFrame() {
 
 	glBindVertexArray(0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); */
-
-	return colorTexture;
 }
 
 void Renderer::endFrame() {

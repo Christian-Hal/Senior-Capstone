@@ -111,7 +111,7 @@ void UI::drawLeftPanel() {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(0, TopSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(LeftSize, h), ImGuiCond_Always);
-	ImGui::Begin("Left Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin("Left Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
 	/////// add widgets here ///////
 	//ImGui::Text("TopSize = %d", TopSize); // <- here for debug
@@ -151,7 +151,7 @@ void UI::drawRightPanel() {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(w - RightSize, TopSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(RightSize, h - TopSize), ImGuiCond_Always);
-	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 	
 	// add widgets
 	if (global.is_file_open())
@@ -173,7 +173,7 @@ void UI::drawBottomPanel() {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, h - BotSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, BotSize), ImGuiCond_Always);
-	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
 
@@ -190,7 +190,7 @@ void UI::drawCenterCanvas(unsigned int colorTexture) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(fbWidth, fbHeight), ImGuiCond_Always);
-	ImGui::Begin("OpenGL Framebuffer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar);
+	ImGui::Begin("OpenGL Framebuffer", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar| ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
 	// Display framebuffer
