@@ -29,7 +29,7 @@ bool App::init() {
 
 	ui.init(window.handle(), renderer, global);
 
-	canvasManager.createCanvas(800, 600);
+	//canvasManager.createCanvas(800, 600);
 
 	return true; 
 

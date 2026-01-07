@@ -61,13 +61,11 @@ static Globals global;
 // Framebuffer Settings
 int fbWidth = 0, fbHeight = 0;
 
-
-
-
 GLuint lineVAO, lineVBO;
 unsigned int oldShaderProgram = 0;
 
 static Renderer* activeRenderer = nullptr;
+static CanvasManager activeCanvasManager;
 
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
@@ -85,8 +83,8 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 }
 
 static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
-	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse
-	if (!activeRenderer || !activeRenderer->isDrawing || ImGui::GetIO().WantCaptureMouse)
+	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse		or the file is not open
+	if (!activeRenderer || !activeRenderer->isDrawing || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())
 		return;
 
 	int w, h;
@@ -260,14 +258,16 @@ bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
 
 
 //
-void Renderer::beginFrame(CanvasManager& canvasManager) {
+void Renderer::beginFrame(CanvasManager& canvasManager) 
+{
+	activeCanvasManager = canvasManager;
 
     // clears the screen
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// render the active canvas
-	renderCanvas(canvasManager.getActive());
+	if (canvasManager.hasActive()) {renderCanvas(canvasManager.getActive());}
 	
 	// gunters old drawing code
 	if (!drawVertices.empty())
@@ -340,6 +340,10 @@ void Renderer::uploadTexture(const Canvas& canvas) {
 // renders the quad using the uploaded pixel data
 void Renderer::renderCanvas(const Canvas& canvas)
 {
+	////// if no active canvas then don't do any of this
+	////// will give the effect of a "main screen" when no file is open
+
+
 	// uplaod the canvas to the texture
 	uploadTexture(canvas);
 	
