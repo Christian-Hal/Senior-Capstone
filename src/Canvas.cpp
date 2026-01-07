@@ -3,11 +3,14 @@
 #include <vector>
 
 // constructor
-Canvas::Canvas(int w, int h) : width(w), height(h), pixels(w * h) {}
+Canvas::Canvas() : width(0), height(0), pixels() {}
+Canvas::Canvas(int w, int h) : width(w), height(h), pixels(w * h, backgroundColor) {}
 
 // canvas size methods
 int Canvas::getWidth() const { return width; }
 int Canvas::getHeight() const { return height; }
+
+const Color* Canvas::getData() const { return pixels.data(); }
 
 // pixel manipulation
 void Canvas::setPixel(int x, int y, const Color& color)

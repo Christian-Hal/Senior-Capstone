@@ -1,6 +1,7 @@
 
 #include "UI.h"
 #include "Globals.h"
+#include "CanvasManager.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -40,7 +41,7 @@ static Renderer renderer;
 static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 // UI initialization 
-void UI::init(GLFWwindow* window, Renderer rendInst, Globals g_inst) {
+void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 	renderer = rendInst;
 	global = g_inst;
 
@@ -54,7 +55,7 @@ void UI::init(GLFWwindow* window, Renderer rendInst, Globals g_inst) {
 }
 
 
-void UI::draw() 
+void UI::draw(CanvasManager& canvasManager) 
 {
 	// start ImGui frame before adding widgets 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -73,13 +74,13 @@ void UI::draw()
 	if (RightSize == 0) {RightSize = static_cast<int>(0.1 * w);}
 
 	// initial popup
-	drawPopup();
+	drawPopup(canvasManager);
 
 	// draw the four main menu panels
-	drawTopPanel();
-	drawLeftPanel();
-	drawRightPanel();
-	drawBottomPanel();
+	drawTopPanel(canvasManager);
+	drawLeftPanel(canvasManager);
+	drawRightPanel(canvasManager);
+	drawBottomPanel(canvasManager);
 
 	// draw the center canvas
 	// drawCenterCanvas(colorTexture);
@@ -90,7 +91,7 @@ void UI::draw()
 
 
 // methods for drawing the individual menu panels
-void UI::drawTopPanel() {
+void UI::drawTopPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(w, TopSize), ImGuiCond_Always);
@@ -107,7 +108,7 @@ void UI::drawTopPanel() {
 }
 
 
-void UI::drawLeftPanel() {
+void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(0, TopSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(LeftSize, h), ImGuiCond_Always);
@@ -147,18 +148,18 @@ void UI::drawLeftPanel() {
 }
 
 
-void UI::drawRightPanel() {
+void UI::drawRightPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(w - RightSize, TopSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(RightSize, h - TopSize), ImGuiCond_Always);
 	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 	
 	// add widgets
-	if (global.is_file_open())
+	if (canvasManager.hasActive())
 	{
 		ImGui::Text("file is open");
 		ImGui::Text("file size is: ");
-		ImGui::Text("%dx%d", global.get_canvas_x(), global.get_canvas_y());
+		ImGui::Text("%dx%d", canvasManager.getActive().getWidth(), canvasManager.getActive().getHeight());
 	}
 
 	// end step
@@ -169,7 +170,7 @@ void UI::drawRightPanel() {
 }
 
 
-void UI::drawBottomPanel() {
+void UI::drawBottomPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, h - BotSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, BotSize), ImGuiCond_Always);
@@ -207,7 +208,7 @@ void UI::drawCenterCanvas(unsigned int colorTexture) {
 
 
 // canvas size popup 
-void UI::drawPopup() 
+void UI::drawPopup(CanvasManager& canvasManager) 
 {
 	static int temp_w = 0;
 	static int temp_h = 0;
@@ -224,10 +225,12 @@ void UI::drawPopup()
 
 		// if user creates a canvas, remove the popup 
         if (ImGui::Button("Create")) {
-            global.set_canvas_x(temp_w);
-            global.set_canvas_y(temp_h);
+
+			// create the new canvas
+			canvasManager.createCanvas(temp_w, temp_h);
+
 			showPopup = false;
-			global.set_fileOpen(true);
+
             ImGui::CloseCurrentPopup();
         }
 

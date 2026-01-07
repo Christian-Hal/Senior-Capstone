@@ -10,11 +10,13 @@ class Canvas {
 
     public:
         // constructor
+        Canvas();
         Canvas(int w, int h);
 
         // getter methods
         int getWidth() const;
         int getHeight() const;
+        const Color* getData() const;
 
         // pixel manipulation
         void setPixel(int x, int y, const Color& color);

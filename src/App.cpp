@@ -4,11 +4,13 @@
 #include "Renderer.h"
 #include "UI.h"
 #include "Globals.h"
+#include "CanvasManager.h"
 
 static Window window; 
 static Renderer renderer; 
 static UI ui; 
 static Globals global;
+static CanvasManager canvasManager;
 
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
@@ -27,6 +29,8 @@ bool App::init() {
 
 	ui.init(window.handle(), renderer, global);
 
+	canvasManager.createCanvas(800, 600);
+
 	return true; 
 
 }
@@ -42,8 +46,8 @@ void App::run()
 		window.pollEvents();
 
 		// order of these four methods must not change
-		renderer.beginFrame();
-		ui.draw();
+		renderer.beginFrame(canvasManager);
+		ui.draw(canvasManager);
 		renderer.endFrame();
 
 		window.swapBuffers();

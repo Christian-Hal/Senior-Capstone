@@ -2,21 +2,25 @@
 #pragma once 
 #include <glfw/glfw3.h>
 #include "Renderer.h"
+#include "CanvasManager.h"
+#include "Canvas.h"
 #include "Globals.h"
 
 class UI {
 
 public: 
-	void init(GLFWwindow* window, Renderer renderer, Globals g_inst);
-	void draw();
+	void init(GLFWwindow* window, Renderer& renderer, Globals& g_inst);
+	void draw(CanvasManager& canvasManager);
 	void shutdown();
 
-	void drawPopup();
+	void drawPopup(CanvasManager& canvasManager);
 
 private: 
-	void drawLeftPanel();
-	void drawRightPanel();
-	void drawTopPanel();
-	void drawBottomPanel();
+	void drawLeftPanel(CanvasManager& canvasManager);
+	void drawRightPanel(CanvasManager& canvasManager);
+	void drawTopPanel(CanvasManager& canvasManager);
+	void drawBottomPanel(CanvasManager& canvasManager);
+
+
 	void drawCenterCanvas(unsigned int colorTexture);
 };

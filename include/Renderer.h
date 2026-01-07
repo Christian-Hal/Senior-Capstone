@@ -2,18 +2,22 @@
 #pragma once 
 //#include <glfw/glfw3.h>
 #include "Globals.h"
+#include "CanvasManager.h"
 #include <vector>
 
 class Renderer {
 
 public:
-	bool init(GLFWwindow* window, Globals g_inst);
-	void beginFrame();
+	bool init(GLFWwindow* window, Globals& g_inst);
+	void beginFrame(CanvasManager& canvasManager);
 	void endFrame();
 	void shutdown();
 	void getFrameData();
 	bool createFramebuffer(float fbWidth, float fbHeight);
 
+	// canvas rendering functions
+	void uploadTexture(const Canvas& canvas);
+	void renderCanvas(const Canvas& canvas);
 
 	//bool drawVertices = false;
 	std::vector<float> drawVertices;
@@ -22,6 +26,7 @@ public:
 
 
 private:
+	unsigned int canvasTexture = 0;
 	int canvasWidth = 1920;
 	int canvasHeight = 1080;
 

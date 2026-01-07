@@ -35,6 +35,8 @@ add_executable(${PROJECT_NAME}
     src/Renderer.cpp 
     src/UI.cpp 
     src/Globals.cpp
+    src/Canvas.cpp
+    src/CanvasManager.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

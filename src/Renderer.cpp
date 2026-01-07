@@ -8,30 +8,35 @@
 
 #include "Renderer.h"
 #include "Globals.h"
+#include "CanvasManager.h"
 #include <iostream>
 #include <vector>
 
 // shader sources 
 static const char* vertexShaderSource = R"(
-#version 330 core 
-layout (location = 0) in vec3 aPos;
+#version 330 core
+layout(location=0) in vec2 pos;
+layout(location=1) in vec2 uv;
+out vec2 TexCoord;
 
 void main(){
-	gl_Position = vec4(aPos, 1.0);
+    TexCoord = uv;
+    gl_Position = vec4(pos,0,1);
 }
 )";
 
 static const char* fragmentShaderSource = R"(
-#version 330 core 
-out vec4 FragColor; 
+#version 330 core
+in vec2 TexCoord;
+out vec4 FragColor;
+uniform sampler2D canvasTex;
 
 void main(){
-	FragColor = vec4(1.0, 0.5, 0.2, 1.0);
-
+    FragColor = texture(canvasTex, TexCoord);
 }
 )";
 
-// making an instance of the Globals class 
+// making an instances of classes
 static Globals global;
 
 // Framebuffer Settings
@@ -67,7 +72,6 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	// Convert screen → NDC
 	float x = (xpos / w) * 2.0f - 1.0f;
 	float y = 1.0f - (ypos / h) * 2.0f;
-
 	
 	activeRenderer->drawVertices.push_back(x);
 	activeRenderer->drawVertices.push_back(y);
@@ -94,9 +98,10 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 
 
 // 
-bool Renderer::init(GLFWwindow* window, Globals g_inst) 
+bool Renderer::init(GLFWwindow* window, Globals& g_inst) 
 {
 	global = g_inst;
+
 	// fb size equal to user input x and y 
 	fbWidth = global.get_canvas_x();
 	fbHeight = global.get_canvas_y();
@@ -110,11 +115,17 @@ bool Renderer::init(GLFWwindow* window, Globals g_inst)
 	float w = (float)fbWidth;
 	float h = (float)fbHeight; 
 
-	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
+	float quadVerts[] = {
+		// position	 // tex coords
+		-1.f, -1.f,   0.f, 0.f,
+		1.f, -1.f,   1.f, 0.f,
+		1.f,  1.f,   1.f, 1.f,
+
+		-1.f, -1.f,   0.f, 0.f,
+		1.f,  1.f,   1.f, 1.f,
+		-1.f,  1.f,   0.f, 1.f
 	};
+
 
     // generate and bind the vbo and vao
 	glGenVertexArrays(1, &vao);
@@ -123,11 +134,14 @@ bool Renderer::init(GLFWwindow* window, Globals g_inst)
 	glBindVertexArray(vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -146,6 +160,14 @@ bool Renderer::init(GLFWwindow* window, Globals g_inst)
     // removes the unneeded shader data
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+
+	// ----- Texture Setup -----
+    glGenTextures(0, &canvasTexture);
+    glBindTexture(GL_TEXTURE_2D, canvasTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	// --- Framebuffer Setup ---
 	Renderer::createFramebuffer(fbWidth, fbHeight);
@@ -191,16 +213,19 @@ bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
 
 
 //
-void Renderer::beginFrame() {
+void Renderer::beginFrame(CanvasManager& canvasManager) {
 
     // clears the screen
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
     // activates shader program and draws the traingle
-	glUseProgram(shaderProgram);
-	glBindVertexArray(vao);
+	// glUseProgram(shaderProgram);
+	// glBindVertexArray(vao);
 
+	renderCanvas(canvasManager.getActive());
+
+	/*
 	if (!drawVertices.empty())
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -212,7 +237,7 @@ void Renderer::beginFrame() {
 		);
 
 		glDrawArrays(GL_LINE_STRIP, 0, drawVertices.size() / 3);
-	}
+	} */
 
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -268,4 +293,32 @@ void Renderer::getFrameData()
               << (int)pixels[1] << ", "
               << (int)pixels[2] << ", "
               << (int)pixels[3] << std::endl;
+}
+
+// Canvas Rendering functions
+void Renderer::uploadTexture(const Canvas& canvas) {
+	
+	// sets the active texture
+	glBindTexture(GL_TEXTURE_2D, canvasTexture);
+
+	// binds the image data to the texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, canvas.getWidth(), canvas.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas.getData());
+
+}
+
+void Renderer::renderCanvas(const Canvas& canvas)
+{
+	// uplaod the canvas to the texture
+	uploadTexture(canvas);
+	
+	// activate the texture and then send it to the shader
+    glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, canvasTexture);
+	glUseProgram(shaderProgram);
+	glUniform1i(glGetUniformLocation(shaderProgram, "canvasTex"), 0);
+
+	// render the quad
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 }

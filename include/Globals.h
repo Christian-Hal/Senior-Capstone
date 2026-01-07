@@ -21,9 +21,6 @@ public:
     int get_scr_width();
     int get_scr_height();
 
-    // other
-    void newCanvas();
-
 private:
     ////// all of the actual variables
     // window settings

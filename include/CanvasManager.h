@@ -7,6 +7,8 @@ class CanvasManager {
     public:
         Canvas& createCanvas(int width, int height);
         Canvas& getActive();
+        bool hasActive();
+
     private:
         // list of active canvases for when we implement the tab system
         std::vector<Canvas> canvases;

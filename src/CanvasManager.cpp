@@ -4,7 +4,7 @@
 
 Canvas& CanvasManager::createCanvas(int width, int height)
 {
-    canvases.emplace_back(width, height);
+    canvases.emplace_back(Canvas(width, height));
     active = &canvases.back();
     return *active;
 }
@@ -12,4 +12,9 @@ Canvas& CanvasManager::createCanvas(int width, int height)
 Canvas& CanvasManager::getActive()
 {
     return *active;
+}
+
+bool CanvasManager::hasActive()
+{
+    return active != nullptr;
 }
