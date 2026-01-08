@@ -18,7 +18,7 @@ add_library(imgui
     external/imgui/imgui_widgets.cpp
     external/imgui/backends/imgui_impl_glfw.cpp
     external/imgui/backends/imgui_impl_opengl3.cpp
-)
+ )
 
 target_include_directories(imgui PUBLIC
     external/imgui
@@ -37,7 +37,7 @@ add_executable(${PROJECT_NAME}
     src/Globals.cpp
     src/Canvas.cpp
     src/CanvasManager.cpp
-)
+    src/Zooming.cpp )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     external/glm
