@@ -5,6 +5,8 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 #include "Renderer.h"
 #include "Globals.h"
@@ -297,32 +299,22 @@ void Renderer::shutdown() {
 	glDeleteProgram(shaderProgram);
 }
 
-void Renderer::getFrameData()
+void Renderer::getFrameData(CanvasManager& canvasManager)
 {
+	// get the width and height of the canvas
+	int saveWidth = canvasManager.getActive().getWidth();
+	int saveHeight = canvasManager.getActive().getHeight();
+
 	// checks if the buffer size is not 0
 	// when the app first runs these two are initialized to zero as a sort of "file is not open"
 	// so this is an easy fix until we get the state system fully set up and can know when a file is or isnt open
-	if (fbWidth == 0 || fbHeight == 0)
-        return;
-	
-	// bind to the framebuffer
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-	// create a vector that can save all the pixel info
-    std::vector<unsigned char> pixels(fbWidth * fbHeight * 4); // length * width * RGBA
+	if(saveWidth == 0 || saveHeight == 0)
+	{
+		return;
+	}
 
-	// read the pixels on the framebuffer and save them to vector
-    glReadPixels(0, 0, fbWidth, fbHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
-
-	// unbind the framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	std::cout << "number of pixels: "<< pixels.size() << std::endl;
-
-    // Example: print first pixel
-    std::cout << "First pixel RGBA: "
-              << (int)pixels[0] << ", "
-              << (int)pixels[1] << ", "
-              << (int)pixels[2] << ", "
-              << (int)pixels[3] << std::endl;
+	// read the pixels in the canvas and write them to a png
+	stbi_write_png("output.png", saveWidth, saveHeight, 4, canvasManager.getActive().getData(), saveWidth * 4);
 }
 
 ///// Canvas Rendering functions

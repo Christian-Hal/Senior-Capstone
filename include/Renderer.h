@@ -12,7 +12,7 @@ public:
 	void beginFrame(CanvasManager& canvasManager);
 	void endFrame();
 	void shutdown();
-	void getFrameData();
+	void getFrameData(CanvasManager& canvasManagerA);
 	bool createFramebuffer(float fbWidth, float fbHeight);
 
 	// canvas rendering functions

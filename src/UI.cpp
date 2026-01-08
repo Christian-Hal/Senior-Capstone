@@ -160,7 +160,7 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 
 	// Save button
 	if (ImGui::Button("Save")) {
-		renderer.getFrameData();
+		renderer.getFrameData(canvasManager);
 	}
 
 	// color wheel
