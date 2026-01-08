@@ -24,6 +24,9 @@ static bool showPopup = false;
 // show panels 
 static bool showPanels = true; 
 
+// reference to the window, used for input 
+static GLFWwindow* windowStorage;
+
 // the init canvas values are displayed in the text boxes
 static int canvasWidth = 0; 
 static int canvasHeight = 0; 
@@ -55,6 +58,9 @@ void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330 core");
+
+	// storing window for user input 
+	windowStorage = window; 
 }
 
 
@@ -78,6 +84,9 @@ void UI::draw(CanvasManager& canvasManager)
 
 	// initial popup
 	drawPopup(canvasManager);
+
+	// -- user input to hide UI panels --
+	if (glfwGetKey(windowStorage, GLFW_KEY_TAB) == GLFW_PRESS) showPanels = !showPanels;
 
 	// draw the four main menu panels
 	if (showPanels) {
