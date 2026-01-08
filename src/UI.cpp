@@ -31,6 +31,13 @@ static GLFWwindow* windowStorage;
 static int canvasWidth = 0; 
 static int canvasHeight = 0; 
 
+// RBGA values for the color wheel 
+static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+// storing time for user input 
+static double lastFrame = 0.0;
+
+
 static Globals global;
 
 // state for draw erase button 
@@ -43,8 +50,7 @@ enum Mode {
 static Mode drawState = DRAW;  
 static Renderer renderer;
 
-// RBGA values for the color wheel 
-static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
 
 // UI initialization 
 void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
@@ -62,6 +68,7 @@ void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 	// storing window for user input 
 	windowStorage = window; 
 }
+
 
 
 void UI::draw(CanvasManager& canvasManager) 
@@ -85,20 +92,32 @@ void UI::draw(CanvasManager& canvasManager)
 	// initial popup
 	drawPopup(canvasManager);
 
+
+	// storing time for user input 
+	
+
+
 	// -- user input to hide UI panels --
-	if (glfwGetKey(windowStorage, GLFW_KEY_TAB) == GLFW_PRESS) showPanels = !showPanels;
+	if (glfwGetKey(windowStorage, GLFW_KEY_TAB) == GLFW_PRESS && glfwGetTime() - lastFrame >= 0.2) {
+		showPanels = !showPanels;
+		lastFrame = glfwGetTime();
+
+	}
 
 	// draw the four main menu panels
 	if (showPanels) {
-		drawTopPanel(canvasManager);
 		drawLeftPanel(canvasManager);
 		drawRightPanel(canvasManager);
 		drawBottomPanel(canvasManager);
 	}
 
+	// top panel drawn regardless of input 
+	drawTopPanel(canvasManager);
+
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
+
 
 
 // methods for drawing the individual menu panels
@@ -117,6 +136,7 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 	// end step
 	ImGui::End();
 }
+
 
 
 void UI::drawLeftPanel(CanvasManager& canvasManager) {
@@ -148,8 +168,8 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		renderer.getFrameData();
 	}
 
-	// color wheel
-	ImGui::ColorEdit4("", color, ImGuiColorEditFlags_NoInputs);
+	// color wheel					ImGuiColorEditFlags_NoInputs
+	ImGui::ColorPicker4("", color, ImGuiColorEditFlags_PickerHueWheel);
 
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
