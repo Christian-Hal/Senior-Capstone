@@ -70,7 +70,7 @@ void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 }
 
 
-
+// NOTE: called in render loop 
 void UI::draw(CanvasManager& canvasManager) 
 {
 	// start ImGui frame before adding widgets 
@@ -91,11 +91,6 @@ void UI::draw(CanvasManager& canvasManager)
 
 	// initial popup
 	drawPopup(canvasManager);
-
-
-	// storing time for user input 
-	
-
 
 	// -- user input to hide UI panels --
 	if (glfwGetKey(windowStorage, GLFW_KEY_TAB) == GLFW_PRESS && glfwGetTime() - lastFrame >= 0.2) {
@@ -164,12 +159,17 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	}
 
 	// Save button
-	if (ImGui::Button("Save")){
+	if (ImGui::Button("Save")) {
 		renderer.getFrameData();
 	}
 
-	// color wheel					ImGuiColorEditFlags_NoInputs
-	ImGui::ColorPicker4("", color, ImGuiColorEditFlags_PickerHueWheel);
+	// color wheel
+	ImGuiColorEditFlags flags = ImGuiColorEditFlags_PickerHueWheel |
+		ImGuiColorEditFlags_NoInputs |
+		ImGuiColorEditFlags_AlphaPreview |
+		ImGuiColorEditFlags_AlphaBar;
+
+	ImGui::ColorPicker4("", color, flags);
 
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
