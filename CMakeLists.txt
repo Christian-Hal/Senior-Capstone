@@ -37,7 +37,8 @@ add_executable(${PROJECT_NAME}
     src/Globals.cpp
     src/Canvas.cpp
     src/CanvasManager.cpp
-    src/Zooming.cpp )
+    src/Zooming.cpp 
+    src/InputManager.cpp)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     external/glm

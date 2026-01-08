@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
@@ -71,6 +72,8 @@ unsigned int oldShaderProgram = 0;
 static Renderer* activeRenderer = nullptr;
 static CanvasManager activeCanvasManager;
 
+
+
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
 	// if no renderer    or imgui wants the mouse
@@ -85,6 +88,8 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 		activeRenderer->isDrawing = (action == GLFW_PRESS);
 	}
 }
+
+
 
 static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse		or the file is not open
@@ -104,6 +109,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 }
 
 
+
 // compile the vertex and fragment shaders 
 static unsigned int compileShader(unsigned int type, const char* source) {
 	
@@ -120,6 +126,7 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 	}
 	return shader; 
 }
+
 
 
 // 
@@ -197,6 +204,7 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 }
 
 
+
 // creates the center framebuffer 
 bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
 	
@@ -224,6 +232,7 @@ bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
 	return true; 
 
 } 
+
 
 
 //
@@ -264,9 +273,13 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 	}
 }
 
+
+
 void Renderer::endFrame() {
 	glBindVertexArray(0);
 }
+
+
 
 void Renderer::shutdown() {
     // delete the data no longer needed
@@ -274,6 +287,8 @@ void Renderer::shutdown() {
 	glDeleteBuffers(1, &vbo);
 	glDeleteProgram(shaderProgram);
 }
+
+
 
 void Renderer::getFrameData(CanvasManager& canvasManager)
 {
@@ -292,6 +307,8 @@ void Renderer::getFrameData(CanvasManager& canvasManager)
 	// read the pixels in the canvas and write them to a png
 	stbi_write_png("output.png", saveWidth, saveHeight, 4, canvasManager.getActive().getData(), saveWidth * 4);
 }
+
+
 
 ///// Canvas Rendering functions
 // creates the VAO and VBO for the canvas quad
@@ -342,6 +359,8 @@ void Renderer::createCanvasQuad(const Canvas& canvas)
 	glBindVertexArray(0);
 }
 
+
+
 // uploads the canvas pixel data to the quad texture
 void Renderer::uploadTexture(const Canvas& canvas) {
 	
@@ -352,6 +371,8 @@ void Renderer::uploadTexture(const Canvas& canvas) {
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, canvas.getWidth(), canvas.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas.getData());
 
 }
+
+
 
 // renders the quad using the uploaded pixel data
 void Renderer::renderCanvas(const Canvas& canvas)
