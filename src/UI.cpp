@@ -21,6 +21,9 @@ int RightSize = 0;
 // state initial pop up 
 static bool showPopup = false; 
 
+// show panels 
+static bool showPanels = true; 
+
 // the init canvas values are displayed in the text boxes
 static int canvasWidth = 0; 
 static int canvasHeight = 0; 
@@ -77,10 +80,12 @@ void UI::draw(CanvasManager& canvasManager)
 	drawPopup(canvasManager);
 
 	// draw the four main menu panels
-	drawTopPanel(canvasManager);
-	drawLeftPanel(canvasManager);
-	drawRightPanel(canvasManager);
-	drawBottomPanel(canvasManager);
+	if (showPanels) {
+		drawTopPanel(canvasManager);
+		drawLeftPanel(canvasManager);
+		drawRightPanel(canvasManager);
+		drawBottomPanel(canvasManager);
+	}
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -135,7 +140,7 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	}
 
 	// color wheel
-	ImGui::ColorEdit4("", color, ImGuiColorEditFlags_PickerHueWheel);
+	ImGui::ColorEdit4("", color, ImGuiColorEditFlags_NoInputs);
 
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
