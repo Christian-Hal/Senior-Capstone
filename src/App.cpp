@@ -30,6 +30,8 @@ bool App::init() {
 	ui.init(window.handle(), renderer, global);
 
 	//canvasManager.createCanvas(800, 600);
+	global.set_scr_width(SCR_WIDTH);
+	global.set_scr_height(SCR_HEIGHT);
 
 	return true; 
 

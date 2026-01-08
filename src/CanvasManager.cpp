@@ -6,6 +6,9 @@ Canvas& CanvasManager::createCanvas(int width, int height)
 {
     canvases.emplace_back(Canvas(width, height));
     active = &canvases.back();
+
+    canvasChange = true;
+
     return *active;
 }
 

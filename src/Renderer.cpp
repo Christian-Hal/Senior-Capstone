@@ -1,6 +1,7 @@
 ﻿
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -19,6 +20,7 @@ static const char* vertexShaderSource = R"(
 #version 330 core
 layout(location=0) in vec2 pos;
 layout(location=1) in vec2 uv;
+
 out vec2 TexCoord;
 
 void main(){
@@ -134,41 +136,6 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 		return false; 
 	}
 
-	// canvas geometry
-	float w = (float)fbWidth;
-	float h = (float)fbHeight; 
-
-	float quadVerts[] = {
-		// position	 // tex coords
-		-1.f, -1.f,   0.f, 0.f,
-		1.f, -1.f,   1.f, 0.f,
-		1.f,  1.f,   1.f, 1.f,
-
-		-1.f, -1.f,   0.f, 0.f,
-		1.f,  1.f,   1.f, 1.f,
-		-1.f,  1.f,   0.f, 1.f
-	};
-
-
-    // generate and bind the vbo and vao
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
-
-	glBindVertexArray(vao);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
-	//glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
 	// ----- Shaders -----
     // compiles the shaders
 	unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
@@ -269,7 +236,16 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// render the active canvas
-	if (canvasManager.hasActive()) {renderCanvas(canvasManager.getActive());}
+	if (canvasManager.hasActive()) 
+	{
+		// if the active canvas has chaneged then recreate the vbo/vao
+		if (canvasManager.canvasChange) {
+			createCanvasQuad(canvasManager.getActive());
+			canvasManager.canvasChange = false;
+		}
+
+		renderCanvas(canvasManager.getActive());
+	}
 	
 	// gunters old drawing code
 	if (!drawVertices.empty())
@@ -318,6 +294,54 @@ void Renderer::getFrameData(CanvasManager& canvasManager)
 }
 
 ///// Canvas Rendering functions
+// creates the VAO and VBO for the canvas quad
+void Renderer::createCanvasQuad(const Canvas& canvas)
+{
+	// get screen center
+	float centerX = global.get_scr_width()  * 0.5f;
+	float centerY = global.get_scr_height() * 0.5f;
+
+	// canvas geometry
+	float cW = canvas.getWidth()  * 0.5f;
+	float cH = canvas.getHeight() * 0.5f;
+
+	float screenW = global.get_scr_width();
+	float screenH = global.get_scr_height();
+
+	float quadVerts[] = {
+		// position coords																	// texture coords
+		// this is a formula that takes the Pixel coordinates and converts them to NDC
+		(centerX - cW) / (screenW * 0.5f) - 1.f, (centerY - cH) / (screenH * 0.5f) - 1.f, 	0.f, 0.f,
+		(centerX + cW) / (screenW * 0.5f) - 1.f, (centerY - cH) / (screenH * 0.5f) - 1.f, 	1.f, 0.f,
+		(centerX + cW) / (screenW * 0.5f) - 1.f, (centerY + cH) / (screenH * 0.5f) - 1.f, 	1.f, 1.f,
+
+		(centerX - cW) / (screenW * 0.5f) - 1.f, (centerY - cH) / (screenH * 0.5f) - 1.f, 	0.f, 0.f,
+		(centerX + cW) / (screenW * 0.5f) - 1.f, (centerY + cH) / (screenH * 0.5f) - 1.f, 	1.f, 1.f,
+		(centerX - cW) / (screenW * 0.5f) - 1.f, (centerY + cH) / (screenH * 0.5f) - 1.f, 	0.f, 1.f
+	};
+
+
+
+    // generate and bind the vbo and vao
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+
+	glBindVertexArray(vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+}
+
 // uploads the canvas pixel data to the quad texture
 void Renderer::uploadTexture(const Canvas& canvas) {
 	
@@ -334,7 +358,6 @@ void Renderer::renderCanvas(const Canvas& canvas)
 {
 	////// if no active canvas then don't do any of this
 	////// will give the effect of a "main screen" when no file is open
-
 
 	// uplaod the canvas to the texture
 	uploadTexture(canvas);

@@ -16,6 +16,7 @@ public:
 	bool createFramebuffer(float fbWidth, float fbHeight);
 
 	// canvas rendering functions
+	void createCanvasQuad(const Canvas& canvas);
 	void uploadTexture(const Canvas& canvas);
 	void renderCanvas(const Canvas& canvas);
 
