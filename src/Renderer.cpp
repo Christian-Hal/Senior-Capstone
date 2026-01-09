@@ -127,7 +127,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int x = static_cast<int>(relX);
 	int y = static_cast<int>(curCanvas.getHeight() - 1 - static_cast<int>(relY));
 	
-
+	curCanvas.setPixel(x, y, ui.getColor());
 }
 
 
