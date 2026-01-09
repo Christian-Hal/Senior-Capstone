@@ -8,14 +8,14 @@
 
 class UI {
 
-public: 
+public:
 	void init(GLFWwindow* window, Renderer& renderer, Globals& g_inst);
 	void draw(CanvasManager& canvasManager);
 	void shutdown();
-
+	Color getColor();
 	void drawPopup(CanvasManager& canvasManager);
 
-private: 
+private:
 	void drawLeftPanel(CanvasManager& canvasManager);
 	void drawRightPanel(CanvasManager& canvasManager);
 	void drawTopPanel(CanvasManager& canvasManager);

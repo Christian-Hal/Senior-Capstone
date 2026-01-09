@@ -13,6 +13,7 @@
 #include "Renderer.h"
 #include "Globals.h"
 #include "CanvasManager.h"
+#include "UI.h"
 #include <iostream>
 #include <vector>
 
@@ -42,23 +43,23 @@ void main(){
 )";
 
 // OLD SHADER CODE
-static const char* oldVertexShaderSource = R"(
-#version 330 core 
-layout (location = 0) in vec3 aPos;
-
-void main(){
-	gl_Position = vec4(aPos, 1.0);
-}
-)";
-
-static const char* oldFragmentShaderSource = R"(
-#version 330 core 
-out vec4 FragColor; 
-
-void main(){
-	FragColor = vec4(1.0, 0.5, 0.2, 1.0);
-}
-)";
+//static const char* oldVertexShaderSource = R"(
+//#version 330 core 
+//layout (location = 0) in vec3 aPos;
+//
+//void main(){
+//	gl_Position = vec4(aPos, 1.0);
+//}
+//)";
+//
+//static const char* oldFragmentShaderSource = R"(
+//#version 330 core 
+//out vec4 FragColor; 
+//
+//void main(){
+//	FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+//}
+//)";
 
 // making an instances of classes
 static Globals global;
@@ -71,13 +72,14 @@ unsigned int oldShaderProgram = 0;
 
 static Renderer* activeRenderer = nullptr;
 static CanvasManager activeCanvasManager;
+static UI ui;
 
 
 
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
 	// if no renderer    or imgui wants the mouse
-	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse) 
+	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse)
 	{
 		return;
 	}
@@ -85,8 +87,14 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 	// if we have a button 				and im gui does NOT want the mouse
 	if (button == GLFW_MOUSE_BUTTON_LEFT && !ImGui::GetIO().WantCaptureMouse)
 	{
-		activeRenderer->isDrawing = (action == GLFW_PRESS);
+		if (action == GLFW_PRESS)
+			activeRenderer->isDrawing = true;
+		else if (action == GLFW_RELEASE)
+			activeRenderer->isDrawing = false;
+
 	}
+
+	
 }
 
 
@@ -96,41 +104,46 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	if (!activeRenderer || !activeRenderer->isDrawing || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())
 		return;
 
-	int w, h;
-	glfwGetFramebufferSize(window, &w, &h);
 
-	// Convert screen → NDC
-	float x = (xpos / w) * 2.0f - 1.0f;
-	float y = 1.0f - (ypos / h) * 2.0f;
+	Canvas& curCanvas = activeCanvasManager.getActive();
 	
-	activeRenderer->drawVertices.push_back(x);
-	activeRenderer->drawVertices.push_back(y);
-	activeRenderer->drawVertices.push_back(0.0f);
+
+
+	int x = static_cast<int>(xpos);
+	int y = static_cast<int>(ypos);
+
+	
+	y = curCanvas.getHeight() - 1 - y;
+	
+	curCanvas.setPixel(x, y, ui.getColor());
+	
+	
+
 }
 
 
 
 // compile the vertex and fragment shaders 
 static unsigned int compileShader(unsigned int type, const char* source) {
-	
+
 	unsigned int shader = glCreateShader(type);
 	glShaderSource(shader, 1, &source, nullptr);
 	glCompileShader(shader);
 
-	int success; 
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success); 
+	int success;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 	if (!success) {
 		char infoLog[512];
-		glGetShaderInfoLog(shader, 512, nullptr, infoLog); 
+		glGetShaderInfoLog(shader, 512, nullptr, infoLog);
 		std::cerr << "Shader compilation failed:\n" << infoLog << std::endl;
 	}
-	return shader; 
+	return shader;
 }
 
 
 
 // 
-bool Renderer::init(GLFWwindow* window, Globals& g_inst) 
+bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 {
 	global = g_inst;
 
@@ -140,55 +153,55 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "Failed to initialize GLAD\n";
-		return false; 
+		return false;
 	}
 
 	// ----- Shaders -----
-    // compiles the shaders
+	// compiles the shaders
 	unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
 	unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
-    // creates the shader program and attatches the shaders
+	// creates the shader program and attatches the shaders
 	shaderProgram = glCreateProgram();
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
 	glLinkProgram(shaderProgram);
 
-    // removes the unneeded shader data
+	// removes the unneeded shader data
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
 	// ----- Texture Setup -----
-    glGenTextures(0, &canvasTexture);
-    glBindTexture(GL_TEXTURE_2D, canvasTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glGenTextures(0, &canvasTexture);
+	glBindTexture(GL_TEXTURE_2D, canvasTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	// --------------------------------- Old Shaders and VAO/VBO for gunters drawing code ---------------------------------
-    // compiles the shaders
-	unsigned int oldVertexShader = compileShader(GL_VERTEX_SHADER, oldVertexShaderSource);
-	unsigned int oldFragmentShader = compileShader(GL_FRAGMENT_SHADER, oldFragmentShaderSource);
+	// compiles the shaders
+	//unsigned int oldVertexShader = compileShader(GL_VERTEX_SHADER, oldVertexShaderSource);
+	//unsigned int oldFragmentShader = compileShader(GL_FRAGMENT_SHADER, oldFragmentShaderSource);
 
-    // creates the shader program and attatches the shaders
-	oldShaderProgram = glCreateProgram();
-	glAttachShader(oldShaderProgram, oldVertexShader);
-	glAttachShader(oldShaderProgram, oldFragmentShader);
-	glLinkProgram(oldShaderProgram);
+	//// creates the shader program and attatches the shaders
+	//oldShaderProgram = glCreateProgram();
+	//glAttachShader(oldShaderProgram, oldVertexShader);
+	//glAttachShader(oldShaderProgram, oldFragmentShader);
+	//glLinkProgram(oldShaderProgram);
 
-    // removes the unneeded shader data
-	glDeleteShader(oldVertexShader);
-	glDeleteShader(oldFragmentShader);
+	//// removes the unneeded shader data
+	//glDeleteShader(oldVertexShader);
+	//glDeleteShader(oldFragmentShader);
 
-	glGenVertexArrays(1, &lineVAO);
-	glGenBuffers(1, &lineVBO);
+	//glGenVertexArrays(1, &lineVAO);
+	//glGenBuffers(1, &lineVBO);
 
-	glBindVertexArray(lineVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0); // x,y,z
-	glEnableVertexAttribArray(0);
-	glBindVertexArray(0);
+	//glBindVertexArray(lineVAO);
+	//glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // x,y,z
+	//glEnableVertexAttribArray(0);
+	//glBindVertexArray(0);
 
 	// --- Framebuffer Setup ---
 	Renderer::createFramebuffer(fbWidth, fbHeight);
@@ -198,7 +211,7 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
 	glfwSetCursorPosCallback(window, cursorPosCallback);
 
-	
+
 
 	return true;
 }
@@ -207,7 +220,7 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 
 // creates the center framebuffer 
 bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
-	
+
 
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -229,23 +242,23 @@ bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	return true; 
+	return true;
 
-} 
+}
 
 
 
 //
-void Renderer::beginFrame(CanvasManager& canvasManager) 
+void Renderer::beginFrame(CanvasManager& canvasManager)
 {
 	activeCanvasManager = canvasManager;
 
-    // clears the screen
+	// clears the screen
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// render the active canvas
-	if (canvasManager.hasActive()) 
+	if (canvasManager.hasActive())
 	{
 		// if the active canvas has chaneged then recreate the vbo/vao
 		if (canvasManager.canvasChange) {
@@ -255,24 +268,7 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 
 		renderCanvas(canvasManager.getActive());
 	}
-	
-	// gunters old drawing code
-	if (!drawVertices.empty())
-	{
-		glUseProgram(oldShaderProgram);
-		glBindVertexArray(lineVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
-		glBufferData(
-			GL_ARRAY_BUFFER,
-			drawVertices.size() * sizeof(float),
-			drawVertices.data(),
-			GL_DYNAMIC_DRAW
-		);
-
-		glDrawArrays(GL_LINE_STRIP, 0, drawVertices.size() / 3);
-	}
 }
-
 
 
 void Renderer::endFrame() {
@@ -282,7 +278,7 @@ void Renderer::endFrame() {
 
 
 void Renderer::shutdown() {
-    // delete the data no longer needed
+	// delete the data no longer needed
 	glDeleteVertexArrays(1, &vao);
 	glDeleteBuffers(1, &vbo);
 	glDeleteProgram(shaderProgram);
@@ -299,7 +295,7 @@ void Renderer::getFrameData(CanvasManager& canvasManager)
 	// checks if the buffer size is not 0
 	// when the app first runs these two are initialized to zero as a sort of "file is not open"
 	// so this is an easy fix until we get the state system fully set up and can know when a file is or isnt open
-	if(saveWidth == 0 || saveHeight == 0)
+	if (saveWidth == 0 || saveHeight == 0)
 	{
 		return;
 	}
@@ -315,11 +311,11 @@ void Renderer::getFrameData(CanvasManager& canvasManager)
 void Renderer::createCanvasQuad(const Canvas& canvas)
 {
 	// get screen center
-	float centerX = global.get_scr_width()  * 0.5f;
+	float centerX = global.get_scr_width() * 0.5f;
 	float centerY = global.get_scr_height() * 0.5f;
 
 	// canvas geometry
-	float cW = canvas.getWidth()  * 0.5f;
+	float cW = canvas.getWidth() * 0.5f;
 	float cH = canvas.getHeight() * 0.5f;
 
 	float screenW = global.get_scr_width();
@@ -339,7 +335,7 @@ void Renderer::createCanvasQuad(const Canvas& canvas)
 
 
 
-    // generate and bind the vbo and vao
+	// generate and bind the vbo and vao
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 
@@ -363,12 +359,15 @@ void Renderer::createCanvasQuad(const Canvas& canvas)
 
 // uploads the canvas pixel data to the quad texture
 void Renderer::uploadTexture(const Canvas& canvas) {
-	
+
 	// sets the active texture
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
 
+	
+
 	// binds the image data to the texture
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, canvas.getWidth(), canvas.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas.getData());
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, GL_RGBA8, canvas.getWidth(), canvas.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas.getData());
 
 }
 
@@ -382,15 +381,15 @@ void Renderer::renderCanvas(const Canvas& canvas)
 
 	// uplaod the canvas to the texture
 	uploadTexture(canvas);
-	
+
 	// activate the texture and then send it to the shader
-    glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
 	glUseProgram(shaderProgram);
 	glUniform1i(glGetUniformLocation(shaderProgram, "canvasTex"), 0);
 
 	// render the quad
-    glBindVertexArray(vao);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+	glBindVertexArray(vao);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindVertexArray(0);
 }

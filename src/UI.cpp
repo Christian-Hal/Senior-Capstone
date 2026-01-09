@@ -19,17 +19,17 @@ int LeftSize = 0;
 int RightSize = 0;
 
 // state initial pop up 
-static bool showPopup = false; 
+static bool showPopup = false;
 
 // show panels 
-static bool showPanels = true; 
+static bool showPanels = true;
 
 // reference to the window, used for input 
 static GLFWwindow* windowStorage;
 
 // the init canvas values are displayed in the text boxes
-static int canvasWidth = 0; 
-static int canvasHeight = 0; 
+static int canvasWidth = 0;
+static int canvasHeight = 0;
 
 // RBGA values for the color wheel 
 static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -42,13 +42,43 @@ static Globals global;
 
 // state for draw erase button 
 enum Mode {
-	DRAW, 
+	DRAW,
 	ERASE
 };
 
 
-static Mode drawState = DRAW;  
+static Mode drawState = DRAW;
 static Renderer renderer;
+
+
+//struct ColorI
+//{
+//	uint8_t r, g, b, a;
+//};
+
+Color UI::getColor()
+{
+	Color c = {
+		static_cast<int>(color[0] * 255.0f),
+		static_cast<int>(color[1] * 255.0f),
+		static_cast<int>(color[2] * 255.0f),
+		static_cast<int>(color[3] * 255.0f)
+	};
+
+	return c;
+}
+
+//int UI::getColor()
+//{
+//	int returnCol[4] = {
+//		static_cast<int>(color[0] * 255.0f),
+//		static_cast<int>(color[1] * 255.0f),
+//		static_cast<int>(color[2] * 255.0f),
+//		static_cast<int>(color[3] * 255.0f)
+//	};
+//
+//	return returnCol[4];
+//}
 
 
 
@@ -60,18 +90,18 @@ void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
-	ImGui::StyleColorsDark(); 
+	ImGui::StyleColorsDark();
 
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330 core");
 
 	// storing window for user input 
-	windowStorage = window; 
+	windowStorage = window;
 }
 
 
 // NOTE: called in render loop 
-void UI::draw(CanvasManager& canvasManager) 
+void UI::draw(CanvasManager& canvasManager)
 {
 	// start ImGui frame before adding widgets 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -84,10 +114,10 @@ void UI::draw(CanvasManager& canvasManager)
 	h = io.DisplaySize.y;
 
 	// compute the panel sizes
-	if (TopSize == 0) {TopSize = static_cast<int>(0.05 * h);}
-	if (BotSize == 0) {BotSize = static_cast<int>(0.05 * h);}
-	if (LeftSize == 0) {LeftSize = static_cast<int>(0.1 * w);}
-	if (RightSize == 0) {RightSize = static_cast<int>(0.1 * w);}
+	if (TopSize == 0) { TopSize = static_cast<int>(0.05 * h); }
+	if (BotSize == 0) { BotSize = static_cast<int>(0.05 * h); }
+	if (LeftSize == 0) { LeftSize = static_cast<int>(0.1 * w); }
+	if (RightSize == 0) { RightSize = static_cast<int>(0.1 * w); }
 
 	// initial popup
 	drawPopup(canvasManager);
@@ -184,7 +214,7 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	ImGui::SetNextWindowPos(ImVec2(w - RightSize, TopSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(RightSize, h - TopSize), ImGuiCond_Always);
 	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
-	
+
 	// add widgets
 	if (canvasManager.hasActive())
 	{
@@ -214,47 +244,47 @@ void UI::drawBottomPanel(CanvasManager& canvasManager) {
 }
 
 // canvas size popup 
-void UI::drawPopup(CanvasManager& canvasManager) 
+void UI::drawPopup(CanvasManager& canvasManager)
 {
 	static int temp_w = 0;
 	static int temp_h = 0;
 
 	if (showPopup) {
-        ImGui::OpenPopup("New Canvas");
-    }
+		ImGui::OpenPopup("New Canvas");
+	}
 
 	// specifying canvas size 
-    if (ImGui::BeginPopupModal("New Canvas", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+	if (ImGui::BeginPopupModal("New Canvas", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-        ImGui::InputInt("Width", &temp_w);
-        ImGui::InputInt("Height", &temp_h);
+		ImGui::InputInt("Width", &temp_w);
+		ImGui::InputInt("Height", &temp_h);
 
 		// if user creates a canvas, remove the popup 
-        if (ImGui::Button("Create")) {
+		if (ImGui::Button("Create")) {
 
 			// create the new canvas
 			canvasManager.createCanvas(temp_w, temp_h);
 
 			showPopup = false;
 
-            ImGui::CloseCurrentPopup();
-        }
+			ImGui::CloseCurrentPopup();
+		}
 
-        ImGui::SameLine();
+		ImGui::SameLine();
 
-        if (ImGui::Button("Cancel")) {
+		if (ImGui::Button("Cancel")) {
 			showPopup = false;
-            ImGui::CloseCurrentPopup();
-        }
+			ImGui::CloseCurrentPopup();
+		}
 
-        ImGui::EndPopup();
-    }
+		ImGui::EndPopup();
+	}
 
 }
 
 // ending and cleanup 
 void UI::shutdown() {
 	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown(); 
+	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
