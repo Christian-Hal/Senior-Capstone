@@ -58,10 +58,10 @@ static Renderer renderer;
 Color UI::getColor()
 {
 	Color c = {
-		static_cast<int>(color[0] * 255.0f),
-		static_cast<int>(color[1] * 255.0f),
-		static_cast<int>(color[2] * 255.0f),
-		static_cast<int>(color[3] * 255.0f)
+		static_cast<unsigned char>(color[0] * 255.0f),
+		static_cast<unsigned char>(color[1] * 255.0f),
+		static_cast<unsigned char>(color[2] * 255.0f),
+		static_cast<unsigned char>(color[3] * 255.0f)
 	};
 
 	return c;
