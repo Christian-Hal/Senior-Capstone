@@ -21,11 +21,15 @@ public:
     int get_scr_width();
     int get_scr_height();
 
+    // here to let the renderer check if the window size has changed
+    // if so it needs to remake the vao and vbo for the canvas quad
+    bool dirtyScreen = false;
+
 private:
     ////// all of the actual variables
     // window settings
-    int SCR_WIDTH = 1280;
-    int SCR_HEIGHT = 720;
+    int SCR_WIDTH = 0;
+    int SCR_HEIGHT = 0;
 
     // canvas settings
     bool fileOpen = false;

@@ -33,7 +33,7 @@ static int canvasWidth = 1920;
 static int canvasHeight = 1080;
 
 // RBGA values for the color wheel 
-static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+static float color[4] = { .0f, .0f, .0f, 1.0f };
 
 // storing time for user input 
 static double lastFrame = 0.0;
@@ -44,10 +44,8 @@ int numLayers = 1;
 // temp 
 int UI::brushSize = 1;
 
-
-
-
-static Globals global;
+// global instance reference
+extern Globals global;
 
 // state for draw erase button 
 static UI::CursorMode cursorMode = UI::CursorMode::Draw; 
@@ -77,7 +75,7 @@ UI::CursorMode UI::getCursorMode() const {
 // UI initialization 
 void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 	renderer = rendInst;
-	global = g_inst;
+	//global = g_inst;
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -259,6 +257,7 @@ void UI::drawBottomPanel(CanvasManager& canvasManager) {
 	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
+	ImGui::Text("%dx%d", global.get_scr_width(), global.get_scr_height());
 
 	// end step
 	ImGui::End();

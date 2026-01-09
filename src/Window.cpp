@@ -1,17 +1,31 @@
 
 #include "Window.h"
+#include "Globals.h"
 #include <iostream> 
 
-// window size 
+// global instance reference
+extern Globals global;
+
+// framebuffer size callback
 static void framebuffer_size_callback(GLFWwindow*, int w, int h) {
 	glViewport(0, 0, w, h);
 }
 
+// window size callback
+static void window_size_callback(GLFWwindow*, int w, int h) {
+	global.set_scr_width(w);
+	global.set_scr_height(h);
 
-bool Window::create(int w, int h, const char* title) {
+	global.dirtyScreen = true;
+}
+
+
+bool Window::create(int w, int h, const char* title, Globals gb) {
 	if (!glfwInit()) {
 		return false;
 	}
+
+	//global = gb;
 
 	// establishing openGL version 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -30,6 +44,8 @@ bool Window::create(int w, int h, const char* title) {
 
 	glfwMakeContextCurrent(m_window);
 	glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
+	glfwSetWindowSizeCallback(m_window, window_size_callback);
+	
 	return true; 
 
 }

@@ -9,7 +9,7 @@
 static Window window; 
 static Renderer renderer; 
 static UI ui; 
-static Globals global;
+Globals global;
 static CanvasManager canvasManager;
 
 static int SCR_WIDTH = 1280;
@@ -19,7 +19,7 @@ static int SCR_HEIGHT = 720;
 // create the window 
 bool App::init() {
 
-	if (!window.create(SCR_WIDTH, SCR_HEIGHT, "Capstone")) {
+	if (!window.create(SCR_WIDTH, SCR_HEIGHT, "Capstone", global)) {
 		return false; 
 	}
 

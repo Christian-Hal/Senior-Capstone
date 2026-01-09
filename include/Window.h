@@ -1,16 +1,17 @@
 
 #pragma once 
 #include <glfw/glfw3.h>
+#include "Globals.h"
 
 class Window {
 
 public:
-	bool create(int width, int height, const char* title);
+	bool create(int width, int height, const char* title, Globals global);
 	void pollEvents(); 
 	void swapBuffers();
 	bool shouldClose() const; 
 	GLFWwindow* handle() const; 
-	void destroy(); 
+	void destroy();  
 
 private:
 	GLFWwindow* m_window = nullptr;

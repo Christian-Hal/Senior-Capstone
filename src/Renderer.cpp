@@ -43,8 +43,8 @@ void main(){
 )";
 
 
-// making an instances of classes
-static Globals global;
+// global instance reference
+extern Globals global;
 
 // Framebuffer Settings
 int fbWidth = 0, fbHeight = 0;
@@ -172,7 +172,7 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 // 
 bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 {
-	global = g_inst;
+	//global = g_inst;
 
 	// fb size equal to user input x and y 
 	fbWidth = global.get_canvas_x();
@@ -265,9 +265,10 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 	if (canvasManager.hasActive())
 	{
 		// if the active canvas has chaneged then recreate the vbo/vao
-		if (canvasManager.canvasChange) {
+		if (canvasManager.canvasChange || global.dirtyScreen) {
 			createCanvasQuad(canvasManager.getActive());
 			canvasManager.canvasChange = false;
+			global.dirtyScreen = false;
 		}
 
 		renderCanvas(canvasManager.getActive());
