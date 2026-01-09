@@ -276,9 +276,19 @@ void Renderer::getFrameData(CanvasManager& canvasManager)
 	{
 		return;
 	}
+	const Color* pixelValues = canvasManager.getActive().getData();
+	
+	std::vector<Color> pixels(saveWidth * saveHeight);
+	std::memcpy(pixels.data(), pixelValues, saveWidth * saveHeight * sizeof(Color));
 
+	for (int y = 0; y < saveHeight / 2; y++) {
+    	int opposite = saveHeight - y - 1;
+    	for (int x = 0; x < saveWidth; x++) {
+        	std::swap(pixels[y * saveWidth + x], pixels[opposite * saveWidth + x]);
+    	}
+	}
 	// read the pixels in the canvas and write them to a png
-	stbi_write_png("output.png", saveWidth, saveHeight, 4, canvasManager.getActive().getData(), saveWidth * 4);
+	stbi_write_png("output.png", saveWidth, saveHeight, 4, pixels.data(), saveWidth * 4);
 }
 
 

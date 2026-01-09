@@ -8,6 +8,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include <iostream>
+#include <string>
 
 // variables to store info for UI declared up here 
 /// display size
@@ -37,6 +38,8 @@ static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 // storing time for user input 
 static double lastFrame = 0.0;
 
+// for storing the number of layers
+int numLayers = 1;
 
 static Globals global;
 
@@ -203,7 +206,31 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 		ImGui::Text("file is open");
 		ImGui::Text("file size is: ");
 		ImGui::Text("%dx%d", canvasManager.getActive().getWidth(), canvasManager.getActive().getHeight());
+		
+		// Create the layer buttons
+		if(ImGui::Button("New Layer")){
+			// increase the number of layers by 1
+			numLayers++;
+		}
+		// 
+		if(ImGui::Button("Remove Layer")){
+			if(numLayers > 1){
+				// decrease the number of layers by 1
+				numLayers--;
+				// call a function that adds a layer
+				
+			}
+		}
+
+		for(int i = 0; i < numLayers; i++){
+			std::string buttonName = "Canvas Layer " + std::to_string(i);
+			if(ImGui::Button(buttonName.c_str())){
+				// call function that adds a layer
+				std::cout << "new layer selected" << std::endl;
+			}
+		}
 	}
+
 
 	// end step
 	RightSize = ImGui::GetWindowWidth();
