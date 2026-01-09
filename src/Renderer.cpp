@@ -107,16 +107,25 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 
 	Canvas& curCanvas = activeCanvasManager.getActive();
 	
+	float centerX = global.get_scr_width() * 0.5f;
+	float centerY = global.get_scr_height() * 0.5f;
+	float cW = curCanvas.getWidth() * 0.5;
+	float cH = curCanvas.getHeight() * 0.5;
 
+	float canvasL = centerX - cW;
+	float canvasR = centerY - cH;
 
-	int x = static_cast<int>(xpos);
-	int y = static_cast<int>(ypos);
+	float relX = xpos - canvasL;
+	float relY = ypos - canvasR;
+
+	if (relX < 0 || relX >= curCanvas.getWidth() || relY < 0 || relY >= curCanvas.getHeight())
+		return;
 
 	
-	y = curCanvas.getHeight() - 1 - y;
-	
-	curCanvas.setPixel(x, y, ui.getColor());
-	
+	std::cout << "x,y" << xpos << ", " << ypos << std::endl;
+
+	int x = static_cast<int>(relX);
+	int y = static_cast<int>(curCanvas.getHeight() - 1 - static_cast<int>(relY));
 	
 
 }
