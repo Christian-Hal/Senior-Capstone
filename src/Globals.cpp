@@ -16,3 +16,6 @@ int Globals::get_canvas_y() { return canvas_y; }
 
 int Globals::get_scr_width() { return SCR_WIDTH; }
 int Globals::get_scr_height() { return SCR_HEIGHT; }
+
+//static Renderer* activeRenderer = nullptr;
+

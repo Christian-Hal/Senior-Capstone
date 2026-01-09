@@ -29,8 +29,8 @@ static bool showPanels = true;
 static GLFWwindow* windowStorage;
 
 // the init canvas values are displayed in the text boxes
-static int canvasWidth = 0;
-static int canvasHeight = 0;
+static int canvasWidth = 1920;
+static int canvasHeight = 1080;
 
 // RBGA values for the color wheel 
 static float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -41,16 +41,17 @@ static double lastFrame = 0.0;
 // for storing the number of layers
 int numLayers = 1;
 
+// temp 
+int UI::brushSize = 1;
+
+
+
+
 static Globals global;
 
 // state for draw erase button 
-enum Mode {
-	DRAW,
-	ERASE
-};
+static UI::CursorMode cursorMode = UI::CursorMode::Draw; 
 
-
-static Mode drawState = DRAW;
 static Renderer renderer;
 
 
@@ -65,6 +66,12 @@ Color UI::getColor()
 
 	return c;
 }
+
+// cursor mode getter 
+UI::CursorMode UI::getCursorMode() const {
+	return cursorMode;
+}
+
 
 
 // UI initialization 
@@ -157,20 +164,22 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 
 	/////// add widgets here ///////
 	//ImGui::Text("TopSize = %d", TopSize); // <- here for debug
+	// 
 	// draw / erase buttons
-	if (drawState == DRAW) {
+	if (getCursorMode() == UI::CursorMode::Draw) {
 		ImGui::Text("State: Draw");
 	}
-	else {
+
+	else if (getCursorMode() == UI::CursorMode::Erase) {
 		ImGui::Text("State: Erase");
 	}
 
 	if (ImGui::Button("Draw")) {
-		drawState = DRAW;
+		cursorMode = UI::CursorMode::Draw;
 	}
 
 	if (ImGui::Button("Erase")) {
-		drawState = ERASE;
+		cursorMode = UI::CursorMode::Erase;
 	}
 
 	// Save button
@@ -185,6 +194,9 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGuiColorEditFlags_AlphaBar;
 
 	ImGui::ColorPicker4("", color, flags);
+
+	// brush size slider 
+	ImGui::SliderInt("Brush Size", &brushSize, 1, 2000);
 
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
@@ -255,8 +267,8 @@ void UI::drawBottomPanel(CanvasManager& canvasManager) {
 // canvas size popup 
 void UI::drawPopup(CanvasManager& canvasManager)
 {
-	static int temp_w = 0;
-	static int temp_h = 0;
+	static int temp_w = 1920;
+	static int temp_h = 1080;
 
 	if (showPopup) {
 		ImGui::OpenPopup("New Canvas");
@@ -273,6 +285,7 @@ void UI::drawPopup(CanvasManager& canvasManager)
 
 			// create the new canvas
 			canvasManager.createCanvas(temp_w, temp_h);
+
 
 			showPopup = false;
 

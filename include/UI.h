@@ -14,10 +14,21 @@ public:
 	void shutdown();
 	Color getColor();
 	void drawPopup(CanvasManager& canvasManager);
+	static int brushSize; 
+
+	// enum 
+	enum class CursorMode {
+		Draw,
+		Erase
+	};
+
+	CursorMode getCursorMode() const;
 
 private:
 	void drawLeftPanel(CanvasManager& canvasManager);
 	void drawRightPanel(CanvasManager& canvasManager);
 	void drawTopPanel(CanvasManager& canvasManager);
 	void drawBottomPanel(CanvasManager& canvasManager);
+
+	
 };
