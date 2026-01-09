@@ -179,29 +179,6 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	// --------------------------------- Old Shaders and VAO/VBO for gunters drawing code ---------------------------------
-	// compiles the shaders
-	//unsigned int oldVertexShader = compileShader(GL_VERTEX_SHADER, oldVertexShaderSource);
-	//unsigned int oldFragmentShader = compileShader(GL_FRAGMENT_SHADER, oldFragmentShaderSource);
-
-	//// creates the shader program and attatches the shaders
-	//oldShaderProgram = glCreateProgram();
-	//glAttachShader(oldShaderProgram, oldVertexShader);
-	//glAttachShader(oldShaderProgram, oldFragmentShader);
-	//glLinkProgram(oldShaderProgram);
-
-	//// removes the unneeded shader data
-	//glDeleteShader(oldVertexShader);
-	//glDeleteShader(oldFragmentShader);
-
-	//glGenVertexArrays(1, &lineVAO);
-	//glGenBuffers(1, &lineVBO);
-
-	//glBindVertexArray(lineVAO);
-	//glBindBuffer(GL_ARRAY_BUFFER, lineVBO);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0); // x,y,z
-	//glEnableVertexAttribArray(0);
-	//glBindVertexArray(0);
 
 	// --- Framebuffer Setup ---
 	Renderer::createFramebuffer(fbWidth, fbHeight);

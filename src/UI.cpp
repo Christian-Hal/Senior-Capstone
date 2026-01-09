@@ -51,11 +51,6 @@ static Mode drawState = DRAW;
 static Renderer renderer;
 
 
-//struct ColorI
-//{
-//	uint8_t r, g, b, a;
-//};
-
 Color UI::getColor()
 {
 	Color c = {
@@ -67,19 +62,6 @@ Color UI::getColor()
 
 	return c;
 }
-
-//int UI::getColor()
-//{
-//	int returnCol[4] = {
-//		static_cast<int>(color[0] * 255.0f),
-//		static_cast<int>(color[1] * 255.0f),
-//		static_cast<int>(color[2] * 255.0f),
-//		static_cast<int>(color[3] * 255.0f)
-//	};
-//
-//	return returnCol[4];
-//}
-
 
 
 // UI initialization 
