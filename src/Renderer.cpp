@@ -42,24 +42,6 @@ void main(){
 }
 )";
 
-// OLD SHADER CODE
-//static const char* oldVertexShaderSource = R"(
-//#version 330 core 
-//layout (location = 0) in vec3 aPos;
-//
-//void main(){
-//	gl_Position = vec4(aPos, 1.0);
-//}
-//)";
-//
-//static const char* oldFragmentShaderSource = R"(
-//#version 330 core 
-//out vec4 FragColor; 
-//
-//void main(){
-//	FragColor = vec4(1.0, 0.5, 0.2, 1.0);
-//}
-//)";
 
 // making an instances of classes
 static Globals global;
@@ -73,6 +55,10 @@ unsigned int oldShaderProgram = 0;
 static Renderer* activeRenderer = nullptr;
 static CanvasManager activeCanvasManager;
 static UI ui;
+
+static bool hasLastPos = false;
+static int lastX = 0;
+static int lastY = 0;
 
 
 
@@ -90,8 +76,10 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 		if (action == GLFW_PRESS)
 			activeRenderer->isDrawing = true;
 		else if (action == GLFW_RELEASE)
+		{
 			activeRenderer->isDrawing = false;
-
+			hasLastPos = false;
+		}
 	}
 
 	
@@ -127,17 +115,37 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int x = static_cast<int>(relX);
 	int y = static_cast<int>(curCanvas.getHeight() - 1 - static_cast<int>(relY));
 	
-	// actually drawing HERE
-	switch (ui.getCursorMode()) {
-	case UI::CursorMode::Draw:
-		curCanvas.setPixel(x, y, ui.getColor());
-		break;
-	case UI::CursorMode::Erase:
-		// NOTE need to change to { 0, 0, 0, 0 } when layers are added 
-		curCanvas.setPixel(x, y, { 255, 255, 255, 255 });
-		break;
+	if (!hasLastPos)
+	{
+		lastX = x;
+		lastY = y;
+		hasLastPos = true;
+		return;
 	}
 
+	int dx = x - lastX;
+	int dy = y - lastY;
+	int steps = std::max(abs(dx), abs(dy));
+
+	for (int i = 0; i <= steps; i++)
+	{
+		int px = lastX + dx * i / steps;
+		int py = lastY + dy * i / steps;
+
+
+		// actually drawing HERE
+		switch (ui.getCursorMode()) {
+		case UI::CursorMode::Draw:
+			curCanvas.setPixel(px, py, ui.getColor());
+			break;
+		case UI::CursorMode::Erase:
+			// NOTE need to change to { 0, 0, 0, 0 } when layers are added 
+			curCanvas.setPixel(px, py, { 255, 255, 255, 255 });
+			break;
+		}
+	}
+	lastX = x;
+	lastY = y;
 }
 
 
