@@ -15,6 +15,7 @@
 #include "CanvasManager.h"
 #include "UI.h"
 #include <iostream>
+#include <algorithm>
 #include <vector>
 
 // shader sources 
@@ -106,9 +107,8 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	float relX = xpos - canvasL;
 	float relY = ypos - canvasR;
 
-	if (relX < 0 || relX >= curCanvas.getWidth() || relY < 0 || relY >= curCanvas.getHeight())
-		return;
-
+	//if (relX < 0 || relX >= curCanvas.getWidth() || relY < 0 || relY >= curCanvas.getHeight())
+	//	return;
 	
 	std::cout << "x,y" << xpos << ", " << ypos << std::endl;
 

@@ -257,7 +257,6 @@ void UI::drawBottomPanel(CanvasManager& canvasManager) {
 	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
-	ImGui::Text("%dx%d", global.get_scr_width(), global.get_scr_height());
 
 	// end step
 	ImGui::End();
