@@ -41,13 +41,8 @@ static double lastFrame = 0.0;
 // temp 
 int UI::brushSize = 1;
 
-<<<<<<< Updated upstream
 // global instance reference
 extern Globals global;
-=======
-
-static Globals global;
->>>>>>> Stashed changes
 
 // state for draw erase button 
 static UI::CursorMode cursorMode = UI::CursorMode::Draw; 
