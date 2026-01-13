@@ -110,7 +110,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	//if (relX < 0 || relX >= curCanvas.getWidth() || relY < 0 || relY >= curCanvas.getHeight())
 	//	return;
 	
-	std::cout << "x,y" << xpos << ", " << ypos << std::endl;
+	//std::cout << "x,y" << xpos << ", " << ypos << std::endl;
 
 	int x = static_cast<int>(relX);
 	int y = static_cast<int>(curCanvas.getHeight() - 1 - static_cast<int>(relY));
@@ -140,7 +140,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 			break;
 		case UI::CursorMode::Erase:
 			// NOTE need to change to { 0, 0, 0, 0 } when layers are added 
-			curCanvas.setPixel(px, py, { 255, 255, 255, 255 });
+			curCanvas.setPixel(px, py, { 0, 0, 0, 0 });
 			break;
 		}
 	}

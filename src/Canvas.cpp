@@ -14,6 +14,7 @@ Canvas::Canvas(int w, int h) : width(w), height(h), numLayers(2), curLayer(1), p
 // canvas size methods
 int Canvas::getWidth() const { return width; }
 int Canvas::getHeight() const { return height; }
+
 // layer number method
 int Canvas::getNumLayers() const { return numLayers; }
 int Canvas::getCurLayer() const { return curLayer; }
@@ -21,6 +22,8 @@ int Canvas::getCurLayer() const { return curLayer; }
 const Color* Canvas::getData() const {
     return pixels.data(); 
 }
+
+
 
 // pixel manipulation
 void Canvas::setPixel(int x, int y, const Color& color)
@@ -64,6 +67,8 @@ Color& Canvas::getPixel(int x, int y) const
     return const_cast<Color&>(pixels[y * width + x]);
 }
 
+
+
 bool operator==(const Color& c2, const Color& c1)
 {
     return (c1.r == c2.r) && (c1.g == c2.g) && (c1.b == c2.b)  && (c1.a == c2.a);
@@ -74,12 +79,15 @@ bool operator!=(const Color& c2, const Color& c1)
     return (c1.r != c2.r) || (c1.g != c2.g) || (c1.b != c2.b)  || (c1.a != c2.a);
 }
 
+
 // adds a layer to layerData
 void Canvas::createLayer(){
     numLayers++;
     layerData.push_back(std::vector<Color>(width * height, emptyColor));
     curLayer = numLayers - 1;
 }
+
+
 
 // removes a layer from layerData and removes the pixel values on that layer
 // [][][] There are some issues with the eraser and background when removing layers [][][]
@@ -110,6 +118,8 @@ void Canvas::removeLayer(){
         // make sure pixel is correct
     }
 }
+
+
 
 void Canvas::selectLayer(int layerNum){
     curLayer = layerNum;
