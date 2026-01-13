@@ -211,8 +211,6 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	if (canvasManager.hasActive())
 	{
 		// save the active canvas for later use
-		Canvas curCanvas = canvasManager.getActive();
-
 		ImGui::Text("file is open");
 		ImGui::Text("file size is: ");
 		ImGui::Text("%dx%d", canvasManager.getActive().getWidth(), canvasManager.getActive().getHeight());
@@ -220,23 +218,24 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 		// Create the layer buttons
 		if(ImGui::Button("New Layer")){
 			// increase the number of layers by 1
-			curCanvas.createLayer();
+			canvasManager.getActive().createLayer();
 		}
 		// remove a layer button 
 		
 		if(ImGui::Button("Remove Layer")){
-			if(curCanvas.getNumLayers() > 1){
+			if(canvasManager.getActive().getNumLayers() > 2){
 				// decrease the number of layers by 1
-				curCanvas.removeLayer();				
+				canvasManager.getActive().removeLayer();				
 			}
 		}
 
-		for(int i = 0; i < curCanvas.getNumLayers(); i++){
+		for(int i = 1; i < canvasManager.getActive().getNumLayers(); i++){
 			std::string buttonName = "Canvas Layer " + std::to_string(i);
 			if(ImGui::Button(buttonName.c_str())){
-				curCanvas.selectLayer(i);
+				canvasManager.getActive().selectLayer(i);
 			}
 		}
+		ImGui::Text("Current canvas: %d", canvasManager.getActive().getCurLayer());
 	}
 
 

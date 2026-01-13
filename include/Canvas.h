@@ -18,6 +18,7 @@ class Canvas {
         int getWidth() const;
         int getHeight() const;
         int getNumLayers() const;
+        int getCurLayer() const;
         const Color* getData() const;
         
         // pixel manipulation
