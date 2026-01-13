@@ -54,6 +54,8 @@ void Canvas::setPixel(int x, int y, const Color& color)
     }
 }
 
+
+
 // the const on this one makes it so that the original can't be changed
 // it makes it read only
 Color& Canvas::getPixel(int x, int y) const

@@ -63,6 +63,8 @@ static int lastY = 0;
 
 
 
+
+
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
 	// if no renderer    or imgui wants the mouse
@@ -92,6 +94,8 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse		or the file is not open
 	if (!activeRenderer || !activeRenderer->isDrawing || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())
 		return;
+
+	
 
 
 	Canvas& curCanvas = activeCanvasManager.getActive();
@@ -174,6 +178,8 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 {
 	//global = g_inst;
 
+	
+
 	// fb size equal to user input x and y 
 	fbWidth = global.get_canvas_x();
 	fbHeight = global.get_canvas_y();
@@ -182,6 +188,11 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 		std::cerr << "Failed to initialize GLAD\n";
 		return false;
 	}
+
+	// enable blening to allow alpha functionality 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
 
 	// ----- Shaders -----
 	// compiles the shaders
@@ -209,6 +220,8 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 
 	// --- Framebuffer Setup ---
 	Renderer::createFramebuffer(fbWidth, fbHeight);
+
+	
 
 
 	activeRenderer = this;
@@ -258,7 +271,7 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 	activeCanvasManager = canvasManager;
 
 	// clears the screen
-	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+	glClearColor(1.0f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// render the active canvas
@@ -393,6 +406,8 @@ void Renderer::renderCanvas(const Canvas& canvas)
 {
 	////// if no active canvas then don't do any of this
 	////// will give the effect of a "main screen" when no file is open
+
+
 
 	// uplaod the canvas to the texture
 	uploadTexture(canvas);
