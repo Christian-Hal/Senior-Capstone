@@ -101,27 +101,28 @@ Color& Canvas::getPixel(int x, int y) const
 // adds a layer to layerData
 void Canvas::createLayer(){
     numLayers++;
-    layerData.push_back(std::vector<Color>(width * height, emptyColor));
-    curLayer = numLayers - 1;
+    layerData.insert(layerData.begin() + curLayer + 1, std::vector<Color>(width * height, emptyColor));
+    curLayer = curLayer + 1;
 }
 
 
 
 // removes a layer from layerData and removes the pixel values on that layer
-// [][][] There are some issues with the eraser and background when removing layers [][][]
 void Canvas::removeLayer(){
-    // do not remove layers if ther is only one layer
+    // do not remove layers if there is only one layer
     if(numLayers > 2){
-        
-        // we need to reiterate through each value for each layer to
-        // make sure pixel is correct        
+        // when removing a layer we need to iterate through through every pixel 
         for(int i = 0; i < pixels.size(); i++){
-            if(layerData[curLayer][i] == pixels[i] && pixels[i].a == 255){
-                for(int j = 0; j < numLayers; j++){  
-                    if(j != curLayer && layerData[j][i].a == 255){
-                        pixels[i] = layerData[j][i];  
-                    }
+            // if the pixel value is not transparent
+            if(pixels[i].a != 0 || layerData[curLayer][i].a ){
+                // place a transparent pixel at i
+                layerData[curLayer][i] = {0,0,0,0};
+                // calculate what pixel will be with the new empty value
+                Color col = layerData[0][i];
+                for(int j = 0; j < numLayers; j++){
+                    col = col * layerData[j][i];
                 }
+                pixels[i] = col;
             }
         }
         layerData.erase(layerData.begin()+curLayer);
