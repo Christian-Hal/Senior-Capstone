@@ -23,6 +23,40 @@ const Color* Canvas::getData() const {
     return pixels.data(); 
 }
 
+// Overloading operations
+bool operator==(const Color& c2, const Color& c1)
+{
+    return (c1.r == c2.r) && (c1.g == c2.g) && (c1.b == c2.b)  && (c1.a == c2.a);
+}
+
+bool operator!=(const Color& c2, const Color& c1)
+{
+    return (c1.r != c2.r) || (c1.g != c2.g) || (c1.b != c2.b)  || (c1.a != c2.a);
+}
+
+// new 
+
+Color operator*(const Color& c2, const Color& c1){
+    
+    // Normalize
+    float a1 = c1.a / 255.0f;
+    float a2 = c2.a / 255.0f;
+
+    // Output alpha
+    float outA = a1 + a2 * (1.0f - a1);
+
+    if (outA == 0.0f)
+        return {0, 0, 0, 0};
+
+    // blending function
+    // C = (C1 * a1 + C2 * a2 * (1 - a1)) / outA
+    float r = (c1.r * a1 + c2.r * a2 * (1.0f - a1)) / outA;
+    float g = (c1.g * a1 + c2.g * a2 * (1.0f - a1)) / outA;
+    float b = (c1.b * a1 + c2.b * a2 * (1.0f - a1)) / outA;
+
+    return {static_cast<unsigned char>(r), static_cast<unsigned char>(g), static_cast<unsigned char>(b), static_cast<unsigned char>(outA * 255.0f)};
+}
+
 
 
 // pixel manipulation
@@ -32,26 +66,20 @@ void Canvas::setPixel(int x, int y, const Color& color)
     if (x < 0 || x >= width || y < 0 || y >= height) {
         return;
     }
-    
-    // checks to see if there are any values in layers above whos
-    // values are visible
-    bool isVisible = true;
-    for(int i = curLayer; i < numLayers; i++){
-        if(layerData[i][y * width + x].a != 0){
-            if(curLayer != i){
-                isVisible = false;
-            }
-        }
-    }
-
+    // fit the color into the layerData vector so it can be accessed later
     layerData[curLayer][y * width + x] = color;
+
+    // initialize the background color for later use in the for loop
+    Color col = layerData[0][y * width + x];
+    for(int i = 1; i < numLayers; i++){ 
+        col = col * layerData[i][y * width + x];
+    }
     
     // formula that lets us keep it as a sizable, flat vector 
     // flat vectors are easier to handle memory wise so it
     //      ends up being better than a 2D vector / matrix
-    if(isVisible){
-        pixels[y * width + x] = color;
-    }
+    pixels[y * width + x] = col;
+    
 }
 
 
@@ -67,18 +95,6 @@ Color& Canvas::getPixel(int x, int y) const
     }
 
     return const_cast<Color&>(pixels[y * width + x]);
-}
-
-
-
-bool operator==(const Color& c2, const Color& c1)
-{
-    return (c1.r == c2.r) && (c1.g == c2.g) && (c1.b == c2.b)  && (c1.a == c2.a);
-}
-
-bool operator!=(const Color& c2, const Color& c1)
-{
-    return (c1.r != c2.r) || (c1.g != c2.g) || (c1.b != c2.b)  || (c1.a != c2.a);
 }
 
 
@@ -100,9 +116,9 @@ void Canvas::removeLayer(){
         // we need to reiterate through each value for each layer to
         // make sure pixel is correct        
         for(int i = 0; i < pixels.size(); i++){
-            if(layerData[curLayer][i] == pixels[i] && pixels[i].a != 0){
+            if(layerData[curLayer][i] == pixels[i] && pixels[i].a == 255){
                 for(int j = 0; j < numLayers; j++){  
-                    if(j != curLayer && layerData[j][i].a != 0){
+                    if(j != curLayer && layerData[j][i].a == 255){
                         pixels[i] = layerData[j][i];  
                     }
                 }
