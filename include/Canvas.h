@@ -2,6 +2,7 @@
 #pragma once
 #include <vector>
 #include <iostream>
+#include <string>
 
 struct Color {
     unsigned char r, g, b, a;
@@ -12,7 +13,7 @@ class Canvas {
     public:
         // constructor
         Canvas();
-        Canvas(int w, int h);
+        Canvas(int w, int h, std::string name);
 
         // getter methods
         int getWidth() const;
@@ -20,6 +21,9 @@ class Canvas {
         int getNumLayers() const;
         int getCurLayer() const;
         const Color* getData() const;
+
+        const std::string getName() const;
+        void setName(std::string name);
         
         // pixel manipulation
         void setPixel(int x, int y, const Color& color);
@@ -32,6 +36,7 @@ class Canvas {
 
     private:
         // canvas settings
+        std::string canvasName;
         int width, height;
         int numLayers;
         int curLayer;

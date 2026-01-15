@@ -2,13 +2,24 @@
 #include "Canvas.h"
 #include <vector>
 #include <iostream>
+#include <string>
 
 // constructor
-Canvas::Canvas() : width(0), height(0), numLayers(0), curLayer(0), pixels(), layerData() {}
-Canvas::Canvas(int w, int h) : width(w), height(h), numLayers(2), curLayer(1), pixels(w * h, backgroundColor) 
+Canvas::Canvas() : width(0), height(0), numLayers(0), curLayer(0), pixels(), layerData(), canvasName("") {}
+Canvas::Canvas(int w, int h, std::string name) : width(w), height(h), numLayers(2), curLayer(1), pixels(w * h, backgroundColor), canvasName(name) 
 {
     layerData.push_back(pixels);
     layerData.push_back(std::vector<Color>(w * h, emptyColor));
+}
+
+// canvas name methods
+const std::string Canvas::getName() const
+{
+    return canvasName;
+}
+void Canvas::setName(std::string name)
+{
+    canvasName = name;
 }
 
 // canvas size methods

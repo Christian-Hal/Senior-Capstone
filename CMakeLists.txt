@@ -18,11 +18,13 @@ add_library(imgui
     external/imgui/imgui_widgets.cpp
     external/imgui/backends/imgui_impl_glfw.cpp
     external/imgui/backends/imgui_impl_opengl3.cpp
+    external/imgui/misc/cpp/imgui_stdlib.cpp 
  )
 
 target_include_directories(imgui PUBLIC
     external/imgui
     external/imgui/backends
+    external/imgui/misc/cpp
 )
 
 target_link_libraries(imgui PUBLIC glfw)

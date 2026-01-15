@@ -30,5 +30,5 @@ private:
 	void drawTopPanel(CanvasManager& canvasManager);
 	void drawBottomPanel(CanvasManager& canvasManager);
 
-	
+	void drawCanvasTabs(CanvasManager& canvasManager);
 };

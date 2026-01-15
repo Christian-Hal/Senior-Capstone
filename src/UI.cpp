@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include <imgui_stdlib.h>
 
 #include <iostream>
 #include <string>
@@ -125,6 +126,10 @@ void UI::draw(CanvasManager& canvasManager)
 
 	// top panel drawn regardless of input 
 	drawTopPanel(canvasManager);
+
+	// canvas tab panel shown only if more than 1 canvas is open
+	drawCanvasTabs(canvasManager);
+
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -254,6 +259,33 @@ void UI::drawBottomPanel(CanvasManager& canvasManager) {
 	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
+	ImGui::Text("Canvases Open: %d", canvasManager.getNumCanvases());
+
+	// end step
+	ImGui::End();
+}
+
+void UI::drawCanvasTabs(CanvasManager& canvasManager)
+{
+	// initialize the panel
+	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, TopSize), ImGuiCond_Always);
+	ImGui::Begin("Canvas Tabs Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+
+	// add widgets
+
+	const std::vector<Canvas>& canvases = canvasManager.getOpenCanvases();
+
+	for(int i = 0; i < canvasManager.getNumCanvases(); i++)
+	{
+		std::string buttonName = canvases[i].getName();
+
+		if(ImGui::Button(buttonName.c_str())){
+			canvasManager.setActiveCanvas(i);
+		}
+
+		ImGui::SameLine();
+	}
 
 	// end step
 	ImGui::End();
@@ -264,6 +296,7 @@ void UI::drawPopup(CanvasManager& canvasManager)
 {
 	static int temp_w = 1920;
 	static int temp_h = 1080;
+	static std::string temp_n = "Untitled";
 
 	if (showPopup) {
 		ImGui::OpenPopup("New Canvas");
@@ -272,17 +305,18 @@ void UI::drawPopup(CanvasManager& canvasManager)
 	// specifying canvas size 
 	if (ImGui::BeginPopupModal("New Canvas", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-		ImGui::InputInt("Width", &temp_w);
-		ImGui::InputInt("Height", &temp_h);
+		ImGui::InputInt("Width:", &temp_w);
+		ImGui::InputInt("Height:", &temp_h);
+		ImGui::InputText("File Name:", &temp_n);
 
 		// if user creates a canvas, remove the popup 
 		if (ImGui::Button("Create")) {
 
 			// create the new canvas
-			canvasManager.createCanvas(temp_w, temp_h);
-
+			canvasManager.createCanvas(temp_w, temp_h, temp_n);
 
 			showPopup = false;
+			temp_n = "Untitled";
 
 			ImGui::CloseCurrentPopup();
 		}
@@ -291,6 +325,7 @@ void UI::drawPopup(CanvasManager& canvasManager)
 
 		if (ImGui::Button("Cancel")) {
 			showPopup = false;
+			temp_n = "Untitled";
 			ImGui::CloseCurrentPopup();
 		}
 
