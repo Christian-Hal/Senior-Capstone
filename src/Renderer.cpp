@@ -17,6 +17,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <string>
 
 // shader sources 
 static const char* vertexShaderSource = R"(
@@ -316,7 +317,8 @@ void Renderer::getFrameData(CanvasManager& canvasManager)
     	}
 	}
 	// read the pixels in the canvas and write them to a png
-	stbi_write_png("output.png", saveWidth, saveHeight, 4, pixels.data(), saveWidth * 4);
+	std::string imageName = canvasManager.getActive().getName();
+	stbi_write_png((imageName + ".png").c_str(), saveWidth, saveHeight, 4, pixels.data(), saveWidth * 4);
 }
 
 

@@ -128,7 +128,7 @@ void UI::draw(CanvasManager& canvasManager)
 	drawTopPanel(canvasManager);
 
 	// canvas tab panel shown only if more than 1 canvas is open
-	drawCanvasTabs(canvasManager);
+	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
 
 
 	ImGui::Render();
@@ -259,7 +259,6 @@ void UI::drawBottomPanel(CanvasManager& canvasManager) {
 	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
-	ImGui::Text("Canvases Open: %d", canvasManager.getNumCanvases());
 
 	// end step
 	ImGui::End();
