@@ -7,8 +7,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+
 
 #include "Renderer.h"
 #include "Globals.h"
@@ -291,35 +290,6 @@ void Renderer::shutdown() {
 }
 
 
-
-void Renderer::getFrameData(CanvasManager& canvasManager)
-{
-	// get the width and height of the canvas
-	int saveWidth = canvasManager.getActive().getWidth();
-	int saveHeight = canvasManager.getActive().getHeight();
-
-	// checks if the buffer size is not 0
-	// when the app first runs these two are initialized to zero as a sort of "file is not open"
-	// so this is an easy fix until we get the state system fully set up and can know when a file is or isnt open
-	if (saveWidth == 0 || saveHeight == 0)
-	{
-		return;
-	}
-	const Color* pixelValues = canvasManager.getActive().getData();
-	
-	std::vector<Color> pixels(saveWidth * saveHeight);
-	std::memcpy(pixels.data(), pixelValues, saveWidth * saveHeight * sizeof(Color));
-
-	for (int y = 0; y < saveHeight / 2; y++) {
-    	int opposite = saveHeight - y - 1;
-    	for (int x = 0; x < saveWidth; x++) {
-        	std::swap(pixels[y * saveWidth + x], pixels[opposite * saveWidth + x]);
-    	}
-	}
-	// read the pixels in the canvas and write them to a png
-	std::string imageName = canvasManager.getActive().getName();
-	stbi_write_png((imageName + ".png").c_str(), saveWidth, saveHeight, 4, pixels.data(), saveWidth * 4);
-}
 
 
 

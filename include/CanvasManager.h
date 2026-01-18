@@ -18,6 +18,10 @@ class CanvasManager {
         // set to false when something acknolwedges the change
         bool canvasChange = false;
 
+        // saving 
+        void getFrameData(CanvasManager& canvasManagerA);
+
+
     private:
         // list of active canvases for when we implement the tab system
         std::vector<Canvas> canvases;
