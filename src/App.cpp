@@ -6,6 +6,8 @@
 #include "Globals.h"
 #include "CanvasManager.h"
 
+
+// define our static objects and vars 
 static Window window; 
 static Renderer renderer; 
 static UI ui; 
@@ -16,9 +18,16 @@ static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
 
 
-// create the window 
+/*
+Creates the window according to 
+
+Initializes the UI 
+
+@return true if window was successfully created 
+*/
 bool App::init() {
 
+	
 	if (!window.create(SCR_WIDTH, SCR_HEIGHT, "Capstone", global)) {
 		return false; 
 	}
@@ -29,7 +38,6 @@ bool App::init() {
 
 	ui.init(window.handle(), renderer, global);
 
-	//canvasManager.createCanvas(800, 600);
 	global.set_scr_width(SCR_WIDTH);
 	global.set_scr_height(SCR_HEIGHT);
 
@@ -38,7 +46,12 @@ bool App::init() {
 }
 
 
-// run the render loop 
+
+/*
+Runs the render loop.
+
+Begin frame, draw UI, end frame
+*/
 void App::run() 
 {
 	// on start up
@@ -57,7 +70,10 @@ void App::run()
 }
 
 
-// shut down the ui, renderer, and the window 
+
+/*
+Shut down the UI, renderer, and the window.
+*/
 void App::shutdown() {
 	ui.shutdown();
 	renderer.shutdown();

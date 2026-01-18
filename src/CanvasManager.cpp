@@ -54,3 +54,4 @@ void CanvasManager::setActiveCanvas(int index)
     active = &canvases[index];
     canvasChange = true;
 }
+

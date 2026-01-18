@@ -1,8 +1,6 @@
 
-// render loop lives here 
 
 #pragma once 
-
 
 class App {
 
@@ -11,3 +9,5 @@ public:
 	void run();
 	void shutdown();
 };
+
+
