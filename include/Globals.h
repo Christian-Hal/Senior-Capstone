@@ -1,5 +1,6 @@
 
 #pragma once
+
 #include "Canvas.h"
 
 class Globals {

@@ -1,7 +1,11 @@
 
 #pragma once 
-#include <glfw/glfw3.h>
+
+
 #include "Globals.h"
+
+#include <glfw/glfw3.h>
+
 
 class Window {
 

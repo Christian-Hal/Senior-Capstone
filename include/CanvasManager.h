@@ -1,6 +1,8 @@
 
 #pragma once
+
 #include "Canvas.h"
+
 #include <vector>
 #include <string>
 

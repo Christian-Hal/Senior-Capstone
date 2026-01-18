@@ -1,8 +1,11 @@
 
-#include "Canvas.h"
+
 #include <vector>
 #include <iostream>
 #include <string>
+
+#include "Canvas.h"
+
 
 // constructor
 Canvas::Canvas() : width(0), height(0), numLayers(0), curLayer(0), pixels(), layerData(), canvasName("") {}

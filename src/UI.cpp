@@ -1,5 +1,9 @@
 
 #include "UI.h"
+
+#include <iostream>
+#include <string>
+
 #include "Globals.h"
 #include "CanvasManager.h"
 
@@ -8,8 +12,6 @@
 #include "imgui_impl_opengl3.h"
 #include <imgui_stdlib.h>
 
-#include <iostream>
-#include <string>
 
 // variables to store info for UI declared up here 
 /// display size

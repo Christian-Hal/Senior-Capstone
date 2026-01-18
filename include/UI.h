@@ -1,10 +1,14 @@
 
 #pragma once 
-#include <glfw/glfw3.h>
+
+
 #include "Renderer.h"
 #include "CanvasManager.h"
 #include "Canvas.h"
 #include "Globals.h"
+
+#include <glfw/glfw3.h>
+
 
 class UI {
 

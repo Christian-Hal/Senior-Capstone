@@ -1,9 +1,15 @@
 
 #pragma once 
-#include <glfw/glfw3.h>
+
+#include <vector>
+
+
 #include "Globals.h"
 #include "CanvasManager.h"
-#include <vector>
+
+#include <glfw/glfw3.h>
+
+
 
 class Renderer {
 

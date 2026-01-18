@@ -1,22 +1,21 @@
 ﻿
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
-
-
-
+#include <glad/glad.h> // glad must break include style uniquely 
 #include "Renderer.h"
-#include "Globals.h"
-#include "CanvasManager.h"
-#include "UI.h"
+
 #include <iostream>
 #include <algorithm>
 #include <vector>
 #include <string>
+
+#include "Globals.h"
+#include "CanvasManager.h"
+#include "UI.h"
+
+#include <glm/glm.hpp>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 
 // shader sources 
 static const char* vertexShaderSource = R"(

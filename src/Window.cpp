@@ -1,7 +1,9 @@
 
 #include "Window.h"
-#include "Globals.h"
+
 #include <iostream> 
+
+#include "Globals.h"
 
 // global instance reference
 extern Globals global;
