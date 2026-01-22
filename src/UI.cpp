@@ -12,6 +12,63 @@
 #include "imgui_impl_opengl3.h"
 #include <imgui_stdlib.h>
 
+// ----- ImGui code to load and access images in directory -----
+
+#define _CRT_SECURE_NO_WARNINGS
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+// Simple helper function to load an image into a OpenGL texture with common settings
+bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
+{
+	// Load from file
+	int image_width = 0;
+	int image_height = 0;
+	unsigned char* image_data = stbi_load_from_memory((const unsigned char*)data, (int)data_size, &image_width, &image_height, NULL, 4);
+	if (image_data == NULL)
+		return false;
+
+	// Create a OpenGL texture identifier
+	GLuint image_texture;
+	glGenTextures(1, &image_texture);
+	glBindTexture(GL_TEXTURE_2D, image_texture);
+
+	// Setup filtering parameters for display
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// Upload pixels into texture
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+	stbi_image_free(image_data);
+
+	*out_texture = image_texture;
+	*out_width = image_width;
+	*out_height = image_height;
+
+	return true;
+}
+
+// Open and read a file, then forward to LoadTextureFromMemory()
+bool LoadTextureFromFile(const char* file_name, GLuint* out_texture, int* out_width, int* out_height)
+{
+	FILE* f = fopen(file_name, "rb");
+	if (f == NULL)
+		return false;
+	fseek(f, 0, SEEK_END);
+	size_t file_size = (size_t)ftell(f);
+	if (file_size == -1)
+		return false;
+	fseek(f, 0, SEEK_SET);
+	void* file_data = IM_ALLOC(file_size);
+	fread(file_data, 1, file_size, f);
+	fclose(f);
+	bool ret = LoadTextureFromMemory(file_data, file_size, out_texture, out_width, out_height);
+	IM_FREE(file_data);
+	return ret;
+}
+
+
 
 // variables to store info for UI declared up here 
 /// display size
@@ -41,8 +98,16 @@ static float color[4] = { .0f, .0f, .0f, 1.0f };
 // storing time for user input 
 static double lastFrame = 0.0;
 
-// temp 
+// brush size 
 int UI::brushSize = 1;
+
+// mouse flags 
+static ImGuiConfigFlags cursorFlags; 
+
+// for imported images  
+int my_image_width = 0; 
+int my_image_height = 0; 
+GLuint my_image_texture = 0; 
 
 // global instance reference
 extern Globals global;
@@ -95,9 +160,14 @@ void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330 core");
 
+	// extra precaution to make cursor stay consistent 
+	// might need to be removed depending on cursor UI interaction 
+	cursorFlags = ImGuiConfigFlags_NoMouseCursorChange;
+
 	// storing window for user input 
 	windowStorage = window;
 }
+
 
 
 // NOTE: called in render loop 
@@ -141,6 +211,14 @@ void UI::draw(CanvasManager& canvasManager)
 
 	// canvas tab panel shown only if more than 1 canvas is open
 	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
+
+	// hide the default cursor 
+	ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+	// establishing custom cursor 
+	ImTextureID cursorTexture = LoadTextureFromFile("/src/tempCursor.png", &my_image_texture, &my_image_width, &my_image_height);
+	ImVec2 cursorPos = ImGui::GetMousePos();
+	//ImGui::GetForegroundDrawList()->AddImage(cursorTexture, cursorPos, ImVec2(cursorPos.x + 16, cursorPos.y + 16)); 
+	ImGui::GetForegroundDrawList()->AddCircle(ImGui::GetMousePos(), 10, IM_COL32(255, 0, 0, 255));
 
 
 	ImGui::Render();
