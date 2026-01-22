@@ -208,7 +208,7 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::ColorPicker4("", color, flags);
 
 	// brush size slider 
-	ImGui::SliderInt("Brush Size", &brushSize, 1, 2000);
+	ImGui::SliderInt("Brush Size", &brushSize, 1, 100);
 
 	// end step
 	LeftSize = ImGui::GetWindowWidth();

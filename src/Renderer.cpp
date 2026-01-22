@@ -130,6 +130,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int steps = std::max(abs(dx), abs(dy));
 
 	// grab and compute the brush info
+	int size = ui.brushSize;
 	int w = activeBrush.width;
 	int h = activeBrush.height;
 	std::vector<int> mask = activeBrush.mask;
@@ -146,11 +147,18 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 			for (int c = 0; c < w; c++)
 			{
 				// if the current index is part of the pattern
-				if (mask[r * w + c] == 1) {
-					// calculate the pixel x and y on the canvas then multiply by the mask value at the point
-					int px = (lastX + dx * i / steps + (c - brushCenter_x));
-					int py = (lastY + dy * i / steps + (r - brushCenter_y));
-					curCanvas.setPixel(px, py, ui.getColor());
+				if (mask[r * w + c] == 1) 
+				{
+					for (int sy = 0; sy < size; sy++)
+					{
+						for (int sx = 0; sx < size; sx++)
+						{
+							// calculate the pixel x and y on the canvas
+							int px = (lastX + dx * i / steps) + (c - brushCenter_x) + sx;
+                        	int py = (lastY + dy * i / steps) + (r - brushCenter_y) + sy;
+							curCanvas.setPixel(px, py, ui.getColor());
+						}
+					}
 				}
 			}
 		}
