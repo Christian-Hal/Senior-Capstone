@@ -10,6 +10,7 @@
 #include "Globals.h"
 #include "CanvasManager.h"
 #include "UI.h"
+#include "BrushTool.h"
 
 #include <glm/glm.hpp>
 #include "imgui.h"
@@ -60,6 +61,7 @@ static bool hasLastPos = false;
 static int lastX = 0;
 static int lastY = 0;
 
+static BrushTool activeBrush = BrushTool(5, 5);
 
 
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
@@ -119,6 +121,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 		lastX = x;
 		lastY = y;
 		hasLastPos = true;
+		curCanvas.setPixel(x, y, ui.getColor());
 		return;
 	}
 
@@ -126,21 +129,30 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int dy = y - lastY;
 	int steps = std::max(abs(dx), abs(dy));
 
+	// grab and compute the brush info
+	int w = activeBrush.width;
+	int h = activeBrush.height;
+	std::vector<int> mask = activeBrush.mask;
+
+	int brushCenter_x = w / 2;
+	int brushCenter_y = h / 2;
+
 	for (int i = 0; i <= steps; i++)
 	{
-		int px = lastX + dx * i / steps;
-		int py = lastY + dy * i / steps;
-
-
-		// actually drawing HERE
-		switch (ui.getCursorMode()) {
-		case UI::CursorMode::Draw:
-			curCanvas.setPixel(px, py, ui.getColor());
-			break;
-		case UI::CursorMode::Erase:
-			// NOTE need to change to { 0, 0, 0, 0 } when layers are added 
-			curCanvas.setPixel(px, py, { 0, 0, 0, 0 });
-			break;
+		// for reach row in the brush mask
+		for (int r = 0; r < h; r++)
+		{
+			// for each column in the brush mask
+			for (int c = 0; c < w; c++)
+			{
+				// if the current index is part of the pattern
+				if (mask[r * w + c] == 1) {
+					// calculate the pixel x and y on the canvas then multiply by the mask value at the point
+					int px = (lastX + dx * i / steps + (c - brushCenter_x));
+					int py = (lastY + dy * i / steps + (r - brushCenter_y));
+					curCanvas.setPixel(px, py, ui.getColor());
+				}
+			}
 		}
 	}
 	lastX = x;

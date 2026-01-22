@@ -30,17 +30,16 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC glfw)
 
 # Executable
-add_executable(${PROJECT_NAME} 
-    src/main.cpp
-    src/App.cpp 
-    src/Window.cpp 
-    src/Renderer.cpp 
-    src/UI.cpp 
-    src/Globals.cpp
-    src/Canvas.cpp
-    src/CanvasManager.cpp
-    src/Zooming.cpp 
-    src/InputManager.cpp)
+file(GLOB_RECURSE PROJECT_SOURCES
+     CONFIGURE_DEPENDS
+     src/*.cpp
+     src/*.c
+)
+
+add_executable(${PROJECT_NAME})
+
+target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCES})
+
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     external/glm

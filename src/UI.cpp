@@ -55,14 +55,24 @@ static Renderer renderer;
 
 Color UI::getColor()
 {
-	Color c = {
-		static_cast<unsigned char>(color[0] * 255.0f),
-		static_cast<unsigned char>(color[1] * 255.0f),
-		static_cast<unsigned char>(color[2] * 255.0f),
-		static_cast<unsigned char>(color[3] * 255.0f)
-	};
-
-	return c;
+	if (cursorMode == UI::CursorMode::Draw) 
+	{	
+		return Color{
+			static_cast<unsigned char>(color[0] * 255.0f),
+			static_cast<unsigned char>(color[1] * 255.0f),
+			static_cast<unsigned char>(color[2] * 255.0f),
+			static_cast<unsigned char>(color[3] * 255.0f)
+		};
+	}
+	if (cursorMode == UI::CursorMode::Erase) 
+	{	
+		return Color{
+			static_cast<unsigned char>(0.f),
+			static_cast<unsigned char>(0.f),
+			static_cast<unsigned char>(0.f),
+			static_cast<unsigned char>(0.f)
+		};
+	}
 }
 
 // cursor mode getter 
