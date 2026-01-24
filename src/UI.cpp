@@ -160,10 +160,6 @@ void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330 core");
 
-	// extra precaution to make cursor stay consistent 
-	// might need to be removed depending on cursor UI interaction 
-	cursorFlags = ImGuiConfigFlags_NoMouseCursorChange;
-
 	// storing window for user input 
 	windowStorage = window;
 }
@@ -212,13 +208,21 @@ void UI::draw(CanvasManager& canvasManager)
 	// canvas tab panel shown only if more than 1 canvas is open
 	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
 
-	// hide the default cursor 
-	ImGui::SetMouseCursor(ImGuiMouseCursor_None);
-	// establishing custom cursor 
-	ImTextureID cursorTexture = LoadTextureFromFile("/src/tempCursor.png", &my_image_texture, &my_image_width, &my_image_height);
-	ImVec2 cursorPos = ImGui::GetMousePos();
-	//ImGui::GetForegroundDrawList()->AddImage(cursorTexture, cursorPos, ImVec2(cursorPos.x + 16, cursorPos.y + 16)); 
-	ImGui::GetForegroundDrawList()->AddCircle(ImGui::GetMousePos(), 10, IM_COL32(255, 0, 0, 255));
+	if (!(ImGui::IsAnyItemHovered())) {
+		// hide the default cursor 
+		ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+		// establishing custom cursor 
+		ImTextureID cursorTexture = LoadTextureFromFile("/src/tempCursor.png", &my_image_texture, &my_image_width, &my_image_height);
+		ImVec2 cursorPos = ImGui::GetMousePos();
+
+		// commented line below is custom image cursor implementation. It is almost working, needs some adjustments. 
+		//ImGui::GetForegroundDrawList()->AddImage(cursorTexture, cursorPos, ImVec2(cursorPos.x + 16, cursorPos.y + 16)); 
+
+		ImGui::GetForegroundDrawList()->AddCircle(ImGui::GetMousePos(), 10, IM_COL32(255, 0, 0, 255));
+
+	}
+
+	
 
 
 	ImGui::Render();
