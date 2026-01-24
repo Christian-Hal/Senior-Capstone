@@ -208,7 +208,7 @@ void UI::draw(CanvasManager& canvasManager)
 	// canvas tab panel shown only if more than 1 canvas is open
 	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
 
-	if (!(ImGui::IsAnyItemHovered())) {
+	if (!(ImGui::GetIO().WantCaptureMouse) && canvasManager.getNumCanvases() > 0) {
 		// hide the default cursor 
 		ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 		// establishing custom cursor 
