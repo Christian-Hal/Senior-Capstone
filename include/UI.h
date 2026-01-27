@@ -17,7 +17,6 @@ public:
 	void draw(CanvasManager& canvasManager);
 	void shutdown();
 	Color getColor();
-	Color getOpacity(); 
 	void drawPopup(CanvasManager& canvasManager);
 	static int brushSize; 
 

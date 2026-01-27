@@ -96,6 +96,8 @@ void Canvas::setPixel(int x, int y, const Color& color)
     
 }
 
+
+
 void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 
     // making sure (x, y) is within bounds 

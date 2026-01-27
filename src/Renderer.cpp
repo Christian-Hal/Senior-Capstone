@@ -11,7 +11,9 @@
 #include "CanvasManager.h"
 #include "UI.h"
 #include "BrushTool.h"
+
 #include "DefaultBrush.h"
+#include "BrushTipLoader.h"
 
 #include <glm/glm.hpp>
 #include "imgui.h"
@@ -113,10 +115,6 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	float relX = xpos - canvasL;
 	float relY = ypos - canvasR;
 
-	//if (relX < 0 || relX >= curCanvas.getWidth() || relY < 0 || relY >= curCanvas.getHeight())
-	//	return;
-
-	//std::cout << "x,y" << xpos << ", " << ypos << std::endl;
 
 	int x = static_cast<int>(relX);
 	int y = static_cast<int>(curCanvas.getHeight() - 1 - static_cast<int>(relY));
@@ -203,8 +201,11 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 		return false;
 	}
 
-	// temp 
-	DefaultBrush::configure(activeBrush); 
+	// ----- Where the brush tip is created (currently) -----
+	if (!BrushTipLoader::loadBrushTipFromPNG("BrushTipTest.png", activeBrush)) {
+		DefaultBrush::configure(activeBrush);
+
+	}
 
 
 	// ----- Shaders -----
