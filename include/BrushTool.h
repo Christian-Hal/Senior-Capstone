@@ -1,15 +1,47 @@
+
 #pragma once
 
 #include <vector>
+#include <string>
 
+
+
+/*
+    BrushTool is all the components which make up a brush.
+
+    width, height: resolution of the brush tip.
+    alpha[]: grayscale opacity values.
+
+    This describes HOW drawing should happen.
+
+*/
 class BrushTool{
 
-    public:
-    // brush tip settings
-    std::vector<int> mask; // defines the 'shape' of the brush
-    int width, height;
+public:
+
+    // ----- Brush tip settings ----- 
+        // note: from Krita these are the gbr/png files
+
+    int width;  // width of brush tip bitmap
+    int height; // height of brush tip bitmap 
+
+    std::vector<float> alpha; // grayscale bitmap alpha values
+
+    // ----- Brush parameter metadata -----
+        // note: these can be default or imported from Krita 
+
+    float spacing;  // distance between stamps
+    float hardness; // 0->soft 1->hard
+    float opacity;  // overall brush opacity 
+    bool rotateWithStroke; // brush rotation 
+    std::string name; // tool name 
+
 
     // constructor
     BrushTool(int w, int h);
+
+
+    // sample the alpha value at a pixel 
+    float sampleAlpha(int x, int y) const;
 
 };

@@ -133,7 +133,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int size = ui.brushSize;
 	int w = activeBrush.width;
 	int h = activeBrush.height;
-	std::vector<int> mask = activeBrush.mask;
+	std::vector<float> alpha = activeBrush.alpha;
 
 	int brushCenter_x = w / 2;
 	int brushCenter_y = h / 2;
@@ -147,7 +147,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 			for (int c = 0; c < w; c++)
 			{
 				// if the current index is part of the pattern
-				if (mask[r * w + c] == 1) 
+				if (alpha[r * w + c] == 1) 
 				{
 					for (int sy = 0; sy < size; sy++)
 					{
