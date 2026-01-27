@@ -48,7 +48,7 @@ bool operator!=(const Color& c2, const Color& c1)
     return (c1.r != c2.r) || (c1.g != c2.g) || (c1.b != c2.b)  || (c1.a != c2.a);
 }
 
-// new 
+
 
 Color operator*(const Color& c2, const Color& c1){
     
@@ -94,6 +94,44 @@ void Canvas::setPixel(int x, int y, const Color& color)
     //      ends up being better than a 2D vector / matrix
     pixels[y * width + x] = col;
     
+}
+
+
+
+void Canvas::blendPixel(int x, int y, const Color& srcColor, float brushAlpha) {
+
+    // making sure (x, y) is within bounds 
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+        return;
+    }
+
+    int index = y * width + x; 
+
+    // read existing color 
+    Color& layerColor = layerData[curLayer][index];
+
+    // convert normalized alpha into 0-255 rep 
+    unsigned char nonNormalizedAlpha = static_cast<unsigned char>(srcColor.a * brushAlpha);
+
+    // blend source over destination 
+    Color out = srcColor * layerColor;
+
+    layerData[curLayer][index] = out; 
+
+
+    // initialize the background color for later use in the for loop
+    Color col = layerData[0][index];
+
+    for (int i = 1; i < numLayers; i++) {
+
+        col = col * layerData[i][index];
+    }
+
+    // formula that lets us keep it as a sizable, flat vector 
+    // flat vectors are easier to handle memory wise so it
+    //      ends up being better than a 2D vector / matrix
+    pixels[index] = col;
+
 }
 
 

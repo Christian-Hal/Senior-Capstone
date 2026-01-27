@@ -28,6 +28,7 @@ class Canvas {
         
         // pixel manipulation
         void setPixel(int x, int y, const Color& color);
+        void blendPixel(int x, int y, const Color& srcColor, float brushAlpha);
         Color& getPixel(int x, int y) const;
 
         // layer manipulation

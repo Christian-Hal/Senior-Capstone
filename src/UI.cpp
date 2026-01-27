@@ -140,6 +140,7 @@ Color UI::getColor()
 	}
 }
 
+
 // cursor mode getter 
 UI::CursorMode UI::getCursorMode() const {
 	return cursorMode;

@@ -25,7 +25,7 @@ public:
     int width;  // width of brush tip bitmap
     int height; // height of brush tip bitmap 
 
-    std::vector<float> alpha; // grayscale bitmap alpha values
+    std::vector<float> tipAlpha; // grayscale bitmap alpha values
 
     // ----- Brush parameter metadata -----
         // note: these can be default or imported from Krita 

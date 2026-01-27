@@ -13,7 +13,7 @@ BrushTool::BrushTool(int w, int h)
 	: width(w),
 	height(h),
 	alpha(w* h, 1.0f),
-	spacing(0.25f),
+	spacing(0.25f), // 25% of brush size is the distance between stamps
 	hardness(1.0f),
 	opacity(1.0f),
 	rotateWithStroke(false)
