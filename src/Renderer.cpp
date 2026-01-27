@@ -11,6 +11,7 @@
 #include "CanvasManager.h"
 #include "UI.h"
 #include "BrushTool.h"
+#include "DefaultBrush.h"
 
 #include <glm/glm.hpp>
 #include "imgui.h"
@@ -61,7 +62,8 @@ static bool hasLastPos = false;
 static int lastX = 0;
 static int lastY = 0;
 
-static BrushTool activeBrush = BrushTool(5, 5);
+// temp changed 
+static BrushTool activeBrush(32, 32);
 
 
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
@@ -89,6 +91,9 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 
 
 
+/*
+	Where the main drawing logic currently lies 
+*/
 static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse		or the file is not open
 	if (!activeRenderer || !activeRenderer->isDrawing || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())
@@ -96,7 +101,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 
 
 	Canvas& curCanvas = activeCanvasManager.getActive();
-	
+
 	float centerX = global.get_scr_width() * 0.5f;
 	float centerY = global.get_scr_height() * 0.5f;
 	float cW = curCanvas.getWidth() * 0.5;
@@ -110,12 +115,12 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 
 	//if (relX < 0 || relX >= curCanvas.getWidth() || relY < 0 || relY >= curCanvas.getHeight())
 	//	return;
-	
+
 	//std::cout << "x,y" << xpos << ", " << ypos << std::endl;
 
 	int x = static_cast<int>(relX);
 	int y = static_cast<int>(curCanvas.getHeight() - 1 - static_cast<int>(relY));
-	
+
 	if (!hasLastPos)
 	{
 		lastX = x;
@@ -131,38 +136,28 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 
 	// grab and compute the brush info
 	int size = ui.brushSize;
-	int w = activeBrush.width;
-	int h = activeBrush.height;
-	std::vector<float> alpha = activeBrush.alpha;
+	int w = activeBrush.tipWidth;
+	int h = activeBrush.tipHeight;
+	std::vector<float> alpha = activeBrush.tipAlpha;
 
 	int brushCenter_x = w / 2;
 	int brushCenter_y = h / 2;
 
-	for (int i = 0; i <= steps; i++)
-	{
-		// for reach row in the brush mask
-		for (int r = 0; r < h; r++)
-		{
-			// for each column in the brush mask
-			for (int c = 0; c < w; c++)
-			{
-				// if the current index is part of the pattern
-				if (alpha[r * w + c] == 1) 
-				{
-					for (int sy = 0; sy < size; sy++)
-					{
-						for (int sx = 0; sx < size; sx++)
-						{
-							// calculate the pixel x and y on the canvas
-							int px = (lastX + dx * i / steps) + (c - brushCenter_x) + sx;
-                        	int py = (lastY + dy * i / steps) + (r - brushCenter_y) + sy;
-							curCanvas.setPixel(px, py, ui.getColor());
-						}
-					}
-				}
-			}
+	for (int r = 0; r < h; r++) {
+		for (int c = 0; c < w; c++) {
+			float a = alpha[r * w + c];
+			if (a <= 0.0f)
+				continue; // skip fully transparent pixels 
+
+			// calculate pixel position on the canvas relative to mouse 
+			int px = x + (c - brushCenter_x);
+			int py = y + (r - brushCenter_y);
+
+			curCanvas.setPixel(px, py, ui.getColor()); 
 		}
+
 	}
+
 	lastX = x;
 	lastY = y;
 }
@@ -201,6 +196,10 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 		std::cerr << "Failed to initialize GLAD\n";
 		return false;
 	}
+
+	// temp 
+	DefaultBrush::configure(activeBrush); 
+
 
 	// ----- Shaders -----
 	// compiles the shaders
@@ -310,10 +309,11 @@ void Renderer::shutdown() {
 
 
 
-
-
-///// Canvas Rendering functions
-// creates the VAO and VBO for the canvas quad
+/*
+	Canvas Rendering functions.
+	
+	Creates the VAO and VBO for the canvas quad.
+*/
 void Renderer::createCanvasQuad(const Canvas& canvas)
 {
 	// get screen center

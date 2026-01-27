@@ -10,9 +10,9 @@
 	giving a fully opaque brush 
 */
 BrushTool::BrushTool(int w, int h)
-	: width(w),
-	height(h),
-	alpha(w* h, 1.0f),
+	: tipWidth(w),
+	tipHeight(h),
+	tipAlpha(w* h, 1.0f),
 	spacing(0.25f), // 25% of brush size is the distance between stamps
 	hardness(1.0f),
 	opacity(1.0f),
@@ -29,8 +29,8 @@ BrushTool::BrushTool(int w, int h)
 	return 0.0, doing nothing. 
 */
 float BrushTool::sampleAlpha(int x, int y) const {
-	if (x < 0 || y < 0 || x >= width || y >= height)
+	if (x < 0 || y < 0 || x >= tipWidth || y >= tipHeight)
 		return 0.0f;
 
-	return alpha[y * width + x]; 
+	return tipAlpha[y * tipWidth + x]; 
 }

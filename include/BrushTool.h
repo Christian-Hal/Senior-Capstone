@@ -22,8 +22,8 @@ public:
     // ----- Brush tip settings ----- 
         // note: from Krita these are the gbr/png files
 
-    int width;  // width of brush tip bitmap
-    int height; // height of brush tip bitmap 
+    int tipWidth;  // width of brush tip bitmap
+    int tipHeight; // height of brush tip bitmap 
 
     std::vector<float> tipAlpha; // grayscale bitmap alpha values
 

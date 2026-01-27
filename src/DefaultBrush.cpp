@@ -1,7 +1,10 @@
 
-#include "BrushTool.h"
 #include <cmath> 
 #include <algorithm>
+
+#include "DefaultBrush.h"
+
+
 
 /*
 	Generating a basic soft round brush tip 
@@ -11,14 +14,15 @@
 
 	It produces alpha data
 */
-void generateDefaultRoundBrush(BrushTool& brush) {
+void DefaultBrush::configure(BrushTool& brush) {
 
 	float cx = (brush.tipWidth - 1) * 0.5f; 
 	float cy = (brush.tipHeight - 1) * 0.5f;
+	float radius = std::min(cx, cy); 
 
 	for (int y = 0; y < brush.tipHeight; ++y) {
 		
-		for (int x = 0; x < brush.tipWidth) {
+		for (int x = 0; x < brush.tipWidth; ++x) {
 
 			float dx = x - cx; 
 			float dy = y - cy; 
