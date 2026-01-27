@@ -96,12 +96,15 @@ void Canvas::setPixel(int x, int y, const Color& color)
     
 }
 
-
-
-void Canvas::blendPixel(int x, int y, const Color& srcColor, float brushAlpha) {
+void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 
     // making sure (x, y) is within bounds 
     if (x < 0 || x >= width || y < 0 || y >= height) {
+        return;
+    }
+
+    if (src.a == 255) {
+        this->setPixel(x, y, src);
         return;
     }
 
@@ -111,7 +114,8 @@ void Canvas::blendPixel(int x, int y, const Color& srcColor, float brushAlpha) {
     Color& layerColor = layerData[curLayer][index];
 
     // convert normalized alpha into 0-255 rep 
-    unsigned char nonNormalizedAlpha = static_cast<unsigned char>(srcColor.a * brushAlpha);
+    Color srcColor = src;
+    srcColor.a = static_cast<unsigned char>(srcColor.a * brushAlpha);
 
     // blend source over destination 
     Color out = srcColor * layerColor;

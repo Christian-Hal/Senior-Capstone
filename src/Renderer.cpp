@@ -143,19 +143,25 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int brushCenter_x = w / 2;
 	int brushCenter_y = h / 2;
 
-	for (int r = 0; r < h; r++) {
-		for (int c = 0; c < w; c++) {
-			float a = alpha[r * w + c];
-			if (a <= 0.0f)
-				continue; // skip fully transparent pixels 
-
-			// calculate pixel position on the canvas relative to mouse 
-			int px = x + (c - brushCenter_x);
-			int py = y + (r - brushCenter_y);
-
-			curCanvas.setPixel(px, py, ui.getColor()); 
+	for (int i = 0; i <= steps; i++)
+	{
+		// for reach row in the brush mask
+		for (int r = 0; r < h; r++)
+		{
+			// for each column in the brush mask
+			for (int c = 0; c < w; c++)
+			{
+				// if the current index is part of the pattern
+				float a = alpha[r * w + c];
+				if (a > 0.0f) 
+				{
+					// calculate the pixel x and y on the canvas
+					int px = (lastX + dx * i / steps) + (c - brushCenter_x);
+					int py = (lastY + dy * i / steps) + (r - brushCenter_y);
+					curCanvas.setPixel(px, py, ui.getColor());
+				}
+			}
 		}
-
 	}
 
 	lastX = x;
