@@ -213,13 +213,18 @@ void UI::draw(CanvasManager& canvasManager)
 		// hide the default cursor 
 		ImGui::SetMouseCursor(ImGuiMouseCursor_None);
 		// establishing custom cursor 
-		ImTextureID cursorTexture = LoadTextureFromFile("/src/tempCursor.png", &my_image_texture, &my_image_width, &my_image_height);
+
+		if (my_image_texture == 0) {
+			LoadTextureFromFile("BrushTipTest.png", &my_image_texture, &my_image_width, &my_image_height);
+		}
+
 		ImVec2 cursorPos = ImGui::GetMousePos();
+		ImTextureID textureID = (ImTextureID)(static_cast<uintptr_t>(my_image_texture));
 
 		// commented line below is custom image cursor implementation. It is almost working, needs some adjustments. 
-		//ImGui::GetForegroundDrawList()->AddImage(cursorTexture, cursorPos, ImVec2(cursorPos.x + 16, cursorPos.y + 16)); 
+		ImGui::GetForegroundDrawList()->AddImage(textureID, cursorPos, ImVec2(cursorPos.x + 16, cursorPos.y + 16)); 
 
-		ImGui::GetForegroundDrawList()->AddCircle(ImGui::GetMousePos(), 10, IM_COL32(255, 0, 0, 255));
+		//ImGui::GetForegroundDrawList()->AddCircle(ImGui::GetMousePos(), 10, IM_COL32(255, 0, 0, 255));
 
 	}
 
