@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
+#include <fstream>
 
 #include "BrushManager.h"
 #include "stb_image.h"
@@ -12,9 +13,11 @@ void BrushManager::init()
 {
     activeBrush = new BrushTool(1,1);
 
-    if (!loadBrushTipFromPNG("BrushTipTest.png", *activeBrush)) {
+    if (!loadBrushFromGBR("penis.gbr", *activeBrush)) {
 		configureAsDefault(*activeBrush);
 	}
+
+    brushChange = true;
 }
 
 // active brush stuff
@@ -70,7 +73,54 @@ bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBr
     return true;
 }
 
-bool BrushManager::loadBrushFromGBR(const std::string& path, BrushTool& outBrush) {}
+bool BrushManager::loadBrushFromGBR(const std::string& path, BrushTool& out)
+{
+    std::ifstream file(path, std::ios::binary);
+    if (!file) {
+        std::cerr << "Failed to open file: " << path << "\n";
+        return false;
+    }
+
+    // load in all of the different grb format elements
+    // layout figured out from: https://developer.gimp.org/core/standards/gbr/#header
+    uint32_t header_size        = read_be32(file);  // defines how large the header and name are
+    uint32_t version            = read_be32(file);  // not important
+    out.tipWidth                = read_be32(file);
+    out.tipHeight               = read_be32(file);
+    uint32_t bpp                = read_be32(file);  // how many bytes are in each pixel
+    uint32_t magic              = read_be32(file);  // not important
+    out.spacing                 = read_be32(file);
+
+    // read in the brush name
+    // the header_size is equal to 28 + the name length so we can use that
+    // to figure out the name length and then grab it
+    size_t name_length = (header_size > 28) ? header_size - 28 : 0;
+    std::string name;
+    if (name_length > 0) {
+        name.resize(name_length);
+        file.read(&name[0], name_length);
+    }
+
+    // reading in the pixel data
+    // i do not understand this code super well, the stuff before this is all good though
+    size_t num_pixels = size_t(out.tipWidth) * size_t(out.tipHeight);
+    std::vector<uint8_t> pixels(num_pixels * bpp);
+    file.read(reinterpret_cast<char*>(pixels.data()), pixels.size());
+
+    // Convert to alpha values [0,1]
+    out.tipAlpha.resize(num_pixels);
+    for (size_t i = 0; i < num_pixels; ++i) {
+        if (bpp == 1) { // if just an alpha value
+            out.tipAlpha[i] = pixels[i] / 255.0f;
+        } else if (bpp == 3) {  // if an RGB value
+            out.tipAlpha[i] = (pixels[i*3] + pixels[i*3+1] + pixels[i*3+2]) / (3.0f * 255.0f);
+        } else if (bpp == 4) {  // if an RGBA value
+            out.tipAlpha[i] = pixels[i*4 + 3] / 255.0f;
+        }
+    }
+
+    return true;
+}
 
 void BrushManager::configureAsDefault(BrushTool& brush) {
 
@@ -95,5 +145,17 @@ void BrushManager::configureAsDefault(BrushTool& brush) {
 			brush.tipAlpha[y * brush.tipWidth + x] = std::clamp(alpha, 0.0f, 1.0f); 
 		}
 	}
+}
 
+uint32_t BrushManager::read_be32(std::ifstream& f)
+{
+    // reads in the next 4 bits
+    unsigned char b[4];
+    f.read(reinterpret_cast<char*>(b), 4);
+    
+    // moves them into their correct spots and combines them into a single number
+    return (uint32_t(b[0]) << 24) |
+           (uint32_t(b[1]) << 16) |
+           (uint32_t(b[2]) << 8)  |
+            uint32_t(b[3]);
 }

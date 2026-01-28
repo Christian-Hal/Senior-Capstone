@@ -14,6 +14,7 @@ class BrushManager
     // active brush stuff
     const BrushTool& getActiveBrush();
     void setActiveBrush(int index);
+    bool brushChange = false;
 
     // brush loader methods
     bool loadBrushTipFromPNG(const std::string& path, BrushTool& outBrush);
@@ -28,4 +29,7 @@ class BrushManager
 
     // default functions
     void configureAsDefault(BrushTool& brush);
+
+    // helper functions
+    uint32_t read_be32(std::ifstream& f);
 };

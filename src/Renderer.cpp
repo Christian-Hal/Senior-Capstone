@@ -66,6 +66,7 @@ static int lastY = 0;
 
 // brush manager + brush info
 extern BrushManager brushManager;
+BrushTool activeBrush;
 
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
@@ -132,7 +133,11 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int steps = std::max(abs(dx), abs(dy));
 
 	// grab and compute the brush info
-	const BrushTool activeBrush = brushManager.getActiveBrush();
+	if (brushManager.brushChange == true)
+	{
+		activeBrush = brushManager.getActiveBrush();
+		brushManager.brushChange = false;
+	}
 	int size = ui.brushSize;
 	int w = activeBrush.tipWidth;
 	int h = activeBrush.tipHeight;
@@ -231,11 +236,6 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-
-	// --- Framebuffer Setup ---
-	Renderer::createFramebuffer(fbWidth, fbHeight);
-
-
 	activeRenderer = this;
 	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
 	glfwSetCursorPosCallback(window, cursorPosCallback);
@@ -244,38 +244,6 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 
 	return true;
 }
-
-
-
-// creates the center framebuffer 
-bool Renderer::createFramebuffer(float fbWidth, float fbHeight) {
-
-
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-	glGenTextures(1, &colorTexture);
-	glBindTexture(GL_TEXTURE_2D, colorTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, fbWidth, fbHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glFramebufferTexture2D(
-		GL_FRAMEBUFFER,
-		GL_COLOR_ATTACHMENT0,
-		GL_TEXTURE_2D,
-		colorTexture,
-		0
-	);
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	return true;
-
-}
-
-
 
 //
 void Renderer::beginFrame(CanvasManager& canvasManager)

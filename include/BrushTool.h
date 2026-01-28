@@ -38,6 +38,7 @@ public:
 
     // constructor
     BrushTool(int w, int h);
+    BrushTool();
 
     // sample the alpha value at a pixel 
     float sampleAlpha(int x, int y) const;

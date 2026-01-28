@@ -18,7 +18,6 @@ public:
 	void beginFrame(CanvasManager& canvasManager);
 	void endFrame();
 	void shutdown();
-	bool createFramebuffer(float fbWidth, float fbHeight);
 
 	// canvas rendering functions
 	void createCanvasQuad(const Canvas& canvas);

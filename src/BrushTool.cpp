@@ -9,16 +9,25 @@
 	Default initialized alpha values are all 1.0 
 	giving a fully opaque brush 
 */
-BrushTool::BrushTool(int w, int h)
-	: tipWidth(w),
+BrushTool::BrushTool(int w, int h) :
+	tipWidth(w),
 	tipHeight(h),
 	tipAlpha(w* h, 1.0f),
 	spacing(0.25f), // 25% of brush size is the distance between stamps
 	hardness(1.0f),
 	opacity(1.0f),
 	rotateWithStroke(false)
-{
-} 
+{}
+
+BrushTool::BrushTool() : 
+	tipWidth(0),
+	tipHeight(0),
+	tipAlpha(0, 1.0f),
+	spacing(0.25f), // 25% of brush size is the distance between stamps
+	hardness(1.0f),
+	opacity(1.0f),
+	rotateWithStroke(false)
+{}
 
 
 
