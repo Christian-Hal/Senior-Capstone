@@ -12,8 +12,8 @@
 #include "UI.h"
 #include "BrushTool.h"
 
-#include "DefaultBrush.h"
-#include "BrushTipLoader.h"
+#include "BrushTool.h"
+#include "BrushManager.h"
 
 #include <glm/glm.hpp>
 #include "imgui.h"
@@ -64,9 +64,8 @@ static bool hasLastPos = false;
 static int lastX = 0;
 static int lastY = 0;
 
-// temp changed 
-static BrushTool activeBrush(32, 32);
-
+// brush manager + brush info
+extern BrushManager brushManager;
 
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
@@ -133,6 +132,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int steps = std::max(abs(dx), abs(dy));
 
 	// grab and compute the brush info
+	const BrushTool activeBrush = brushManager.getActiveBrush();
 	int size = ui.brushSize;
 	int w = activeBrush.tipWidth;
 	int h = activeBrush.tipHeight;
@@ -201,11 +201,11 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 		return false;
 	}
 
-	// ----- Where the brush tip is created (currently) -----
+	/*/ ----- Where the brush tip is created (currently) -----
 	if (!BrushTipLoader::loadBrushTipFromPNG("BrushTipTest.png", activeBrush)) {
 		DefaultBrush::configure(activeBrush);
 
-	}
+	} // */
 
 
 	// ----- Shaders -----

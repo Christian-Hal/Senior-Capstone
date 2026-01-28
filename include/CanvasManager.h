@@ -29,7 +29,7 @@ class CanvasManager {
         std::vector<Canvas> canvases;
 
         // pointer to the active canvas
-        Canvas* active = nullptr;
+        Canvas* activeCanvas = nullptr;
         int activeIndex = -1;
 
         // just a helper function to avoid having the same name in multiple files

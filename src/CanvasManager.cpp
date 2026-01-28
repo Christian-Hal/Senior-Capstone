@@ -10,21 +10,21 @@ Canvas& CanvasManager::createCanvas(int width, int height, std::string name)
 {
     std::string fixed_name = checkName(name);
     canvases.emplace_back(Canvas(width, height, fixed_name));
-    active = &canvases.back();
+    activeCanvas = &canvases.back();
 
     canvasChange = true;
 
-    return *active;
+    return *activeCanvas;
 }
 
 Canvas& CanvasManager::getActive()
 {
-    return *active;
+    return *activeCanvas;
 }
 
 bool CanvasManager::hasActive()
 {
-    return active != nullptr;
+    return activeCanvas != nullptr;
 }
 
 int CanvasManager::getNumCanvases()
@@ -55,7 +55,7 @@ void CanvasManager::setActiveCanvas(int index)
 {
     if (index > 0 && index < canvases.size()){}
     
-    active = &canvases[index];
+    activeCanvas = &canvases[index];
     canvasChange = true;
 }
 

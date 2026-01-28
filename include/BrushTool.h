@@ -20,26 +20,24 @@ class BrushTool{
 public:
 
     // ----- Brush tip settings ----- 
-        // note: from Krita these are the gbr/png files
+    // note: from Krita these are the gbr/png files
 
-    int tipWidth;  // width of brush tip bitmap
-    int tipHeight; // height of brush tip bitmap 
+    int tipWidth;                       // width of brush tip bitmap
+    int tipHeight;                      // height of brush tip bitmap 
 
-    std::vector<float> tipAlpha; // grayscale bitmap alpha values
+    std::vector<float> tipAlpha;        // grayscale bitmap alpha values
 
     // ----- Brush parameter metadata -----
-        // note: these can be default or imported from Krita 
+    // note: these can be default or imported from Krita 
 
-    float spacing;  // distance between stamps
-    float hardness; // 0->soft 1->hard
-    float opacity;  // overall brush opacity 
-    bool rotateWithStroke; // brush rotation 
-    std::string name; // tool name 
-
+    float spacing;                      // distance between stamps
+    float hardness;                     // 0->soft 1->hard
+    float opacity;                      // overall brush opacity 
+    bool rotateWithStroke;              // brush rotation 
+    std::string name;                   // tool name 
 
     // constructor
     BrushTool(int w, int h);
-
 
     // sample the alpha value at a pixel 
     float sampleAlpha(int x, int y) const;

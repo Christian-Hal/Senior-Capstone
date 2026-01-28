@@ -6,6 +6,7 @@
 #include "UI.h"
 #include "Globals.h"
 #include "CanvasManager.h"
+#include "BrushManager.h"
 
 
 // define our static objects and vars 
@@ -13,6 +14,7 @@ static Window window;
 static Renderer renderer; 
 static UI ui; 
 Globals global;
+BrushManager brushManager;
 static CanvasManager canvasManager;
 
 static int SCR_WIDTH = 1280;
@@ -37,6 +39,7 @@ bool App::init() {
 		return false; 
 	}
 
+	brushManager.init();
 	ui.init(window.handle(), renderer, global);
 
 	global.set_scr_width(SCR_WIDTH);
