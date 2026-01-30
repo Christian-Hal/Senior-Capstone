@@ -146,22 +146,31 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int brushCenter_x = w / 2;
 	int brushCenter_y = h / 2;
 
+	// for each step between the last position and current position
 	for (int i = 0; i <= steps; i++)
 	{
-		// for reach row in the brush mask
+		// for each row in the brush mask
 		for (int r = 0; r < h; r++)
 		{
+			int baseX = lastX + dx * i / steps - brushCenter_x * size;
+			int baseY = lastY + dy * i / steps - brushCenter_y * size;
 			// for each column in the brush mask
 			for (int c = 0; c < w; c++)
 			{
 				// if the current index is part of the pattern
 				float a = alpha[r * w + c];
-				if (a > 0.0f) 
+				if (a > 0.01f) 
 				{
-					// calculate the pixel x and y on the canvas
-					int px = (lastX + dx * i / steps) + (c - brushCenter_x);
-					int py = (lastY + dy * i / steps) + (r - brushCenter_y);
-					curCanvas.setPixel(px, py, ui.getColor());
+					for (int sy = 0; sy < size; sy++)
+					{
+						for (int sx = 0; sx < size; sx++)
+						{
+							// calculate the pixel x and y on the canvas
+							int px = baseX + c * size + sx;
+                    		int py = baseY + r * size + sy;
+                    		curCanvas.setPixel(px, py, ui.getColor());
+						}
+					}
 				}
 			}
 		}

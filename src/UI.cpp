@@ -215,7 +215,7 @@ void UI::draw(CanvasManager& canvasManager)
 		// establishing custom cursor 
 
 		if (my_image_texture == 0) {
-			LoadTextureFromFile("BrushTipTest.png", &my_image_texture, &my_image_width, &my_image_height);
+			LoadTextureFromFile("tempCursor.png", &my_image_texture, &my_image_width, &my_image_height);
 		}
 
 		ImVec2 cursorPos = ImGui::GetMousePos();
