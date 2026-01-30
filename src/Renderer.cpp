@@ -11,11 +11,13 @@
 #include "CanvasManager.h"
 #include "UI.h"
 #include "BrushTool.h"
-
-#include "BrushTool.h"
 #include "BrushManager.h"
+#include "Zooming.h"
+
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -27,11 +29,13 @@ static const char* vertexShaderSource = R"(
 layout(location=0) in vec2 pos;
 layout(location=1) in vec2 uv;
 
+uniform mat4 u_MVP;
+
 out vec2 TexCoord;
 
 void main(){
     TexCoord = uv;
-    gl_Position = vec4(pos,0,1);
+    gl_Position = u_MVP * vec4(pos,0.0,1.0);
 }
 )";
 
@@ -68,6 +72,13 @@ static int lastY = 0;
 extern BrushManager brushManager;
 BrushTool activeBrush;
 
+
+Camera2d camera;
+static bool isPanning = false;
+static double lastMouseX = 0.0;
+static double lastMouseY = 0.0;
+
+
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
 	// if no renderer    or imgui wants the mouse
@@ -88,36 +99,79 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 		}
 	}
 
-	
+	if (button == GLFW_MOUSE_BUTTON_MIDDLE && !ImGui::GetIO().WantCaptureMouse)
+	{
+		if (action == GLFW_PRESS)
+		{
+			isPanning = true;
+			glfwGetCursorPos(window, &lastMouseX, &lastMouseY);
+		}
+		else if (action == GLFW_RELEASE)
+		{
+			isPanning = false;
+		}
+	}
 }
 
 
 
 /*
-	Where the main drawing logic currently lies 
+	Where the main drawing logic currently lies
 */
 static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse		or the file is not open
-	if (!activeRenderer || !activeRenderer->isDrawing || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())
+	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())
 		return;
 
 
+	if (isPanning)
+	{
+		double dx = xpos - lastMouseX;
+		double dy = ypos - lastMouseY;
+
+		camera.offset.x += (float)dx;
+		camera.offset.y -= (float)dy;
+
+		lastMouseX = xpos;
+		lastMouseY = ypos;
+		return;
+	}
+
+
+	if (!activeRenderer->isDrawing) { return; }
+
 	Canvas& curCanvas = activeCanvasManager.getActive();
 
-	float centerX = global.get_scr_width() * 0.5f;
-	float centerY = global.get_scr_height() * 0.5f;
-	float cW = curCanvas.getWidth() * 0.5;
-	float cH = curCanvas.getHeight() * 0.5;
-
-	float canvasL = centerX - cW;
-	float canvasR = centerY - cH;
-
-	float relX = xpos - canvasL;
-	float relY = ypos - canvasR;
+	float screenX = (float)xpos;
+	float screenY = global.get_scr_height() - (float)ypos;
 
 
-	int x = static_cast<int>(relX);
-	int y = static_cast<int>(curCanvas.getHeight() - 1 - static_cast<int>(relY));
+	glm::vec2 canvasCenter(
+		curCanvas.getWidth() * 0.5f,
+		curCanvas.getHeight() * 0.5f
+	);
+
+	glm::vec2 p = { screenX, screenY };
+
+	p -= camera.offset;
+	p -= canvasCenter;
+	
+	float c = cosf(-camera.rotation);
+	float s = sinf(-camera.rotation);
+
+	p = {
+		p.x * c - p.y * s,
+		p.x * s + p.y * c
+	};
+
+	p /= camera.zoom;
+
+	p += canvasCenter;
+
+
+	int x = (int)p.x;
+	int y = (int)p.y;
+
 
 	if (!hasLastPos)
 	{
@@ -156,7 +210,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 			{
 				// if the current index is part of the pattern
 				float a = alpha[r * w + c];
-				if (a > 0.0f) 
+				if (a > 0.0f)
 				{
 					// calculate the pixel x and y on the canvas
 					int px = (lastX + dx * i / steps) + (c - brushCenter_x);
@@ -171,6 +225,70 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	lastY = y;
 }
 
+
+static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
+{
+	if (ImGui::GetIO().WantCaptureMouse)
+		return;
+
+	// Rotate when holding R
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		camera.rotation += (float)yoffset * 0.05f;
+		return;
+	}
+
+	const float zoomSpeed = 0.1f;
+	float oldZoom = camera.zoom;
+
+	camera.zoom *= (1.0f + (float)yoffset * zoomSpeed);
+	camera.zoom = std::clamp(camera.zoom, 0.1f, 10.0f);
+
+	// Mouse position (screen space)
+	double mx, my;
+	glfwGetCursorPos(window, &mx, &my);
+
+	glm::vec2 mouseScreen(
+		(float)mx,
+		(float)(global.get_scr_height() - my)
+	);
+
+	Canvas& canvas = activeCanvasManager.getActive();
+
+	glm::vec2 canvasCenter(
+		canvas.getWidth() * 0.5f,
+		canvas.getHeight() * 0.5f
+	);
+
+	// --- Build OLD view matrix ---
+	glm::mat4 oldView(1.0f);
+	oldView = glm::translate(oldView, glm::vec3(camera.offset, 0.0f));
+	oldView = glm::translate(oldView, glm::vec3(canvasCenter, 0.0f));
+	oldView = glm::rotate(oldView, camera.rotation, glm::vec3(0, 0, 1));
+	oldView = glm::scale(oldView, glm::vec3(oldZoom, oldZoom, 1.0f));
+	oldView = glm::translate(oldView, glm::vec3(-canvasCenter, 0.0f));
+
+	// Convert mouse to world/canvas space
+	glm::vec4 world =
+		glm::inverse(oldView) * glm::vec4(mouseScreen, 0.0f, 1.0f);
+
+	// --- Build NEW view matrix ---
+	glm::mat4 newView(1.0f);
+	newView = glm::translate(newView, glm::vec3(camera.offset, 0.0f));
+	newView = glm::translate(newView, glm::vec3(canvasCenter, 0.0f));
+	newView = glm::rotate(newView, camera.rotation, glm::vec3(0, 0, 1));
+	newView = glm::scale(newView, glm::vec3(camera.zoom, camera.zoom, 1.0f));
+	newView = glm::translate(newView, glm::vec3(-canvasCenter, 0.0f));
+
+	// Where that world point ends up after zoom
+	glm::vec4 newScreen = newView * world;
+
+	// Offset correction so mouse stays fixed
+	glm::vec2 delta =
+		mouseScreen - glm::vec2(newScreen);
+
+	camera.offset += delta;
+}
 
 
 // compile the vertex and fragment shaders 
@@ -239,6 +357,7 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	activeRenderer = this;
 	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
 	glfwSetCursorPosCallback(window, cursorPosCallback);
+	glfwSetScrollCallback(window, scrollCallBack);
 
 
 
@@ -286,55 +405,42 @@ void Renderer::shutdown() {
 
 /*
 	Canvas Rendering functions.
-	
+
 	Creates the VAO and VBO for the canvas quad.
 */
+
 void Renderer::createCanvasQuad(const Canvas& canvas)
 {
-	// get screen center
-	float centerX = global.get_scr_width() * 0.5f;
-	float centerY = global.get_scr_height() * 0.5f;
-
-	// canvas geometry
-	float cW = canvas.getWidth() * 0.5f;
-	float cH = canvas.getHeight() * 0.5f;
-
-	float screenW = global.get_scr_width();
-	float screenH = global.get_scr_height();
+	float w = (float)canvas.getWidth();
+	float h = (float)canvas.getHeight();
 
 	float quadVerts[] = {
-		// position coords																	// texture coords
-		// this is a formula that takes the Pixel coordinates and converts them to NDC
-		(centerX - cW) / (screenW * 0.5f) - 1.f, (centerY - cH) / (screenH * 0.5f) - 1.f, 	0.f, 0.f,
-		(centerX + cW) / (screenW * 0.5f) - 1.f, (centerY - cH) / (screenH * 0.5f) - 1.f, 	1.f, 0.f,
-		(centerX + cW) / (screenW * 0.5f) - 1.f, (centerY + cH) / (screenH * 0.5f) - 1.f, 	1.f, 1.f,
+		// pos (pixels)     // uv
+		0.f, 0.f,          0.f, 0.f,
+		w,   0.f,          1.f, 0.f,
+		w,   h,            1.f, 1.f,
 
-		(centerX - cW) / (screenW * 0.5f) - 1.f, (centerY - cH) / (screenH * 0.5f) - 1.f, 	0.f, 0.f,
-		(centerX + cW) / (screenW * 0.5f) - 1.f, (centerY + cH) / (screenH * 0.5f) - 1.f, 	1.f, 1.f,
-		(centerX - cW) / (screenW * 0.5f) - 1.f, (centerY + cH) / (screenH * 0.5f) - 1.f, 	0.f, 1.f
+		0.f, 0.f,          0.f, 0.f,
+		w,   h,            1.f, 1.f,
+		0.f, h,            0.f, 1.f
 	};
 
-
-
-	// generate and bind the vbo and vao
 	glGenVertexArrays(1, &vao);
 	glGenBuffers(1, &vbo);
 
 	glBindVertexArray(vao);
-
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
-	//glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 }
+
 
 
 
@@ -343,8 +449,6 @@ void Renderer::uploadTexture(const Canvas& canvas) {
 
 	// sets the active texture
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
-
-	
 
 	// binds the image data to the texture
 	glTexImage2D(
@@ -363,13 +467,41 @@ void Renderer::renderCanvas(const Canvas& canvas)
 	// uplaod the canvas to the texture
 	uploadTexture(canvas);
 
-	// activate the texture and then send it to the shader
+	glm::mat4 projection = glm::ortho(
+		0.0f,
+		(float)global.get_scr_width(),
+		0.0f,
+		(float)global.get_scr_height()
+	);
+
+	glm::vec2 canvasCenter(
+		canvas.getWidth() * 0.5f,
+		canvas.getHeight() * 0.5f
+	);
+
+	glm::mat4 view = glm::mat4(1.0f);
+
+	view = glm::translate(view, glm::vec3(camera.offset, 0.0f));
+	view = glm::translate(view, glm::vec3(canvasCenter, 0.0f));
+	view = glm::rotate(view, camera.rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+	view = glm::scale(view, glm::vec3(camera.zoom, camera.zoom, 1.0f));
+	view = glm::translate(view, glm::vec3(-canvasCenter, 0.0f));	
+
+	glm::mat4 mvp = projection * view;
+
+	glUseProgram(shaderProgram);
+	glUniformMatrix4fv(
+		glGetUniformLocation(shaderProgram, "u_MVP"),
+		1,
+		GL_FALSE,
+		glm::value_ptr(mvp)
+	);
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
 	glUseProgram(shaderProgram);
 	glUniform1i(glGetUniformLocation(shaderProgram, "canvasTex"), 0);
 
-	// render the quad
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindVertexArray(0);
