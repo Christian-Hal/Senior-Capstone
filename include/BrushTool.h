@@ -34,10 +34,10 @@ public:
     float hardness;                     // 0->soft 1->hard
     float opacity;                      // overall brush opacity 
     bool rotateWithStroke;              // brush rotation 
-    std::string name;                   // tool name 
+    std::string brushName;                   // tool name 
 
     // constructor
-    BrushTool(int w, int h);
+    BrushTool(int w, int h, std::string name);
     BrushTool();
 
     // sample the alpha value at a pixel 

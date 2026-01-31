@@ -6,6 +6,7 @@
 
 #include "Globals.h"
 #include "CanvasManager.h"
+#include "BrushManager.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -116,6 +117,9 @@ extern Globals global;
 static UI::CursorMode cursorMode = UI::CursorMode::Draw; 
 
 static Renderer renderer;
+
+// brush manager
+extern BrushManager brushManager;
 
 
 Color UI::getColor()
@@ -297,6 +301,18 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 
 	// brush size slider 
 	ImGui::SliderInt("Brush Size", &brushSize, 1, 100);
+
+	// Displaying loaded brush options
+	const std::vector<BrushTool>& brushes = brushManager.getLoadedBrushes();
+
+	for(int i = 0; i < brushes.size(); i++)
+	{
+		std::string buttonName = brushes[i].brushName;
+
+		if(ImGui::Button(buttonName.c_str())){
+			brushManager.setActiveBrush(i);
+		}
+	}
 
 	// end step
 	LeftSize = ImGui::GetWindowWidth();

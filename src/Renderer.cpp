@@ -91,7 +91,9 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 	
 }
 
-
+// random mouse setting stuff
+int lastDrawnX = 0;
+int lastDrawnY = 0;
 
 /*
 	Where the main drawing logic currently lies 
@@ -141,6 +143,7 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int size = ui.brushSize;
 	int w = activeBrush.tipWidth;
 	int h = activeBrush.tipHeight;
+	int brushSpacing = size * activeBrush.spacing;
 	std::vector<float> alpha = activeBrush.tipAlpha;
 
 	int brushCenter_x = w / 2;
@@ -149,11 +152,16 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	// for each step between the last position and current position
 	for (int i = 0; i <= steps; i++)
 	{
+		int baseX = lastX + dx * i / steps - brushCenter_x * size;
+		int baseY = lastY + dy * i / steps - brushCenter_y * size;
+
+		float distance = sqrt(((lastDrawnX - baseX) * (lastDrawnX - baseX)) +  ((lastDrawnY - baseY) * (lastDrawnY - baseY)));
+		if (distance < brushSpacing)
+			continue;
+
 		// for each row in the brush mask
 		for (int r = 0; r < h; r++)
 		{
-			int baseX = lastX + dx * i / steps - brushCenter_x * size;
-			int baseY = lastY + dy * i / steps - brushCenter_y * size;
 			// for each column in the brush mask
 			for (int c = 0; c < w; c++)
 			{
@@ -168,9 +176,13 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 							// calculate the pixel x and y on the canvas
 							int px = baseX + c * size + sx;
                     		int py = baseY + r * size + sy;
+							
                     		curCanvas.setPixel(px, py, ui.getColor());
 						}
 					}
+
+					lastDrawnX = baseX;
+					lastDrawnY = baseY;
 				}
 			}
 		}
