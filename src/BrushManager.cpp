@@ -25,6 +25,8 @@ void BrushManager::init()
     brushChange = true;
 }
 
+
+
 const std::vector<BrushTool>& BrushManager::getLoadedBrushes()
 {
     return loaded_Brushes;
@@ -36,6 +38,8 @@ const BrushTool& BrushManager::getActiveBrush()
     return *activeBrush;
 }
 
+
+
 void BrushManager::setActiveBrush(int index) 
 {
     if (index > 0 && index < loaded_Brushes.size()){}
@@ -44,12 +48,14 @@ void BrushManager::setActiveBrush(int index)
     brushChange = true;
 }
 
+
+
 // brush loader methods
 bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBrush)
 {
     int width, height, channels;
 
-    // Force RGBA so we don't care about input format
+    // force RGBA so we don't care about input format
     unsigned char* data = stbi_load(
         path.c_str(),
         &width,
@@ -67,14 +73,14 @@ bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBr
     outBrush.tipHeight = height;
     outBrush.tipAlpha.resize(width * height);
 
-    // Convert to normalized alpha
+    // convert to normalized alpha
     for (int i = 0; i < width * height; ++i) {
         unsigned char r = data[i * 4 + 0];
         unsigned char g = data[i * 4 + 1];
         unsigned char b = data[i * 4 + 2];
         unsigned char a = data[i * 4 + 3];
 
-        // Krita-style: luminance * alpha
+        // luminance * alpha
         float luminance =
             (0.2126f * r +
                 0.7152f * g +
@@ -88,6 +94,8 @@ bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBr
     stbi_image_free(data);
     return true;
 }
+
+
 
 bool BrushManager::loadBrushFromGBR(const std::string& path, BrushTool& out)
 {
@@ -139,6 +147,8 @@ bool BrushManager::loadBrushFromGBR(const std::string& path, BrushTool& out)
     return true;
 }
 
+
+
 void BrushManager::configureAsDefault(BrushTool& brush) {
 
 	float cx = (brush.tipWidth - 1) * 0.5f; 
@@ -164,6 +174,8 @@ void BrushManager::configureAsDefault(BrushTool& brush) {
 		}
 	}
 }
+
+
 
 uint32_t BrushManager::read_be32(std::ifstream& f)
 {

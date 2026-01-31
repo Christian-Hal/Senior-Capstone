@@ -121,7 +121,6 @@ static Renderer renderer;
 // brush manager
 extern BrushManager brushManager;
 
-
 Color UI::getColor()
 {
 	if (cursorMode == UI::CursorMode::Draw) 
@@ -143,6 +142,7 @@ Color UI::getColor()
 		};
 	}
 }
+
 
 
 // cursor mode getter 
@@ -213,11 +213,13 @@ void UI::draw(CanvasManager& canvasManager)
 	// canvas tab panel shown only if more than 1 canvas is open
 	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
 
+	// mouse cursor is left as default when there is no canvas present
 	if (!(ImGui::GetIO().WantCaptureMouse) && canvasManager.getNumCanvases() > 0) {
+
 		// hide the default cursor 
 		ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+		
 		// establishing custom cursor 
-
 		if (my_image_texture == 0) {
 			LoadTextureFromFile("tempCursor.png", &my_image_texture, &my_image_width, &my_image_height);
 		}
@@ -226,9 +228,9 @@ void UI::draw(CanvasManager& canvasManager)
 		ImTextureID textureID = (ImTextureID)(static_cast<uintptr_t>(my_image_texture));
 
 		// commented line below is custom image cursor implementation. It is almost working, needs some adjustments. 
-		ImGui::GetForegroundDrawList()->AddImage(textureID, cursorPos, ImVec2(cursorPos.x + 16, cursorPos.y + 16)); 
+		//ImGui::GetForegroundDrawList()->AddImage(textureID, cursorPos, ImVec2(cursorPos.x + 16, cursorPos.y + 16)); 
 
-		//ImGui::GetForegroundDrawList()->AddCircle(ImGui::GetMousePos(), 10, IM_COL32(255, 0, 0, 255));
+		ImGui::GetForegroundDrawList()->AddCircle(ImGui::GetMousePos(), UI::brushSize * 5, IM_COL32(255, 0, 0, 255));
 
 	}
 
@@ -322,6 +324,7 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 }
 
 
+
 void UI::drawRightPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(w - RightSize, TopSize), ImGuiCond_Always);
@@ -368,6 +371,7 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 }
 
 
+
 void UI::drawBottomPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, h - BotSize), ImGuiCond_Always);
@@ -379,6 +383,8 @@ void UI::drawBottomPanel(CanvasManager& canvasManager) {
 	// end step
 	ImGui::End();
 }
+
+
 
 void UI::drawCanvasTabs(CanvasManager& canvasManager)
 {
@@ -408,6 +414,8 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 	// end step
 	ImGui::End();
 }
+
+
 
 // canvas size popup 
 void UI::drawPopup(CanvasManager& canvasManager)
@@ -451,6 +459,8 @@ void UI::drawPopup(CanvasManager& canvasManager)
 	}
 
 }
+
+
 
 // ending and cleanup 
 void UI::shutdown() {
