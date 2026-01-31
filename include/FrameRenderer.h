@@ -11,7 +11,7 @@ using namespace std;
 class FrameRenderer{
     public:
         FrameRenderer();
-        static void newCanvas(Canvas* canvas);
+        static void newCanvas(Canvas* oldCanvas, Canvas* newCanvas);
         static void updateCanvas();
         static void createFrame();
         static void removeFrame();
@@ -32,8 +32,16 @@ class FrameRenderer{
         static int curFrame;
         static int curCanvas;
         static int numCanvas;
-
+        
         // frame number, pixel data for that frame
         static vector<vector<Color>> frames;
+
+        // one layer of layerData to be assigned to the current canvas
+        static vector<vector<Color>> frLayerData;
         
+        static void writeAllData(Canvas* canvas);
+        static void writeMetaData(Canvas* canvas);
+        static void writePixelData(Canvas* canvas);
+        static void writeLayerData(Canvas* canvas);
+
 };

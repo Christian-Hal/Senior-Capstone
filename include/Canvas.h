@@ -22,6 +22,7 @@ class Canvas {
         int getNumLayers() const;
         int getCurLayer() const;
         const Color* getData() const;
+        const std::vector<std::vector<Color>>& getLayerData() const;
 
         const std::string getName() const;
         void setName(std::string name);

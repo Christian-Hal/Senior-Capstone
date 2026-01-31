@@ -13,7 +13,6 @@ Canvas::Canvas(int w, int h, std::string name) : width(w), height(h), numLayers(
 {
     layerData.push_back(pixels);
     layerData.push_back(std::vector<Color>(w * h, emptyColor));
-    FrameRenderer::newCanvas(this);
 }
 
 // canvas name methods
@@ -36,6 +35,10 @@ int Canvas::getCurLayer() const { return curLayer; }
 
 const Color* Canvas::getData() const {
     return pixels.data(); 
+}
+
+const std::vector<std::vector<Color>>& Canvas::getLayerData() const {
+    return layerData;
 }
 
 // Overloading operations

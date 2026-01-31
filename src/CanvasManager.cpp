@@ -9,8 +9,13 @@
 
 Canvas& CanvasManager::createCanvas(int width, int height, std::string name)
 {
+    Canvas oldCanvasCopy;
+    if(this->hasActive()){
+        oldCanvasCopy = *activeCanvas;
+    }
     std::string fixed_name = checkName(name);
     canvases.emplace_back(Canvas(width, height, fixed_name));
+    FrameRenderer::newCanvas(&oldCanvasCopy, &canvases.back());
     activeCanvas = &canvases.back();
 
     canvasChange = true;

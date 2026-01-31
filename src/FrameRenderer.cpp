@@ -7,6 +7,13 @@
 #include <vector>
 #include <string>
 
+
+// NOTES - there are 3 types of files in a canvas folder: the metaData file containing the width, hieght, number of layers and number of frames this is stored in meta.dat
+//          each value is on a new line and stored in the order previously given
+//          The second type of file is the frames[num][data] data, this contains the pixels[] information for each frame in a canvas tihs is stored in framedata.dat
+//          The thrid is layerDatas.dat and contains the layerdata for each frame in a canvas. this is stored in layerDatas.dat
+
+
 // use fs for filesystem and auto-add std
 namespace fs = std::filesystem;
 using namespace std;
@@ -39,19 +46,19 @@ FrameRenderer::FrameRenderer()
 // this also creates a new folder that holds all of the information that is being stored in the new canvas
 // creates metaData.dat
 // it also creates the file fd1.dat and for every frame that is added the number goes up by 1
-void FrameRenderer::newCanvas(Canvas* canvas){
-    cout << "New Canvas created" << endl;
-    fs::create_directories("./frameDatas/canvas" + to_string(numCanvas));
-    ofstream File("./frameDatas/canvas0/metaData.dat");
-    File.write(
-        reinterpret_cast<const char*>(canvas->getData()),
-        canvas->getWidth() * canvas->getHeight() * 4); // * 32 since color is unisigned char* 4 times over which is 8 bits each
-    File.close();
+void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
+    // Save the data if there already was a canvas
+    if(numCanvas != 0){
+        cout << to_string(oldCanvas->getHeight()) << endl;
+        writeAllData(oldCanvas);
+    }
     numCanvas++;
     curCanvas = numCanvas;
-    // now save the data
-    
+    numFrames = 1;
+    curFrame = 1;
 
+    fs::create_directories("./frameDatas/canvas" + to_string(curCanvas));
+    writeAllData(newCanvas);
 }
 
 // this function is called whenever you move from one canvas to another
@@ -130,3 +137,38 @@ int FrameRenderer::getCurCanvas(){
     return curCanvas;
 }
 
+
+// Private functions 
+void FrameRenderer::writeAllData(Canvas* canvas){
+    writeMetaData(canvas);
+    writePixelData(canvas);
+    writeLayerData(canvas);
+}
+
+void FrameRenderer::writeMetaData(Canvas* canvas){
+    //saves the width, hight, number of layers, and number of frames
+    ofstream File("./frameDatas/canvas" + to_string(curCanvas) + "/meta.dat");
+    int width = canvas->getWidth();
+    int height = canvas->getHeight();
+    int numLayers = canvas->getNumLayers();
+
+    File.write(reinterpret_cast<const char*>(&width), sizeof(int));
+    File.write(reinterpret_cast<const char*>(&height), sizeof(int));
+    File.write(reinterpret_cast<const char*>(&numLayers), sizeof(int));  
+    File.write(reinterpret_cast<char*>(&numFrames), sizeof(numFrames));
+    File.close();
+}
+
+void FrameRenderer::writePixelData(Canvas* canvas){
+    ofstream File("./frameDatas/canvas" + to_string(curCanvas) + "/frameData.dat");
+    for(int i = 0; i < numFrames; i++){
+        File.write(
+            reinterpret_cast<const char*>(canvas->getData()),
+            canvas->getWidth() * canvas->getHeight() * 4); // * 4 since color is unisigned char* 4 times over
+    }
+    File.close();
+}
+
+void FrameRenderer::writeLayerData(Canvas* canvas){
+    cout << "not yet implimented" << endl;
+}
