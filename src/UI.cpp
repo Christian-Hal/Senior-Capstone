@@ -6,6 +6,7 @@
 
 #include "Globals.h"
 #include "CanvasManager.h"
+#include "FrameRenderer.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -168,7 +169,7 @@ void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 
 
 // NOTE: called in render loop 
-void UI::draw(CanvasManager& canvasManager)
+void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 {
 	// start ImGui frame before adding widgets 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -200,7 +201,7 @@ void UI::draw(CanvasManager& canvasManager)
 	if (showPanels) {
 		drawLeftPanel(canvasManager);
 		drawRightPanel(canvasManager);
-		drawBottomPanel(canvasManager);
+		drawBottomPanel(canvasManager, frameRenderer);
 	}
 
 	// top panel drawn regardless of input 
@@ -352,14 +353,27 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 }
 
 
-void UI::drawBottomPanel(CanvasManager& canvasManager) {
+void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, h - BotSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, BotSize), ImGuiCond_Always);
 	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
+	ImGui::Text("UNFINISHED");
+	if(ImGui::Button("Next Frame")){
 
+	}
+	if(ImGui::Button("Previous Frame")){
+		
+	}
+
+	if(ImGui::Button("Create Frame")){
+
+	}
+	if(ImGui::Button("Remove Frame")){
+	
+	}
 	// end step
 	ImGui::End();
 }

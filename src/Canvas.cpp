@@ -1,10 +1,10 @@
 
-
 #include <vector>
 #include <iostream>
 #include <string>
 
 #include "Canvas.h"
+#include "FrameRenderer.h"
 
 
 // constructor
@@ -13,6 +13,7 @@ Canvas::Canvas(int w, int h, std::string name) : width(w), height(h), numLayers(
 {
     layerData.push_back(pixels);
     layerData.push_back(std::vector<Color>(w * h, emptyColor));
+    FrameRenderer::newCanvas(this);
 }
 
 // canvas name methods

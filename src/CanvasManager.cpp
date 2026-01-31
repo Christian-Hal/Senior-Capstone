@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "CanvasManager.h"
+#include "FrameRenderer.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -57,6 +58,7 @@ void CanvasManager::setActiveCanvas(int index)
     
     activeCanvas = &canvases[index];
     canvasChange = true;
+    FrameRenderer::updateCanvas();
 }
 
 // bandaid placement of saving features 
