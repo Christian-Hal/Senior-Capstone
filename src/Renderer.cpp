@@ -113,7 +113,9 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 	}
 }
 
-
+// random mouse setting stuff
+int lastDrawnX = 0;
+int lastDrawnY = 0;
 
 /*
 	Where the main drawing logic currently lies
@@ -195,14 +197,23 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 	int size = ui.brushSize;
 	int w = activeBrush.tipWidth;
 	int h = activeBrush.tipHeight;
+	int brushSpacing = size * activeBrush.spacing;
 	std::vector<float> alpha = activeBrush.tipAlpha;
 
 	int brushCenter_x = w / 2;
 	int brushCenter_y = h / 2;
 
+	// for each step between the last position and current position
 	for (int i = 0; i <= steps; i++)
 	{
-		// for reach row in the brush mask
+		int baseX = lastX + dx * i / steps - brushCenter_x * size;
+		int baseY = lastY + dy * i / steps - brushCenter_y * size;
+
+		float distance = sqrt(((lastDrawnX - baseX) * (lastDrawnX - baseX)) +  ((lastDrawnY - baseY) * (lastDrawnY - baseY)));
+		if (distance < brushSpacing)
+			continue;
+
+		// for each row in the brush mask
 		for (int r = 0; r < h; r++)
 		{
 			// for each column in the brush mask
@@ -210,12 +221,22 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 			{
 				// if the current index is part of the pattern
 				float a = alpha[r * w + c];
-				if (a > 0.0f)
+				if (a > 0.01f) 
 				{
-					// calculate the pixel x and y on the canvas
-					int px = (lastX + dx * i / steps) + (c - brushCenter_x);
-					int py = (lastY + dy * i / steps) + (r - brushCenter_y);
-					curCanvas.setPixel(px, py, ui.getColor());
+					for (int sy = 0; sy < size; sy++)
+					{
+						for (int sx = 0; sx < size; sx++)
+						{
+							// calculate the pixel x and y on the canvas
+							int px = baseX + c * size + sx;
+                    		int py = baseY + r * size + sy;
+							
+                    		curCanvas.setPixel(px, py, ui.getColor());
+						}
+					}
+
+					lastDrawnX = baseX;
+					lastDrawnY = baseY;
 				}
 			}
 		}
@@ -313,23 +334,10 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 // 
 bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 {
-	//global = g_inst;
-
-	// fb size equal to user input x and y 
-	fbWidth = global.get_canvas_x();
-	fbHeight = global.get_canvas_y();
-
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "Failed to initialize GLAD\n";
 		return false;
 	}
-
-	/*/ ----- Where the brush tip is created (currently) -----
-	if (!BrushTipLoader::loadBrushTipFromPNG("BrushTipTest.png", activeBrush)) {
-		DefaultBrush::configure(activeBrush);
-
-	} // */
-
 
 	// ----- Shaders -----
 	// compiles the shaders
@@ -358,8 +366,6 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
 	glfwSetCursorPosCallback(window, cursorPosCallback);
 	glfwSetScrollCallback(window, scrollCallBack);
-
-
 
 	return true;
 }
@@ -391,7 +397,6 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 void Renderer::endFrame() {
 	glBindVertexArray(0);
 }
-
 
 
 void Renderer::shutdown() {

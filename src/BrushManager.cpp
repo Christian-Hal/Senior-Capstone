@@ -11,13 +11,23 @@
 // init function that loads in all default brushes
 void BrushManager::init()
 {
-    activeBrush = new BrushTool(1,1);
+    loaded_Brushes.emplace_back(BrushTool(1,1, "DefaultBrush"));
 
-    if (!loadBrushFromGBR("penis.gbr", *activeBrush)) {
-		configureAsDefault(*activeBrush);
-	}
+    for (const auto& path : defaultBrushPaths)
+    {
+        BrushTool temp = BrushTool();
+        if (loadBrushFromGBR(path, temp))
+            loaded_Brushes.emplace_back(temp);
+    }
+
+    activeBrush = &loaded_Brushes.front();
 
     brushChange = true;
+}
+
+const std::vector<BrushTool>& BrushManager::getLoadedBrushes()
+{
+    return loaded_Brushes;
 }
 
 // active brush stuff
@@ -26,7 +36,13 @@ const BrushTool& BrushManager::getActiveBrush()
     return *activeBrush;
 }
 
-void BrushManager::setActiveBrush(int index) {}
+void BrushManager::setActiveBrush(int index) 
+{
+    if (index > 0 && index < loaded_Brushes.size()){}
+    
+    activeBrush = &loaded_Brushes[index];
+    brushChange = true;
+}
 
 // brush loader methods
 bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBrush)
@@ -100,6 +116,7 @@ bool BrushManager::loadBrushFromGBR(const std::string& path, BrushTool& out)
         name.resize(name_length);
         file.read(&name[0], name_length);
     }
+    out.brushName = name;
 
     // reading in the pixel data
     // i do not understand this code super well, the stuff before this is all good though
@@ -126,7 +143,8 @@ void BrushManager::configureAsDefault(BrushTool& brush) {
 
 	float cx = (brush.tipWidth - 1) * 0.5f; 
 	float cy = (brush.tipHeight - 1) * 0.5f;
-	float radius = std::min(cx, cy); 
+	float radius = std::min(cx, cy);
+    brush.brushName = "D_Circle";
 
 	for (int y = 0; y < brush.tipHeight; ++y) {
 		

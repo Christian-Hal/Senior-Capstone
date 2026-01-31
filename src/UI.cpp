@@ -6,6 +6,7 @@
 
 #include "Globals.h"
 #include "CanvasManager.h"
+#include "BrushManager.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -117,6 +118,9 @@ static UI::CursorMode cursorMode = UI::CursorMode::Draw;
 
 static Renderer renderer;
 
+// brush manager
+extern BrushManager brushManager;
+
 
 Color UI::getColor()
 {
@@ -215,7 +219,7 @@ void UI::draw(CanvasManager& canvasManager)
 		// establishing custom cursor 
 
 		if (my_image_texture == 0) {
-			LoadTextureFromFile("BrushTipTest.png", &my_image_texture, &my_image_width, &my_image_height);
+			LoadTextureFromFile("tempCursor.png", &my_image_texture, &my_image_width, &my_image_height);
 		}
 
 		ImVec2 cursorPos = ImGui::GetMousePos();
@@ -263,8 +267,6 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::Begin("Left Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
 	/////// add widgets here ///////
-	//ImGui::Text("TopSize = %d", TopSize); // <- here for debug
-	// 
 	// draw / erase buttons
 	if (getCursorMode() == UI::CursorMode::Draw) {
 		ImGui::Text("State: Draw");
@@ -297,6 +299,20 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 
 	// brush size slider 
 	ImGui::SliderInt("Brush Size", &brushSize, 1, 100);
+
+	// --- Displaying loaded brush options ---
+	// grabs the list of loaded brushes
+	const std::vector<BrushTool>& brushes = brushManager.getLoadedBrushes();
+
+	// adds a button for each brush that sets it to the active one
+	for(int i = 0; i < brushes.size(); i++)
+	{
+		std::string buttonName = brushes[i].brushName;
+
+		if(ImGui::Button(buttonName.c_str())){
+			brushManager.setActiveBrush(i);
+		}
+	}
 
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
@@ -373,8 +389,11 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 
 	// add widgets
 
+	// --- Displaying the loaded canvases ---
+	// grabs the list of loaded canvases
 	const std::vector<Canvas>& canvases = canvasManager.getOpenCanvases();
 
+	// adds a button for each canvas that sets it to the active one
 	for(int i = 0; i < canvasManager.getNumCanvases(); i++)
 	{
 		std::string buttonName = canvases[i].getName();
