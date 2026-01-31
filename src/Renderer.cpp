@@ -216,23 +216,10 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 // 
 bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 {
-	//global = g_inst;
-
-	// fb size equal to user input x and y 
-	fbWidth = global.get_canvas_x();
-	fbHeight = global.get_canvas_y();
-
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cerr << "Failed to initialize GLAD\n";
 		return false;
 	}
-
-	/*/ ----- Where the brush tip is created (currently) -----
-	if (!BrushTipLoader::loadBrushTipFromPNG("BrushTipTest.png", activeBrush)) {
-		DefaultBrush::configure(activeBrush);
-
-	} // */
-
 
 	// ----- Shaders -----
 	// compiles the shaders
@@ -260,8 +247,6 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	activeRenderer = this;
 	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
 	glfwSetCursorPosCallback(window, cursorPosCallback);
-
-
 
 	return true;
 }
@@ -293,7 +278,6 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 void Renderer::endFrame() {
 	glBindVertexArray(0);
 }
-
 
 
 void Renderer::shutdown() {
@@ -364,8 +348,6 @@ void Renderer::uploadTexture(const Canvas& canvas) {
 
 	// sets the active texture
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
-
-	
 
 	// binds the image data to the texture
 	glTexImage2D(

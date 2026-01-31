@@ -267,8 +267,6 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::Begin("Left Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
 	/////// add widgets here ///////
-	//ImGui::Text("TopSize = %d", TopSize); // <- here for debug
-	// 
 	// draw / erase buttons
 	if (getCursorMode() == UI::CursorMode::Draw) {
 		ImGui::Text("State: Draw");
@@ -302,9 +300,11 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	// brush size slider 
 	ImGui::SliderInt("Brush Size", &brushSize, 1, 100);
 
-	// Displaying loaded brush options
+	// --- Displaying loaded brush options ---
+	// grabs the list of loaded brushes
 	const std::vector<BrushTool>& brushes = brushManager.getLoadedBrushes();
 
+	// adds a button for each brush that sets it to the active one
 	for(int i = 0; i < brushes.size(); i++)
 	{
 		std::string buttonName = brushes[i].brushName;
@@ -389,8 +389,11 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 
 	// add widgets
 
+	// --- Displaying the loaded canvases ---
+	// grabs the list of loaded canvases
 	const std::vector<Canvas>& canvases = canvasManager.getOpenCanvases();
 
+	// adds a button for each canvas that sets it to the active one
 	for(int i = 0; i < canvasManager.getNumCanvases(); i++)
 	{
 		std::string buttonName = canvases[i].getName();
