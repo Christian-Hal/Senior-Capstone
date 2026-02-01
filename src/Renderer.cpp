@@ -391,6 +391,8 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	//balls
 }
 
+
+
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 {
 	if (ImGui::GetIO().WantCaptureMouse)
@@ -521,6 +523,7 @@ static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int acti
 
 }
 
+
 // compile the vertex and fragment shaders 
 static unsigned int compileShader(unsigned int type, const char* source) {
 
@@ -580,6 +583,8 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	return true;
 }
 
+
+
 static void centerCamera(const Canvas& canvas)
 {
 
@@ -598,6 +603,7 @@ static void centerCamera(const Canvas& canvas)
 
 	camera.offset = screenCenter - canvasCenter;
 }
+
 
 
 //
@@ -625,9 +631,11 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 }
 
 
+
 void Renderer::endFrame() {
 	glBindVertexArray(0);
 }
+
 
 
 void Renderer::shutdown() {

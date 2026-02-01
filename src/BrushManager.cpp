@@ -32,6 +32,8 @@ const std::vector<BrushTool>& BrushManager::getLoadedBrushes()
     return loaded_Brushes;
 }
 
+
+
 // active brush stuff
 const BrushTool& BrushManager::getActiveBrush()
 {

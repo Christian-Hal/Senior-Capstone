@@ -1,6 +1,7 @@
 
 #pragma once 
 
+#include <vector>
 
 #include "Renderer.h"
 #include "CanvasManager.h"
