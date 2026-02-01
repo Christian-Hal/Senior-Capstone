@@ -12,7 +12,7 @@ class FrameRenderer{
     public:
         FrameRenderer();
         static void newCanvas(Canvas* oldCanvas, Canvas* newCanvas);
-        static void updateCanvas();
+        static void updateCanvas(Canvas* oldCanvas, int newCanvasIndex);
         static void createFrame();
         static void removeFrame();
         static void selectFrame(int frame);
@@ -22,8 +22,8 @@ class FrameRenderer{
         static void setCurFrame(int newCurFrame);
         static int getCurFrame();
 
-        static void setnumFrames(int numFrames);
-        static int getnumFrames();
+        static void setNumFrames(int numFrames);
+        static int getNumFrames();
 
         static void setCurCanvas(int newCurCanvas);
         static int getCurCanvas();
@@ -38,7 +38,7 @@ class FrameRenderer{
 
         // one layer of layerData to be assigned to the current canvas
         static vector<vector<Color>> frLayerData;
-        
+
         static void writeAllData(Canvas* canvas);
         static void writeMetaData(Canvas* canvas);
         static void writePixelData(Canvas* canvas);

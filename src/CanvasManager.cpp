@@ -59,11 +59,16 @@ const std::vector<Canvas>& CanvasManager::getOpenCanvases() const
 
 void CanvasManager::setActiveCanvas(int index)
 {
+
     if (index > 0 && index < canvases.size()){}
     
+    Canvas oldCanvasCopy;
+    if(this->hasActive()){
+        oldCanvasCopy = *activeCanvas;
+    }
     activeCanvas = &canvases[index];
     canvasChange = true;
-    FrameRenderer::updateCanvas();
+    FrameRenderer::updateCanvas(&oldCanvasCopy, index);
 }
 
 // bandaid placement of saving features 
