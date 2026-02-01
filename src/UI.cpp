@@ -150,6 +150,9 @@ UI::CursorMode UI::getCursorMode() const {
 	return cursorMode;
 }
 
+void UI::setCursorMode(UI::CursorMode temp) {
+	cursorMode = temp;
+}
 
 
 // UI initialization 

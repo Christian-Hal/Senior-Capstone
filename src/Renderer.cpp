@@ -73,9 +73,7 @@ extern BrushManager brushManager;
 BrushTool activeBrush;
 
 Camera2d camera;
-static bool isPanning = false;
-static double lastMouseX = 0.0;
-static double lastMouseY = 0.0;
+
 
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
@@ -101,6 +99,21 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 			{
 				isPanning = true;
 				glfwGetCursorPos(window, &lastMouseX, &lastMouseY);
+
+				if (mode == UI::CursorMode::Rotate)
+				{
+					Canvas& canvas = activeCanvasManager.getActive();
+
+					glm::vec2 canvasCenter(
+						canvas.getWidth() * 0.5f + camera.offset.x,
+						canvas.getHeight() * 0.5f + camera.offset.y
+					);
+
+					float mx = (float)lastMouseX;
+					float my = global.get_scr_height() - (float)lastMouseY;
+
+					lastAngle = atan2f(my - canvasCenter.y, mx - canvasCenter.x);
+				}
 			}	
 
 			else if (mode == UI::CursorMode::ZoomIn || mode == UI::CursorMode::ZoomOut)
@@ -169,7 +182,7 @@ int lastDrawnY = 0;
 /*
 	Where the main drawing logic currently lies 
 */
-static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
+static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse		or the file is not open
 	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())
 		return;
@@ -189,8 +202,21 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 
 		else if (mode == UI::CursorMode::Rotate)
 		{
-			camera.rotation += (float)dx * 0.005f;
-			camera.rotation -= (float)dy * 0.005f;
+			Canvas& canvas = activeCanvasManager.getActive();
+
+			glm::vec2 canvasCenter(
+				canvas.getWidth() * 0.5f + camera.offset.x,
+				canvas.getHeight() * 0.5f + camera.offset.y
+			);
+
+			float mx = (float)xpos;
+			float my = global.get_scr_height() - (float)ypos;
+
+			float angle = atan2f(my - canvasCenter.y, mx - canvasCenter.x);
+			float delta = angle - lastAngle;
+
+			camera.rotation += delta;
+			lastAngle = angle;
 		}
 
 		lastMouseX = xpos;
@@ -198,8 +224,54 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos) {
 		return;
 	}
 
-	
-	
+	if (isZoomDragging)
+	{
+		double dy = ypos - lastZoomMouseY;
+		lastZoomMouseY = ypos;
+
+		const float zoomSpeed = 0.005f;
+		float oldZoom = camera.zoom;
+
+		camera.zoom *= (1.0f - (float)dy * zoomSpeed);
+		camera.zoom = std::clamp(camera.zoom, 0.1f, 10.0f);
+
+		// Zoom around mouse position
+		double mx, my;
+		glfwGetCursorPos(window, &mx, &my);
+
+		glm::vec2 mouseScreen(
+			(float)mx,
+			(float)(global.get_scr_height() - my)
+		);
+
+		Canvas& canvas = activeCanvasManager.getActive();
+		glm::vec2 canvasCenter(
+			canvas.getWidth() * 0.5f,
+			canvas.getHeight() * 0.5f
+		);
+
+		glm::mat4 oldView(1.0f);
+		oldView = glm::translate(oldView, glm::vec3(camera.offset, 0.0f));
+		oldView = glm::translate(oldView, glm::vec3(canvasCenter, 0.0f));
+		oldView = glm::rotate(oldView, camera.rotation, glm::vec3(0, 0, 1));
+		oldView = glm::scale(oldView, glm::vec3(oldZoom));
+		oldView = glm::translate(oldView, glm::vec3(-canvasCenter, 0.0f));
+
+		glm::vec4 world =
+			glm::inverse(oldView) * glm::vec4(mouseScreen, 0.0f, 1.0f);
+
+		glm::mat4 newView(1.0f);
+		newView = glm::translate(newView, glm::vec3(camera.offset, 0.0f));
+		newView = glm::translate(newView, glm::vec3(canvasCenter, 0.0f));
+		newView = glm::rotate(newView, camera.rotation, glm::vec3(0, 0, 1));
+		newView = glm::scale(newView, glm::vec3(camera.zoom));
+		newView = glm::translate(newView, glm::vec3(-canvasCenter, 0.0f));
+
+		glm::vec4 newScreen = newView * world;
+		camera.offset += mouseScreen - glm::vec2(newScreen);
+
+		return;
+	}
 
 	if (!activeRenderer->isDrawing) { return; }
 
@@ -378,6 +450,76 @@ static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 	camera.offset += mouseScreen - glm::vec2(newScreen);
 }
 
+static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (ImGui::GetIO().WantCaptureKeyboard)
+		return;
+
+
+	if (key == GLFW_KEY_R && action == GLFW_PRESS)
+	{
+		ui.setCursorMode(UI::CursorMode::Rotate);
+		return;
+	}
+
+	else if (key == GLFW_KEY_H && action == GLFW_PRESS)
+	{
+		ui.setCursorMode(UI::CursorMode::Pan);
+		return;
+	}
+
+	else if (key == GLFW_KEY_D && action == GLFW_PRESS)
+	{
+		ui.setCursorMode(UI::CursorMode::Draw);
+		return;
+	}
+
+	else if (key == GLFW_KEY_E && action == GLFW_PRESS)
+	{
+		ui.setCursorMode(UI::CursorMode::Erase);
+		return;
+	}
+
+	if (key == GLFW_KEY_SPACE)
+	{
+		if (action == GLFW_PRESS &&
+			(mods & GLFW_MOD_CONTROL))
+		{
+			isZoomDragging = true;
+			glfwGetCursorPos(window, nullptr, &lastZoomMouseY);
+		}
+
+		if (action == GLFW_RELEASE)
+		{
+			isZoomDragging = false;
+		}
+	}
+
+	if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
+	{
+		if (action == GLFW_RELEASE)
+			isZoomDragging = false;
+	}
+
+	if (key == GLFW_KEY_SPACE)
+	{
+		UI::CursorMode temp = ui.getCursorMode();
+
+		if (action == GLFW_PRESS &&
+			(mods & GLFW_MOD_SHIFT))
+		{
+			ui.setCursorMode(UI::CursorMode::Rotate);
+		}
+
+		if (action == GLFW_RELEASE)
+		{
+			ui.setCursorMode(temp);
+		}
+	}
+
+	
+
+}
 
 // compile the vertex and fragment shaders 
 static unsigned int compileShader(unsigned int type, const char* source) {
@@ -431,8 +573,9 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 
 	activeRenderer = this;
 	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
-	glfwSetCursorPosCallback(window, cursorPosCallback);
+	glfwSetCursorPosCallback(window, cursorPosCallBack);
 	glfwSetScrollCallback(window, scrollCallBack);
+	glfwSetKeyCallback(window, keyboardCallBack);
 
 	return true;
 }

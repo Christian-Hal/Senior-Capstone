@@ -31,6 +31,8 @@ public:
 	};
 
 	CursorMode getCursorMode() const;
+	//void UI::setCursorMode(UI::CursorMode);
+	void setCursorMode(CursorMode);
 
 private:
 	void drawLeftPanel(CanvasManager& canvasManager);
