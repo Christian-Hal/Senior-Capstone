@@ -278,6 +278,22 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGui::Text("State: Erase");
 	}
 
+	else if (getCursorMode() == UI::CursorMode::ZoomIn) {
+		ImGui::Text("State: Zoom In");
+	}
+
+	else if (getCursorMode() == UI::CursorMode::ZoomOut) {
+		ImGui::Text("State: Zoom Out");
+	}
+
+	else if (getCursorMode() == UI::CursorMode::Rotate) {
+		ImGui::Text("State: Rotate");
+	}
+
+	else if (getCursorMode() == UI::CursorMode::Pan) {
+		ImGui::Text("State: Pan");
+	}
+
 	if (ImGui::Button("Draw")) {
 		cursorMode = UI::CursorMode::Draw;
 	}
@@ -285,6 +301,24 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	if (ImGui::Button("Erase")) {
 		cursorMode = UI::CursorMode::Erase;
 	}
+
+	if (ImGui::Button("Pan")) {
+		cursorMode = UI::CursorMode::Pan;
+	}
+
+	if (ImGui::Button("Rotate")) {
+		cursorMode = UI::CursorMode::Rotate;
+	}
+
+	if (ImGui::Button("Zoom In")) {
+		cursorMode = UI::CursorMode::ZoomIn;
+	}
+
+	if (ImGui::Button("Zoom Out")) {
+		cursorMode = UI::CursorMode::ZoomOut;
+	}
+
+	
 
 	// Save button
 	if (ImGui::Button("Save")) {

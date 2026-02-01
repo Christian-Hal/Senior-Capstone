@@ -23,7 +23,11 @@ public:
 	// enum 
 	enum class CursorMode {
 		Draw,
-		Erase
+		Erase,
+		ZoomIn,
+		ZoomOut,
+		Rotate,
+		Pan
 	};
 
 	CursorMode getCursorMode() const;
