@@ -100,7 +100,13 @@ void Canvas::setPixel(int x, int y, const Color& color)
     
 }
 
+void Canvas::setPixels(std::vector<Color> newPixels){
+    pixels = newPixels;
+}
 
+void Canvas::setLayerData(std::vector<std::vector<Color>> newLayerData){
+    layerData = newLayerData;
+}
 
 void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 

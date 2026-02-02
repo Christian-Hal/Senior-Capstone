@@ -31,6 +31,8 @@ class Canvas {
         void setPixel(int x, int y, const Color& color);
         void blendPixel(int x, int y, const Color& srcColor, float brushAlpha);
         Color& getPixel(int x, int y) const;
+        void setPixels(std::vector<Color> newPixels);
+        void setLayerData(std::vector<std::vector<Color>> newLayerData);
 
         // layer manipulation
         void createLayer();

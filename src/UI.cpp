@@ -378,17 +378,17 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 	// add widgets
 	ImGui::Text("UNFINISHED");
 	if(ImGui::Button("Next Frame")){
-
+		FrameRenderer::selectFrame(canvasManager.getActive(), 1);
 	}
 	if(ImGui::Button("Previous Frame")){
-		
+		FrameRenderer::selectFrame(canvasManager.getActive(), -1);
 	}
 
 	if(ImGui::Button("Create Frame")){
-
+		FrameRenderer::createFrame(canvasManager.getActive());
 	}
 	if(ImGui::Button("Remove Frame")){
-	
+		FrameRenderer::removeFrame(canvasManager.getActive());
 	}
 	// end step
 	ImGui::End();

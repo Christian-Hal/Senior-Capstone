@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <vector>
 #include <string>
+#include <array>
 
 
 // NOTES - there are 3 types of files in a canvas folder: the metaData file containing the width, hieght, number of layers and number of frames this is stored in meta.dat
@@ -44,11 +45,13 @@ FrameRenderer::FrameRenderer()
 // this saves whatever was on the current canvas (if there was a current canvas)
 // this changes the "frames" variable to the proper [empty] pixels values since we changed canvases 
 // this also creates a new folder that holds all of the information that is being stored in the new canvas
-// creates metaData.dat
-// it also creates the file fd1.dat and for every frame that is added the number goes up by 1
+// creates meta.dat
+// creates frameData.dat
+// creates the layerData[1].dat and for every frame that is added the number goes up by 1
 void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
     // Save the data if there already was a canvas
     if(numCanvas != 0){
+        frames.push_back(vector<Color>(oldCanvas->getData(), oldCanvas->getData() + oldCanvas->getWidth() * oldCanvas->getHeight()));
         writeAllData(oldCanvas);
     }
     numCanvas++;
@@ -58,40 +61,76 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
 
     fs::create_directories("./frameDatas/canvas" + to_string(curCanvas));
     // save the first "frame" to frames
-
-    frames.push_back(vector<Color>(newCanvas->getData(), newCanvas->getData() 
-            + (newCanvas->getWidth() * newCanvas->getHeight())));
-
+    // if its a new canvas we only have 1 frame, the starting frame
+    frames.clear();
+    frames.push_back(vector<Color>(newCanvas->getData(), newCanvas->getData() + (newCanvas->getWidth() * newCanvas->getHeight())));
     writeAllData(newCanvas);
-    // we also need to update frame to be the proper vector for this canvas.
 }
 
 // this function is called whenever you move from one canvas to another
 // saves the pixelData and frame data 
-void FrameRenderer::updateCanvas(Canvas* oldCanvas, int newCanvasIndex){
+// updates the frames vector with the proper array.
+// pulls the correct layerData for the first frame.
+// [NOTE] : no matter what frame you were on last visit, you will always go back to frame 1 after changing canvases
+void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCanvasIndex){
+    
+    // Save data
     if(numCanvas != 0){
+        frames.insert(frames.begin(), vector<Color>(oldCanvas->getData(), oldCanvas->getData() + (oldCanvas->getWidth() * oldCanvas->getHeight())));
         writeAllData(oldCanvas);
     }
+
+    // update internal values
     curCanvas = newCanvasIndex + 1;
     curFrame = 1;
-    numFrames = getNumFrames();
+
+    // after saving we can clear the frame
+    frames.clear();
+
+    // and load it with the new canvas
+    int* meta = readMetaData();
+    numFrames = meta[3]; // meta contains [canvasWidth, canvasHeight, numLayers, numFrames]
+
+    // getFrame data and assign it to the active canvas
+    frames = readPixelData(meta);
+    newCanvas->setPixels(frames[curFrame - 1]);
+    newCanvas->setLayerData(readLayerData(meta));
+    cout << "wrote to layerData" << endl;
+
+
     cout << "Canvas Changed to canvas " << to_string(curCanvas) << endl;
 }
 
-// create a new frame and save changes to the old frame
+
+// save changes to the old frame
 // inserts the frame at 1 + curFrame and update numFrames
 // updates all frame filenames accordingly
 // loads new frame with blank canvas
-void FrameRenderer::createFrame(){
-    cout << "Creating a new frame" << endl;
+void FrameRenderer::createFrame(Canvas canvas){
+    // Save the old frame
+    writeAllData(&canvas);
+
+    // insert new frame
     numFrames++;
+    int* meta = readMetaData(); // meta[0] is width, meta[1] is height
+
+    frames.insert(frames.begin() + curFrame - 1, vector<Color>(meta[0] * meta[1], {255,255,255,255}));
+    cout << "inserted the frame" << endl;
+    // create function that renames any other frames that come after
+    rename(true);
+    
     curFrame++;
+
+    writeAllData(&canvas);
+    canvas.setPixels(frames[curFrame-1]);
+    canvas.setLayerData(readLayerData(meta));
 }
 
 // remove current frame and update file names accordingly
-void FrameRenderer::removeFrame(){
+void FrameRenderer::removeFrame(Canvas canvas){
     cout << "removing a frame" << endl;
     if(numFrames > 1){
+        writeAllData(&canvas);
         if(curFrame == 1){
             curFrame++;
         }
@@ -102,10 +141,17 @@ void FrameRenderer::removeFrame(){
 }
 
 // save the current data to the drive
-// load the pixelDatas into the corrrect file
-void FrameRenderer::selectFrame(int frameNum){
-    if(0 < frameNum && frameNum <= numFrames){
-        cout << "Frame #" << frameNum << " Selected" << endl;
+// load the pixelDatas from the corrrect file to here
+// update the canvas with info from the drive
+void FrameRenderer::selectFrame(Canvas canvas, int frameDelta){
+    if(0 < curFrame + frameDelta && curFrame + frameDelta <= numFrames){
+        // save data to drive
+        cout << "Frame #" << to_string(frameDelta + curFrame) << " Selected" << endl;
+        writeAllData(&canvas);
+        curFrame = curFrame + frameDelta;
+        int* meta = readMetaData();
+        canvas.setPixels(frames[curFrame-1]);
+        canvas.setLayerData(readLayerData(meta));
     }
     else{
         cout << "Frame outside of bounds" << endl;
@@ -117,39 +163,8 @@ void FrameRenderer::shutdown(){
     fs::remove_all("./frameDatas");
 }
 
-//  ----------- setters and getters ---------------
-void FrameRenderer::setCurFrame(int newCurFrame){
-    if(0 < newCurFrame && newCurFrame <= numFrames){
-        curFrame = newCurFrame;
-    }
-    else{
-        cout << "FrameRenderer.cpp line 82: you tried to set \"curFrames\" to something it should not be" << endl;
-    }
-}
 
-int FrameRenderer::getCurFrame(){
-    return curFrame;
-}
-
-int FrameRenderer::getNumFrames(){
-    return numFrames;
-}
-
-void FrameRenderer::setCurCanvas(int newCurCanvas){
-    if(0 < newCurCanvas && newCurCanvas < numCanvas){
-        curCanvas = newCurCanvas;
-    }
-    else {
-        cout << "FrameRenderer.cpp line 105: You tried to set \"curCanvas\" to something it should not be" << endl;
-    }
-}
-
-int FrameRenderer::getCurCanvas(){
-    return curCanvas;
-}
-
-
-// Private functions 
+// --------------------- Private functions ------------------------------ 
 void FrameRenderer::writeAllData(Canvas* canvas){
     writeMetaData(canvas);
     writePixelData(canvas);
@@ -190,9 +205,85 @@ void FrameRenderer::writeLayerData(Canvas* canvas){
 
         ofstream File("./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) + ".dat");
         for (int i = 0; i < frLayerData.size(); i++){
-            cout << "h" << endl;
             File.write(reinterpret_cast<const char*>(frLayerData[i].data()), frLayerData[i].size() * 4);
         }
         File.close();
+    }
+}
+
+// returns a pointer where you can access [width, height, NumLayers, NumFrames]
+int* FrameRenderer::readMetaData() {
+    static int meta[4];
+    // init all values
+    for(int i = 0; i < 4; i++){
+        meta[i] = 0;
+    }
+
+    ifstream File("./frameDatas/canvas" + to_string(curCanvas) + "/meta.dat", ios::binary);
+    if (!File) {
+        cout << "returning nothing";
+        return meta;   // return default {0,0,0,0} if file missing
+    }
+
+    File.read(reinterpret_cast<char*>(meta), 4 * sizeof(int));
+    return meta;
+}
+
+vector<vector<Color>> FrameRenderer::readPixelData(int* arr) {
+    int width = arr[0];
+    int height = arr[1];
+    int numFra = arr[3];
+
+    vector<vector<Color>> readFrames(numFra, vector<Color>(width * height));
+
+    ifstream File("./frameDatas/canvas" + to_string(curCanvas) + "/frameData.dat", ios::binary);
+    if (!File){
+        return readFrames;
+    }
+
+    for (int i = 0; i < numFra; i++) {
+        File.read(reinterpret_cast<char*>(readFrames[i].data()), width * height * sizeof(Color));
+    }
+    cout << "read pixelData" << endl;
+    return readFrames;
+}
+    
+vector<vector<Color>> FrameRenderer::readLayerData(int* arr){
+    int width = arr[0];
+    int height = arr[1];
+    int numLay = arr[2];
+
+    vector<vector<Color>> returnData(numLay, vector<Color>(width*height));
+
+    string path = "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) +  ".dat";
+    ifstream File(path, ios::binary);
+    if (!File){
+        cout << "returned nothing" << endl;
+        return returnData;
+    }
+
+    for(int i = 0; i < numLay; i++){
+        File.read(reinterpret_cast<char*>(returnData[i].data()), width * height * sizeof(Color));
+    }
+    cout << "should be 255:" << returnData[0][0].r << endl;
+    cout << "should be 0:" << returnData[0][1].r << endl;
+    return returnData;
+}
+
+void FrameRenderer::rename(bool isAdding){
+
+    for(int i = curFrame; i <= numFrames; i++){
+        if(isAdding){
+            cout << "renaming file" << endl;
+            fs::rename(
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i + 1) + ".dat");
+            cout << "renamed 1 file" << endl;
+        }
+        else{
+            fs::rename(
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i - 1) + ".dat");
+        }
     }
 }

@@ -68,7 +68,7 @@ void CanvasManager::setActiveCanvas(int index)
     }
     activeCanvas = &canvases[index];
     canvasChange = true;
-    FrameRenderer::updateCanvas(&oldCanvasCopy, index);
+    FrameRenderer::updateCanvas(&oldCanvasCopy, activeCanvas, index);
 }
 
 // bandaid placement of saving features 
