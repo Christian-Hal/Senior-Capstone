@@ -70,6 +70,7 @@ static Renderer renderer;
 extern BrushManager brushManager;
 
 
+
 // ----- ImGui code to load and access images in directory -----
 
 
@@ -156,9 +157,12 @@ UI::CursorMode UI::getCursorMode() const {
 	return cursorMode;
 }
 
+
+
 void UI::setCursorMode(UI::CursorMode temp) {
 	cursorMode = temp;
 }
+
 
 
 // UI initialization 
@@ -250,7 +254,9 @@ void UI::draw(CanvasManager& canvasManager)
 			ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
 			// center brush tip
-			ImVec2 offset = ImVec2(mousePos.x - (tw * scale * 0.5f), mousePos.y - (th * scale * 0.5f));
+			// NOTE: once we are able to draw from a single click, the float values in these 
+			// calculations might need to be slightly changed 
+			ImVec2 offset = ImVec2(mousePos.x - (tw * scale * 0.3f), mousePos.y - (th * scale * 0.3f));
 
 			for (int y = 0; y < th; y++) {
 				for (int x = 0; x < tw; x++) {
@@ -258,7 +264,7 @@ void UI::draw(CanvasManager& canvasManager)
 
 					// edge pixels, for the cursor outline, are only those with alpha values above a threshold
 					if (tipAlpha[i] > 0.01f) {
-						ImVec2 p_min = ImVec2(offset.x + (x * scale), offset.y + (y * scale));
+						ImVec2 p_min = ImVec2(offset.x + (x * scale * 0.63), offset.y + (y * scale * 0.63));
 						ImVec2 p_max = ImVec2(p_min.x + scale, p_min.y + scale);
 
 						// drawing those pixels, color value is fix
@@ -373,7 +379,8 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::ColorPicker4("", color, flags);
 
 	// brush size slider 
-	ImGui::SliderInt("Brush Size", &brushSize, 1, 100);
+	// value is temporarily significantly lowered due to current brush size implementation 
+	ImGui::SliderInt("Brush Size", &brushSize, 1, 20);
 
 	// --- Displaying loaded brush options ---
 	// grabs the list of loaded brushes
