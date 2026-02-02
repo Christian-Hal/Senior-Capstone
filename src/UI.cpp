@@ -390,6 +390,9 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 	if(ImGui::Button("Remove Frame")){
 		FrameRenderer::removeFrame(canvasManager.getActive());
 	}
+	if(ImGui::Button("Play")){
+		FrameRenderer::play(canvasManager.getActive());
+	}
 	// end step
 	ImGui::End();
 }

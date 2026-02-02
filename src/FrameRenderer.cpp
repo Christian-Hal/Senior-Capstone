@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <thread>
+#include <chrono>
 
 
 // NOTES - there are 3 types of files in a canvas folder: the metaData file containing the width, hieght, number of layers and number of frames this is stored in meta.dat
@@ -170,6 +172,23 @@ void FrameRenderer::selectFrame(Canvas& canvas, int frameDelta){
     else{
         cout << "Frame outside of bounds" << endl;
     }
+}
+
+void FrameRenderer::play(Canvas& canvas){
+    frames[curFrame - 1] =  vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
+    int start = curFrame;
+    std::thread t([&canvas, start]{
+        int i = start;
+        while (i <= numFrames) {
+            canvas.setPixels(frames[i-1]);
+            i++;
+            std::this_thread::sleep_for(std::chrono::milliseconds(84)); // 42 milliseconds is ~ 24 fps
+        }
+        cout << "exiting the loop" << endl;
+        canvas.setPixels(frames[start-1]);
+    });
+    t.detach();
+
 }
 
 // removes all of the files after shutdown so you dont eat up storage.

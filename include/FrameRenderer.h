@@ -16,6 +16,7 @@ class FrameRenderer{
         static void createFrame(Canvas& canvas);
         static void removeFrame(Canvas& canvas);
         static void selectFrame(Canvas& canvas, int frameDelta);
+        static void play(Canvas& canvas);
         void shutdown();
 
     private:
