@@ -8,7 +8,11 @@
 #include "BrushManager.h"
 #include "stb_image.h"
 
-// init function that loads in all default brushes
+/*
+    Init method that loads in the default brushes. 
+
+    Default brush is 1px. 
+*/
 void BrushManager::init()
 {
     loaded_Brushes.emplace_back(BrushTool(1,1, "DefaultBrush"));
@@ -26,7 +30,11 @@ void BrushManager::init()
 }
 
 
+/*
+    Getter for loaded brushes.
 
+    @return vector of the loaded brushes
+*/
 const std::vector<BrushTool>& BrushManager::getLoadedBrushes()
 {
     return loaded_Brushes;
@@ -34,14 +42,20 @@ const std::vector<BrushTool>& BrushManager::getLoadedBrushes()
 
 
 
-// active brush stuff
+/*
+    ActiveBrush Getter.
+
+    @return pointer to the activeBrush.
+*/
 const BrushTool& BrushManager::getActiveBrush()
 {
     return *activeBrush;
 }
 
 
-
+/*
+    ActiveBrush Setter.
+*/
 void BrushManager::setActiveBrush(int index) 
 {
     if (index > 0 && index < loaded_Brushes.size()){}
@@ -52,7 +66,15 @@ void BrushManager::setActiveBrush(int index)
 
 
 
-// brush loader methods
+/*
+    Loads a brush tip given a PNG image.
+
+    This image must be in the build out folder in your project (for now). 
+
+    Uses STBimage to load the image, parse the pixels, and derive a brushtip. 
+
+    @return true if the brushtip was successfully loaded.
+*/
 bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBrush)
 {
     int width, height, channels;
@@ -66,6 +88,7 @@ bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBr
         STBI_rgb_alpha
     );
 
+    // error msg 
     if (!data) {
         std::cerr << "Failed to load brush tip: " << path << "\n";
         return false;
@@ -98,7 +121,15 @@ bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBr
 }
 
 
+/*
+    Loads a brush tip given a GBR file. 
 
+    This file must be in the build out folder in your project (for now). 
+
+    Parse the gbr file format to derive a brushtip composed of alpha values. 
+
+    @return true if the brushtip was successfully loaded.
+*/
 bool BrushManager::loadBrushFromGBR(const std::string& path, BrushTool& out)
 {
     std::ifstream file(path, std::ios::binary);
@@ -150,7 +181,13 @@ bool BrushManager::loadBrushFromGBR(const std::string& path, BrushTool& out)
 }
 
 
+/*
+    Loads the default brush tip. 
 
+    This brush specifically is a hard coded list of pixel values. 
+
+    Returns nothing as it cannot fail to load. 
+*/
 void BrushManager::configureAsDefault(BrushTool& brush) {
 
 	float cx = (brush.tipWidth - 1) * 0.5f; 
@@ -178,7 +215,11 @@ void BrushManager::configureAsDefault(BrushTool& brush) {
 }
 
 
+/*
+    Helper method for parsing the GBR brush files.
 
+    @return groups of bits needed for file parsing. 
+*/
 uint32_t BrushManager::read_be32(std::ifstream& f)
 {
     // reads in the next 4 bits

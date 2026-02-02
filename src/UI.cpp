@@ -257,7 +257,7 @@ void UI::draw(CanvasManager& canvasManager)
 					ImVec2 p_min = ImVec2(offset.x + (x * scale), offset.y + (y * scale));
 					ImVec2 p_max = ImVec2(p_min.x + scale, p_min.y + scale);
 
-					// drawing those pixels, color value is fixedd 
+					// drawing those pixels, color value is fix
 					drawList->AddRect(p_min, p_max, IM_COL32(128, 128, 128, 255));
 				}
 			}
