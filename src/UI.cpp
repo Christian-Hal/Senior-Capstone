@@ -243,25 +243,37 @@ void UI::draw(CanvasManager& canvasManager)
 
 		// grab mouse position and initialize draw list 
 		ImVec2 mousePos = ImGui::GetMousePos();
-		ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
-		// center brush tip
-		ImVec2 offset = ImVec2(mousePos.x - (tw * scale * 0.5f), mousePos.y - (th * scale * 0.5f));
+		// *** TEMP FIX ***
+		// drawing the custom cursor only if the brushsize is large enough
+		if (scale >= 3) {
+			ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
-		for (int y = 0; y < th; y++) {
-			for (int x = 0; x < tw; x++) {
-				int i = y * tw + x;
+			// center brush tip
+			ImVec2 offset = ImVec2(mousePos.x - (tw * scale * 0.5f), mousePos.y - (th * scale * 0.5f));
 
-				// edge pixels, for the cursor outline, are only those with alpha values above a threshold
-				if (tipAlpha[i] > 0.01f) {
-					ImVec2 p_min = ImVec2(offset.x + (x * scale), offset.y + (y * scale));
-					ImVec2 p_max = ImVec2(p_min.x + scale, p_min.y + scale);
+			for (int y = 0; y < th; y++) {
+				for (int x = 0; x < tw; x++) {
+					int i = y * tw + x;
 
-					// drawing those pixels, color value is fix
-					drawList->AddRect(p_min, p_max, IM_COL32(128, 128, 128, 255));
+					// edge pixels, for the cursor outline, are only those with alpha values above a threshold
+					if (tipAlpha[i] > 0.01f) {
+						ImVec2 p_min = ImVec2(offset.x + (x * scale), offset.y + (y * scale));
+						ImVec2 p_max = ImVec2(p_min.x + scale, p_min.y + scale);
+
+						// drawing those pixels, color value is fix
+						drawList->AddRect(p_min, p_max, IM_COL32(128, 128, 128, 255));
+					}
 				}
 			}
 		}
+
+		// if brush size is smaller, then draw default circle cursor
+		else {
+			ImGui::GetForegroundDrawList()->AddCircle(ImGui::GetMousePos(), 10, IM_COL32(255, 0, 0, 255));
+		}
+
+		
 	}
 
 	ImGui::Render();
