@@ -74,7 +74,7 @@ BrushTool activeBrush;
 
 Camera2d camera;
 
-
+// callback for mouse button reading
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
 	// if no renderer    or imgui wants the mouse
@@ -90,11 +90,13 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 	{
 		if (action == GLFW_PRESS)
 		{
+			// for drawing and erasing
 			if (mode == UI::CursorMode::Draw || mode == UI::CursorMode::Erase)
 			{
 				activeRenderer->isDrawing = true;
 			}
 
+			// for pan and zoom and come extra logic for smooth rotation
 			else if (mode == UI::CursorMode::Pan || mode == UI::CursorMode::Rotate)
 			{
 				isPanning = true;
@@ -116,6 +118,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 				}
 			}	
 
+			// for click zoom in and out plus logic for it
 			else if (mode == UI::CursorMode::ZoomIn || mode == UI::CursorMode::ZoomOut)
 			{
 				const float zoomStep = 1.2f;
@@ -189,6 +192,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 	UI::CursorMode mode = ui.getCursorMode();
 	
+	// panning and rotation logic cursor logic
 	if (isPanning)
 	{
 		double dx = xpos - lastMouseX;
@@ -224,6 +228,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 		return;
 	}
 
+	// for tempoary zoom logic
 	if (isZoomDragging)
 	{
 		double dy = ypos - lastZoomMouseY;
@@ -277,6 +282,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 	Canvas& curCanvas = activeCanvasManager.getActive();
 
+	// logic for proper drawing on the manipulated canvas (canvas that is zoomed, panned, or rotated)
 	float screenX = (float)xpos;
 	float screenY = global.get_scr_height() - (float)ypos;
 
@@ -304,6 +310,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	p += canvasCenter;
 
 
+
 	int x = (int)p.x;
 	int y = (int)p.y;
 
@@ -320,6 +327,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	int dy = y - lastY;
 	int steps = std::max(abs(dx), abs(dy));
 
+	// logic to prevent system crashing if zoomed in too much
 	if (steps == 0)
 	{
 		// Draw a single dab and bail out
@@ -388,10 +396,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 	lastX = x;
 	lastY = y;
-	//balls
 }
-
-
 
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 {
@@ -452,11 +457,11 @@ static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 	camera.offset += mouseScreen - glm::vec2(newScreen);
 }
 
+//keyboard callbacks to set up hotkeys for switching cursorModes and temporary shortcut for zoom
 static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (ImGui::GetIO().WantCaptureKeyboard)
 		return;
-
 
 	if (key == GLFW_KEY_R && action == GLFW_PRESS)
 	{
@@ -502,25 +507,6 @@ static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int acti
 		if (action == GLFW_RELEASE)
 			isZoomDragging = false;
 	}
-
-	if (key == GLFW_KEY_SPACE)
-	{
-		UI::CursorMode temp = ui.getCursorMode();
-
-		if (action == GLFW_PRESS &&
-			(mods & GLFW_MOD_SHIFT))
-		{
-			ui.setCursorMode(UI::CursorMode::Rotate);
-		}
-
-		if (action == GLFW_RELEASE)
-		{
-			ui.setCursorMode(temp);
-		}
-	}
-
-	
-
 }
 
 
