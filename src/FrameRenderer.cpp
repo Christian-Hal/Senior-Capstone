@@ -51,7 +51,7 @@ FrameRenderer::FrameRenderer()
 void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
     // Save the data if there already was a canvas
     if(numCanvas != 0){
-        frames.push_back(vector<Color>(oldCanvas->getData(), oldCanvas->getData() + oldCanvas->getWidth() * oldCanvas->getHeight()));
+        frames[curFrame - 1] = vector<Color>(oldCanvas->getData(), oldCanvas->getData() + (oldCanvas->getWidth() * oldCanvas->getHeight()));
         writeAllData(oldCanvas);
     }
     numCanvas++;
@@ -76,7 +76,7 @@ void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCa
     
     // Save data
     if(numCanvas != 0){
-        frames.insert(frames.begin(), vector<Color>(oldCanvas->getData(), oldCanvas->getData() + (oldCanvas->getWidth() * oldCanvas->getHeight())));
+        frames[curFrame - 1] =  vector<Color>(oldCanvas->getData(), oldCanvas->getData() + (oldCanvas->getWidth() * oldCanvas->getHeight()));
         writeAllData(oldCanvas);
     }
 
@@ -106,47 +106,61 @@ void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCa
 // inserts the frame at 1 + curFrame and update numFrames
 // updates all frame filenames accordingly
 // loads new frame with blank canvas
-void FrameRenderer::createFrame(Canvas canvas){
+void FrameRenderer::createFrame(Canvas& canvas){
     // Save the old frame
+    frames[curFrame - 1] =  vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
     writeAllData(&canvas);
-
-    // insert new frame
     numFrames++;
+    curFrame++;
+    // insert new frame
     int* meta = readMetaData(); // meta[0] is width, meta[1] is height
-
-    frames.insert(frames.begin() + curFrame - 1, vector<Color>(meta[0] * meta[1], {255,255,255,255}));
-    cout << "inserted the frame" << endl;
+    if(numFrames == curFrame){
+        frames.insert(frames.end(), vector<Color>(meta[0] * meta[1], {255,255,255,255}));
+    }
+    else{
+        // this ought to insert inbetween the oldCurrent frame
+        frames.insert(frames.begin() + curFrame - 1, vector<Color>(meta[0] * meta[1], {255,255,255,255}));
+    }
+    canvas.setPixels(frames[curFrame - 1]);
+    canvas.setLayerData(readLayerData(meta));
     // create function that renames any other frames that come after
     rename(true);
-    
-    curFrame++;
-
     writeAllData(&canvas);
-    canvas.setPixels(frames[curFrame-1]);
-    canvas.setLayerData(readLayerData(meta));
 }
 
 // remove current frame and update file names accordingly
-void FrameRenderer::removeFrame(Canvas canvas){
-    cout << "removing a frame" << endl;
+void FrameRenderer::removeFrame(Canvas& canvas){
+    cout << "current frame: " << curFrame << endl;
     if(numFrames > 1){
-        writeAllData(&canvas);
-        if(curFrame == 1){
-            curFrame++;
+        // erases the frameData
+        frames.erase(frames.begin() + curFrame - 1);
+        // erases the layerData
+        if(!fs::remove("./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) + ".dat")){
+            cerr << "File was not removed" << endl;
         }
-        else{
+        // fixes the names of layerdata
+        rename(false);
+        if(curFrame == numFrames){
             curFrame--;
         }
+        numFrames--;
+        // saves the information (changed frameData, changed metadata)
+        writeAllData(&canvas);
+        int* meta = readMetaData();
+        canvas.setPixels(frames[curFrame-1]);
+        canvas.setLayerData(readLayerData(meta));
+    
     }
 }
 
 // save the current data to the drive
 // load the pixelDatas from the corrrect file to here
 // update the canvas with info from the drive
-void FrameRenderer::selectFrame(Canvas canvas, int frameDelta){
+void FrameRenderer::selectFrame(Canvas& canvas, int frameDelta){
     if(0 < curFrame + frameDelta && curFrame + frameDelta <= numFrames){
         // save data to drive
         cout << "Frame #" << to_string(frameDelta + curFrame) << " Selected" << endl;
+        frames[curFrame - 1] =  vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
         writeAllData(&canvas);
         curFrame = curFrame + frameDelta;
         int* meta = readMetaData();
@@ -244,7 +258,6 @@ vector<vector<Color>> FrameRenderer::readPixelData(int* arr) {
     for (int i = 0; i < numFra; i++) {
         File.read(reinterpret_cast<char*>(readFrames[i].data()), width * height * sizeof(Color));
     }
-    cout << "read pixelData" << endl;
     return readFrames;
 }
     
@@ -258,32 +271,31 @@ vector<vector<Color>> FrameRenderer::readLayerData(int* arr){
     string path = "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) +  ".dat";
     ifstream File(path, ios::binary);
     if (!File){
-        cout << "returned nothing" << endl;
         return returnData;
     }
 
     for(int i = 0; i < numLay; i++){
         File.read(reinterpret_cast<char*>(returnData[i].data()), width * height * sizeof(Color));
     }
-    cout << "should be 255:" << returnData[0][0].r << endl;
-    cout << "should be 0:" << returnData[0][1].r << endl;
     return returnData;
 }
 
 void FrameRenderer::rename(bool isAdding){
-
-    for(int i = curFrame; i <= numFrames; i++){
-        if(isAdding){
+    if(isAdding){
+        for(int i = curFrame + 2; i <= numFrames; i++){
             cout << "renaming file" << endl;
             fs::rename(
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
-                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i + 1) + ".dat");
-            cout << "renamed 1 file" << endl;
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i+1) + ".dat");
         }
-        else{
+    }
+    else{
+        for(int i = curFrame; i < numFrames; i++){
+            cout << i << endl;
             fs::rename(
-                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
-                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i - 1) + ".dat");
-        }
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i + 1) + ".dat",
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat");
+            }
+        
     }
 }

@@ -13,9 +13,9 @@ class FrameRenderer{
         FrameRenderer();
         static void newCanvas(Canvas* oldCanvas, Canvas* newCanvas);
         static void updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCanvasIndex);
-        static void createFrame(Canvas canvas);
-        static void removeFrame(Canvas canvas);
-        static void selectFrame(Canvas canvas, int frameDelta);
+        static void createFrame(Canvas& canvas);
+        static void removeFrame(Canvas& canvas);
+        static void selectFrame(Canvas& canvas, int frameDelta);
         void shutdown();
 
     private:
