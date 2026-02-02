@@ -1,5 +1,4 @@
 
-
 #include <vector>
 #include <iostream>
 #include <string>
@@ -15,11 +14,19 @@ Canvas::Canvas(int w, int h, std::string name) : width(w), height(h), numLayers(
     layerData.push_back(std::vector<Color>(w * h, emptyColor));
 }
 
-// canvas name methods
+
+/*
+    Canvas getter. 
+
+    @return name of the canvas. 
+*/
 const std::string Canvas::getName() const
 {
     return canvasName;
 }
+/*
+    Canvas setter. 
+*/
 void Canvas::setName(std::string name)
 {
     canvasName = name;
