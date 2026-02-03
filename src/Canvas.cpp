@@ -75,6 +75,8 @@ const std::vector<std::vector<Color>>& Canvas::getLayerData() const {
     return layerData;
 }
 
+
+
 // Overloading operations
 bool operator==(const Color& c2, const Color& c1)
 {
@@ -161,6 +163,10 @@ void Canvas::setPixel(int x, int y, const Color& color)
 
 void Canvas::setPixels(std::vector<Color> newPixels){
     pixels = newPixels;
+}
+
+void Canvas::setLayerData(std::vector<std::vector<Color>> newLayerData){
+    layerData = newLayerData;
 }
 
 /*
