@@ -6,6 +6,8 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+
+
 Canvas& CanvasManager::createCanvas(int width, int height, std::string name)
 {
     std::string fixed_name = checkName(name);
@@ -17,20 +19,28 @@ Canvas& CanvasManager::createCanvas(int width, int height, std::string name)
     return *activeCanvas;
 }
 
+
+
 Canvas& CanvasManager::getActive()
 {
     return *activeCanvas;
 }
+
+
 
 bool CanvasManager::hasActive()
 {
     return activeCanvas != nullptr;
 }
 
+
+
 int CanvasManager::getNumCanvases()
 {
     return canvases.size();
 }
+
+
 
 std::string CanvasManager::checkName(std::string name)
 {
@@ -46,6 +56,8 @@ std::string CanvasManager::checkName(std::string name)
     return name;
 }
 
+
+
 const std::vector<Canvas>& CanvasManager::getOpenCanvases() const
 {
     return canvases;
@@ -59,9 +71,10 @@ void CanvasManager::setActiveCanvas(int index)
     canvasChange = true;
 }
 
+
+
 // bandaid placement of saving features 
 // will look pretty later
-
 void CanvasManager::getFrameData(CanvasManager& canvasManager)
 {
     // get the width and height of the canvas

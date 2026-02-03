@@ -40,7 +40,6 @@ public:
     BrushTool(int w, int h, std::string name);
     BrushTool();
 
-    // sample the alpha value at a pixel 
-    float sampleAlpha(int x, int y) const;
+  
 
 };

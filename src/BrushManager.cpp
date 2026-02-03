@@ -55,6 +55,8 @@ const BrushTool& BrushManager::getActiveBrush()
 
 /*
     ActiveBrush Setter.
+
+    @param index: The index of the brush to be set as the active brush. 
 */
 void BrushManager::setActiveBrush(int index) 
 {
@@ -72,6 +74,10 @@ void BrushManager::setActiveBrush(int index)
     This image must be in the build out folder in your project (for now). 
 
     Uses STBimage to load the image, parse the pixels, and derive a brushtip. 
+
+    @param path: The path to where the png is stored from build out file as current root dir. 
+
+    @param outBrush: The brush that will have the PNG tip associated with it. 
 
     @return true if the brushtip was successfully loaded.
 */
@@ -126,7 +132,11 @@ bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBr
 
     This file must be in the build out folder in your project (for now). 
 
-    Parse the gbr file format to derive a brushtip composed of alpha values. 
+    Parse the gbr file format to derive a brushtip composed of alpha values.
+
+    @param path: The path to where the png is stored from build out file as current root dir.
+
+    @param outBrush: The brush that will have the GBR tip associated with it.
 
     @return true if the brushtip was successfully loaded.
 */
@@ -185,6 +195,8 @@ bool BrushManager::loadBrushFromGBR(const std::string& path, BrushTool& out)
     Loads the default brush tip. 
 
     This brush specifically is a hard coded list of pixel values. 
+
+    @param brush: The brush to be configured as the default brush. 
 
     Returns nothing as it cannot fail to load. 
 */

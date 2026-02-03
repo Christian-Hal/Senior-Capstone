@@ -10,7 +10,11 @@
 	Creates a brush tip of w x h
 
 	Default initialized alpha values are all 1.0 
-	giving a fully opaque brush 
+	giving a fully opaque brush. 
+
+	@param w: The width of the brushtip.
+	@param h: The height of the brushtip.
+	@param name: The name of the brush. 
 */
 BrushTool::BrushTool(int w, int h, std::string name) :
 	tipWidth(w),
@@ -23,6 +27,13 @@ BrushTool::BrushTool(int w, int h, std::string name) :
 	rotateWithStroke(false)
 {}
 
+
+
+/*
+	Alternative default BrushTool constructor. 
+
+	Consists of default values and takes no parameters.
+*/
 BrushTool::BrushTool() : 
 	tipWidth(0),
 	tipHeight(0),
@@ -33,18 +44,3 @@ BrushTool::BrushTool() :
 	opacity(1.0f),
 	rotateWithStroke(false)
 {}
-
-
-
-/*
-	Returns the alpha value at a pair of coordinates 
-
-	If the coordinates are outside of the brush, 
-	return 0.0, doing nothing. 
-*/
-float BrushTool::sampleAlpha(int x, int y) const {
-	if (x < 0 || y < 0 || x >= tipWidth || y >= tipHeight)
-		return 0.0f;
-
-	return tipAlpha[y * tipWidth + x]; 
-}

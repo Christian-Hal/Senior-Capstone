@@ -6,6 +6,7 @@
 #include "Canvas.h"
 
 
+
 // constructor
 Canvas::Canvas() : width(0), height(0), numLayers(0), curLayer(0), pixels(), layerData(), canvasName("") {}
 Canvas::Canvas(int w, int h, std::string name) : width(w), height(h), numLayers(2), curLayer(1), pixels(w * h, backgroundColor), canvasName(name) 
@@ -13,6 +14,7 @@ Canvas::Canvas(int w, int h, std::string name) : width(w), height(h), numLayers(
     layerData.push_back(pixels);
     layerData.push_back(std::vector<Color>(w * h, emptyColor));
 }
+
 
 
 /*
@@ -24,6 +26,9 @@ const std::string Canvas::getName() const
 {
     return canvasName;
 }
+
+
+
 /*
     Canvas setter. 
 */
@@ -32,31 +37,69 @@ void Canvas::setName(std::string name)
     canvasName = name;
 }
 
-// canvas size methods
+
+
+
+/*
+    Canvas width and height getters. 
+*/
 int Canvas::getWidth() const { return width; }
 int Canvas::getHeight() const { return height; }
 
-// layer number method
+/*
+    Canvas number of layers and current layer getters. 
+*/
 int Canvas::getNumLayers() const { return numLayers; }
 int Canvas::getCurLayer() const { return curLayer; }
 
+
+
+/*
+    Getter for pixel data. 
+
+    @return pixel data as a Color type pointer 
+*/
 const Color* Canvas::getData() const {
     return pixels.data(); 
 }
 
-// Overloading operations
+
+
+/*
+    Equality operator overload for Color datatype. 
+
+    Is true if rgba values are equal for both Colors. 
+*/
 bool operator==(const Color& c2, const Color& c1)
 {
     return (c1.r == c2.r) && (c1.g == c2.g) && (c1.b == c2.b)  && (c1.a == c2.a);
 }
 
+
+
+/*
+    Inequality operator overload for Color datatype.
+
+    Is true if any of the rgba values are not equal for both Colors. 
+
+    EX: if color1 red is not equal to color2 red this is true.
+*/
 bool operator!=(const Color& c2, const Color& c1)
 {
     return (c1.r != c2.r) || (c1.g != c2.g) || (c1.b != c2.b)  || (c1.a != c2.a);
 }
 
 
+/*
+    Multiplication operator overload for Color datatype. 
 
+    Used to blend two colors together. 
+
+    Uses the standard alpha blending formula. 
+
+    Note: Currently does not apply to drawings on a singular layer due to 
+          set pixel replacing pixels rather than drawing them. 
+*/
 Color operator*(const Color& c2, const Color& c1){
     
     // Normalize
@@ -80,7 +123,14 @@ Color operator*(const Color& c2, const Color& c1){
 
 
 
-// pixel manipulation
+/*
+    If the pixel at a given coordinate is within bounds, 
+    the color is drawn onto that layer. 
+
+    @param x: The x coordinate of the pixel to be set.
+    @param y: The y coordinate of the pixel to be set. 
+    @param color: The color to set the pixel to. 
+*/
 void Canvas::setPixel(int x, int y, const Color& color)
 {
     // making sure (x, y) is within bounds
@@ -104,7 +154,21 @@ void Canvas::setPixel(int x, int y, const Color& color)
 }
 
 
+/*
+    Note: Not yet implemented 
 
+    Modified version of setPixel which does not replace 
+    pixels entirely but rather accumulates them to 
+    allow for single layer blending. 
+
+    If the alpha value of the source pixel is full, it 
+    calls setPixel instead. 
+
+    @param x: The x coordinate of the pixel to be blended. 
+    @param y: The y coordinate of the pixel to be blended. 
+    @param src: The color value of the source pixel, which is the pixel to be set. 
+    @param brushAlpha: The alpha of the current brush, used in calculating the blending. 
+*/
 void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 
     // making sure (x, y) is within bounds 

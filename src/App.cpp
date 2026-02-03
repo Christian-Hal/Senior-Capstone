@@ -22,11 +22,11 @@ static int SCR_HEIGHT = 720;
 
 
 /*
-Creates the window according to 
+Creates the window according to screen height and width values.
 
-Initializes the UI 
+Initializes the UI.
 
-@return true if window was successfully created 
+@return true if window was successfully created.
 */
 bool App::init() {
 
@@ -54,7 +54,7 @@ bool App::init() {
 /*
 Runs the render loop.
 
-Begin frame, draw UI, end frame
+Begin frame, draw UI, end frame.
 */
 void App::run() 
 {
@@ -76,7 +76,7 @@ void App::run()
 
 
 /*
-Shut down the UI, renderer, and the window.
+Shuts down the UI, renderer, and the window.
 */
 void App::shutdown() {
 	ui.shutdown();
