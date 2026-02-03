@@ -7,7 +7,6 @@
 #include "CanvasManager.h"
 #include "Canvas.h"
 #include "Globals.h"
-#include "FrameRenderer.h"
 
 #include <GLFW/glfw3.h>
 
@@ -16,7 +15,7 @@ class UI {
 
 public:
 	void init(GLFWwindow* window, Renderer& renderer, Globals& g_inst);
-	void draw(CanvasManager& canvasManager, FrameRenderer frameRenderer);
+	void draw(CanvasManager& canvasManager);
 	void shutdown();
 	Color getColor();
 	void drawPopup(CanvasManager& canvasManager);
@@ -40,7 +39,7 @@ private:
 	void drawLeftPanel(CanvasManager& canvasManager);
 	void drawRightPanel(CanvasManager& canvasManager);
 	void drawTopPanel(CanvasManager& canvasManager);
-	void drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer);
+	void drawBottomPanel(CanvasManager& canvasManager);
 
 	void drawCanvasTabs(CanvasManager& canvasManager);
 };

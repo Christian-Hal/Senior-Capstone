@@ -7,7 +7,6 @@
 #include "Globals.h"
 #include "CanvasManager.h"
 #include "BrushManager.h"
-#include "FrameRenderer.h"
 
 
 // define our static objects and vars 
@@ -17,7 +16,6 @@ static UI ui;
 Globals global;
 BrushManager brushManager;
 static CanvasManager canvasManager;
-FrameRenderer frameRenderer;
 
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
@@ -68,7 +66,7 @@ void App::run()
 
 		// order of these four methods must not change
 		renderer.beginFrame(canvasManager);
-		ui.draw(canvasManager, frameRenderer);
+		ui.draw(canvasManager);
 		renderer.endFrame();
 
 		window.swapBuffers();
@@ -81,7 +79,6 @@ void App::run()
 Shuts down the UI, renderer, and the window.
 */
 void App::shutdown() {
-	frameRenderer.shutdown();
 	ui.shutdown();
 	renderer.shutdown();
 	window.destroy();

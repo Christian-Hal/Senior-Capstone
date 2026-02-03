@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "CanvasManager.h"
-#include "FrameRenderer.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -11,13 +10,8 @@
 
 Canvas& CanvasManager::createCanvas(int width, int height, std::string name)
 {
-    Canvas oldCanvasCopy;
-    if(this->hasActive()){
-        oldCanvasCopy = *activeCanvas;
-    }
     std::string fixed_name = checkName(name);
     canvases.emplace_back(Canvas(width, height, fixed_name));
-    FrameRenderer::newCanvas(&oldCanvasCopy, &canvases.back());
     activeCanvas = &canvases.back();
 
     canvasChange = true;
@@ -71,16 +65,10 @@ const std::vector<Canvas>& CanvasManager::getOpenCanvases() const
 
 void CanvasManager::setActiveCanvas(int index)
 {
-
     if (index > 0 && index < canvases.size()){}
     
-    Canvas oldCanvasCopy;
-    if(this->hasActive()){
-        oldCanvasCopy = *activeCanvas;
-    }
     activeCanvas = &canvases[index];
     canvasChange = true;
-    FrameRenderer::updateCanvas(&oldCanvasCopy, activeCanvas, index);
 }
 
 
