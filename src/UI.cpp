@@ -456,11 +456,15 @@ void UI::drawBottomPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, h - BotSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, BotSize), ImGuiCond_Always);
-	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
 
 	// end step
+	if (ImGui::GetWindowHeight() > h - 2 * TopSize)
+		BotSize = h - 2 * TopSize;
+	else
+		BotSize = ImGui::GetWindowHeight();
 	ImGui::End();
 }
 
