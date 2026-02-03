@@ -22,6 +22,7 @@ class Canvas {
         int getNumLayers() const;
         int getCurLayer() const;
         const Color* getData() const;
+        const std::vector<std::vector<Color>>& getLayerData() const;
 
         const std::string getName() const;
         void setName(std::string name);
@@ -30,6 +31,8 @@ class Canvas {
         void setPixel(int x, int y, const Color& color);
         void blendPixel(int x, int y, const Color& srcColor, float brushAlpha);
         Color& getPixel(int x, int y) const;
+        void setPixels(std::vector<Color> newPixels);
+        void setLayerData(std::vector<std::vector<Color>> newLayerData);
 
         // layer manipulation
         void createLayer();
