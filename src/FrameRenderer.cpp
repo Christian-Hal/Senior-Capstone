@@ -124,7 +124,10 @@ void FrameRenderer::createFrame(Canvas& canvas){
         frames.insert(frames.begin() + curFrame - 1, vector<Color>(meta[0] * meta[1], {255,255,255,255}));
     }
     canvas.setPixels(frames[curFrame - 1]);
-    canvas.setLayerData(readLayerData(meta));
+    //band-aid solution. this does not fix removing layers fully
+    vector<vector<Color>> layDat(meta[2], vector<Color>(meta[0] * meta[1], {0,0,0,0})); //meta[2] is the number of layers
+    layDat[0] = vector<Color>(meta[0] * meta[1], {255,255,255,255});
+    canvas.setLayerData(layDat);
     // create function that renames any other frames that come after
     rename(true);
     writeAllData(&canvas);
@@ -235,10 +238,10 @@ void FrameRenderer::writePixelData(Canvas* canvas){
 void FrameRenderer::writeLayerData(Canvas* canvas){
     if(curFrame <= numFrames){
         vector<vector<Color>> frLayerData = canvas->getLayerData();
-
+        cout << (int)frLayerData[0][0].r << endl;
         ofstream File("./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) + ".dat");
         for (int i = 0; i < frLayerData.size(); i++){
-            File.write(reinterpret_cast<const char*>(frLayerData[i].data()), frLayerData[i].size() * 4);
+            File.write(reinterpret_cast<const char*>(frLayerData[i].data()), frLayerData[i].size() * sizeof(Color));
         }
         File.close();
     }
@@ -292,7 +295,7 @@ vector<vector<Color>> FrameRenderer::readLayerData(int* arr){
     if (!File){
         return returnData;
     }
-
+    bool firstCalled = false;
     for(int i = 0; i < numLay; i++){
         File.read(reinterpret_cast<char*>(returnData[i].data()), width * height * sizeof(Color));
     }
