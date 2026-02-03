@@ -4,7 +4,6 @@
 #include <string>
 
 #include "Canvas.h"
-#include "FrameRenderer.h"
 
 
 
@@ -71,11 +70,6 @@ const Color* Canvas::getData() const {
 
     Is true if rgba values are equal for both Colors. 
 */
-const std::vector<std::vector<Color>>& Canvas::getLayerData() const {
-    return layerData;
-}
-
-// Overloading operations
 bool operator==(const Color& c2, const Color& c1)
 {
     return (c1.r == c2.r) && (c1.g == c2.g) && (c1.b == c2.b)  && (c1.a == c2.a);
@@ -159,15 +153,9 @@ void Canvas::setPixel(int x, int y, const Color& color)
     
 }
 
-void Canvas::setPixels(std::vector<Color> newPixels){
-    pixels = newPixels;
-}
 
 /*
     Note: Not yet implemented 
-void Canvas::setLayerData(std::vector<std::vector<Color>> newLayerData){
-    layerData = newLayerData;
-}
 
     Modified version of setPixel which does not replace 
     pixels entirely but rather accumulates them to 
