@@ -63,7 +63,7 @@ const Color* Canvas::getData() const {
     return pixels.data(); 
 }
 
-
+// Overloading operations
 
 /*
     Equality operator overload for Color datatype. 
@@ -152,7 +152,6 @@ void Canvas::setPixel(int x, int y, const Color& color)
     pixels[y * width + x] = col;
     
 }
-
 
 /*
     Note: Not yet implemented 
