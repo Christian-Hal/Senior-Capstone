@@ -96,6 +96,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 			if (mode == UI::CursorMode::Draw || mode == UI::CursorMode::Erase)
 			{
 				activeRenderer->isDrawing = true;
+				drawSystem.drawing = true;
 			}
 			/*
 			// for pan and zoom and come extra logic for smooth rotation
@@ -173,9 +174,8 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 		else if (action == GLFW_RELEASE)
 		{
 			activeRenderer->isDrawing = false;
-			isPanning = false;
 			drawSystem.drawing = false;
-			drawSystem.clear();
+			drawSystem.stop();
 		}
 	}
 }

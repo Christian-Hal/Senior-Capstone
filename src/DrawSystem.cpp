@@ -8,9 +8,9 @@ void DrawSystem::init()
     strokeManager.init();
 }
 
-void DrawSystem::clear()
+void DrawSystem::stop()
 {
-    strokeManager.clearStrokes();
+    strokeManager.endStroke();
 }
 
 void DrawSystem::addPointToStroke(int x, int y)

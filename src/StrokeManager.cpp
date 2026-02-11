@@ -8,8 +8,11 @@ void StrokeManager::init()
     currentStroke = {};
 }
 
-void StrokeManager::clearStrokes()
+void StrokeManager::endStroke()
 {
+    // add current stroke into list of recent actions (for UNDO)
+
+    // clear the current stroke
     currentStroke.clear();
 }
 
@@ -25,10 +28,14 @@ bool StrokeManager::hasStrokes()
 
 void StrokeManager::process()
 {
-    // Pop the first element of the list
+    // Grab first element of the list
     std::pair<int, int> point = currentStroke.front();
-    currentStroke.pop_front();
+    currentStroke.remove(point);
 
     // Process it: for now just a debug print
     std::cout << "(" << point.first << ", " << point.second << ")\n";
+
+    // need to smooth between points
+    // run through the current stroke list and smooth each point into a better line
+    // not sure how to do this right now
 }
