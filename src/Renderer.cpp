@@ -13,6 +13,7 @@
 #include "BrushTool.h"
 #include "BrushManager.h"
 #include "Zooming.h"
+#include "DrawSystem.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -53,6 +54,7 @@ void main(){
 
 // global instance reference
 extern Globals global;
+extern DrawSystem drawSystem;
 
 // Framebuffer Settings
 int fbWidth = 0, fbHeight = 0;
@@ -95,7 +97,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 			{
 				activeRenderer->isDrawing = true;
 			}
-
+			/*
 			// for pan and zoom and come extra logic for smooth rotation
 			else if (mode == UI::CursorMode::Pan || mode == UI::CursorMode::Rotate)
 			{
@@ -166,14 +168,14 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 
 				camera.offset += mouseScreen - glm::vec2(newScreen);
 				return;
-			}
+			} */
 		}
-
 		else if (action == GLFW_RELEASE)
 		{
 			activeRenderer->isDrawing = false;
 			isPanning = false;
-			hasLastPos = false;
+			drawSystem.drawing = false;
+			drawSystem.clear();
 		}
 	}
 }
@@ -186,14 +188,14 @@ int lastDrawnY = 0;
 	Where the main drawing logic currently lies 
 */
 static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
-	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse		or the file is not open
-	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())
+	// if no renderer	  or ImGUI wants to use the mouse	 or the file is not open			or it is not drawing
+	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive() || !drawSystem.drawing)
 		return;
 
 	UI::CursorMode mode = ui.getCursorMode();
 	
 	// panning and rotation logic cursor logic
-	if (isPanning)
+	/*if (isPanning)
 	{
 		double dx = xpos - lastMouseX;
 		double dy = ypos - lastMouseY;
@@ -276,7 +278,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 		camera.offset += mouseScreen - glm::vec2(newScreen);
 
 		return;
-	}
+	} */
 
 	if (!activeRenderer->isDrawing) { return; }
 
@@ -310,11 +312,14 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	p += canvasCenter;
 
 
-
+	// these are the final pixel coodinates????
 	int x = (int)p.x;
 	int y = (int)p.y;
 
-	if (!hasLastPos)
+	// send the pixel coords into the draw system
+	drawSystem.addPointToStroke(x, y);
+
+	/*if (!hasLastPos)
 	{
 		lastX = x;
 		lastY = y;
@@ -395,7 +400,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	}
 
 	lastX = x;
-	lastY = y;
+	lastY = y; */
 }
 
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
