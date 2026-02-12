@@ -1,7 +1,11 @@
 
 #include "StrokeManager.h"
+#include "CanvasManager.h"
 
 #include <iostream>
+#include <list>
+
+static CanvasManager activeCanvasManager;
 
 void StrokeManager::init()
 {
@@ -10,9 +14,12 @@ void StrokeManager::init()
 
 void StrokeManager::endStroke()
 {
-    // add current stroke into list of recent actions (for UNDO)
+    // Process any remaining points in the stroke
+    if (hasStrokes()) {process();}
 
-    // clear the current stroke
+    // TODO : Add final event path into list of recent actions (for UNDO)
+
+    // Clear the current stroke
     currentStroke.clear();
 }
 
@@ -28,14 +35,21 @@ bool StrokeManager::hasStrokes()
 
 void StrokeManager::process()
 {
-    // Grab first element of the list
-    std::pair<int, int> point = currentStroke.front();
-    currentStroke.remove(point);
+    std::cout << "processing!" << std::endl;
+    while(!currentStroke.empty()) {
+        // Pop the first element out of the list
+        std::pair<int, int> point = currentStroke.front();
+        currentStroke.remove(point);
 
-    // Process it: for now just a debug print
-    std::cout << "(" << point.first << ", " << point.second << ")\n";
+        // TODO : Implement smoothing and interpolation
+        // Smooth the points
 
-    // need to smooth between points
-    // run through the current stroke list and smooth each point into a better line
-    // not sure how to do this right now
+        // Interpolate the points
+    }
+
+    // TODO : Implement event path
+    // Add the fixed segment to the curEventPath
+
+    // TODO : update function to return the smoothed path
+    // return path
 }

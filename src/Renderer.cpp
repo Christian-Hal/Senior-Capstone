@@ -13,7 +13,7 @@
 #include "BrushTool.h"
 #include "BrushManager.h"
 #include "Zooming.h"
-#include "DrawSystem.h"
+#include "DrawEngine.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -54,7 +54,7 @@ void main(){
 
 // global instance reference
 extern Globals global;
-extern DrawSystem drawSystem;
+extern DrawEngine drawEngine;
 
 // Framebuffer Settings
 int fbWidth = 0, fbHeight = 0;
@@ -96,7 +96,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 			if (mode == UI::CursorMode::Draw || mode == UI::CursorMode::Erase)
 			{
 				activeRenderer->isDrawing = true;
-				drawSystem.drawing = true;
+				drawEngine.start();
 			}
 			/*
 			// for pan and zoom and come extra logic for smooth rotation
@@ -174,8 +174,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 		else if (action == GLFW_RELEASE)
 		{
 			activeRenderer->isDrawing = false;
-			drawSystem.drawing = false;
-			drawSystem.stop();
+			drawEngine.stop();
 		}
 	}
 }
@@ -189,7 +188,7 @@ int lastDrawnY = 0;
 */
 static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	  or ImGUI wants to use the mouse	 or the file is not open			or it is not drawing
-	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive() || !drawSystem.drawing)
+	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive() || !drawEngine.isDrawing())
 		return;
 
 	UI::CursorMode mode = ui.getCursorMode();
@@ -316,8 +315,11 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	int x = (int)p.x;
 	int y = (int)p.y;
 
-	// send the pixel coords into the draw system
-	drawSystem.addPointToStroke(x, y);
+	// right now it sends the pixel cooridantes to the stroke manager
+	// i want to rip out all of the mouse -> pixel coordinate math and
+	// put it into the drawSystem but I can't right now because I don't
+	// fully understand it and the canvas manipulation stuff
+	drawEngine.processMouseInput(x, y);
 
 	/*if (!hasLastPos)
 	{

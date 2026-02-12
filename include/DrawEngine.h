@@ -4,23 +4,26 @@
 
 #include <list>
 
-class DrawSystem
+class DrawEngine
 {
     public:
-        bool drawing = false;
-
         void init();
+
+        void start();
+
+        bool isDrawing();
 
         // Tells the stroke manager to stop the current stroke list
         void stop();
 
         // Tells the stroke manager to add a point to the current stroke list
-        void addPointToStroke(int x, int y);
+        void processMouseInput(int x, int y);
 
         // Processes the current draw state
         void process();
 
     private:
         StrokeManager strokeManager;
+        bool drawing = false;
 
 };

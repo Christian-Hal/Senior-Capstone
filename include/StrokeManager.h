@@ -25,4 +25,6 @@ class StrokeManager
         // A list of points that make up the current stroke
         std::list<std::pair<int,int>> currentStroke;
 
+        std::pair<int, int> pointSmoother();
+
 };

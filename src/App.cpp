@@ -7,7 +7,7 @@
 #include "Globals.h"
 #include "CanvasManager.h"
 #include "BrushManager.h"
-#include "DrawSystem.h"
+#include "DrawEngine.h"
 
 
 // define our static objects and vars 
@@ -16,7 +16,7 @@ static Renderer renderer;
 static UI ui; 
 Globals global;
 BrushManager brushManager;
-DrawSystem drawSystem;
+DrawEngine drawEngine;
 static CanvasManager canvasManager;
 
 static int SCR_WIDTH = 1280;
@@ -41,7 +41,7 @@ bool App::init() {
 		return false; 
 	}
 
-	drawSystem.init();
+	drawEngine.init();
 	brushManager.init();
 	ui.init(window.handle(), renderer, global);
 
@@ -66,7 +66,7 @@ void App::run()
 		window.pollEvents();
 
 		// Let the draw system run a process
-		drawSystem.process();
+		drawEngine.process();
 
 		// Render the canvas, the UI, and then clear stuff and swap buffers.
 		// The order of these next four methods must not change
