@@ -151,6 +151,17 @@ Color UI::getColor()
 	}
 }
 
+/*
+	Setter for color
+
+	@param currentPixelColor: The color of the pixel that the cursor is currently 
+						      hovering over. 
+*/
+void UI::setColor(Color currentPixelColor) {
+	
+	
+}
+
 
 
 // cursor mode getter 
@@ -340,6 +351,12 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGui::Text("State: Pan");
 	}
 
+	else if (getCursorMode() == UI::CursorMode::ColorPick) {
+		ImGui::Text("State: Color Pick"); 
+	}
+
+
+
 	if (ImGui::Button("Draw")) {
 		cursorMode = UI::CursorMode::Draw;
 	}
@@ -364,6 +381,9 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		cursorMode = UI::CursorMode::ZoomOut;
 	}
 
+	if (ImGui::Button("Color Picker")) {
+		cursorMode = UI::CursorMode::ColorPick; 
+	}
 	
 
 	// Save button
@@ -450,6 +470,7 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	ImGui::SetWindowSize(ImVec2(size.x, h)); // keeps its Y-value the same
 	ImGui::End();
 }
+
 
 
 void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer) {

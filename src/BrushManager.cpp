@@ -30,6 +30,7 @@ void BrushManager::init()
 }
 
 
+
 /*
     Getter for loaded brushes.
 
@@ -51,6 +52,7 @@ const BrushTool& BrushManager::getActiveBrush()
 {
     return *activeBrush;
 }
+
 
 
 /*
@@ -127,6 +129,7 @@ bool BrushManager::loadBrushTipFromPNG(const std::string& path, BrushTool& outBr
 }
 
 
+
 /*
     Loads a brush tip given a GBR file. 
 
@@ -191,6 +194,7 @@ bool BrushManager::loadBrushFromGBR(const std::string& path, BrushTool& out)
 }
 
 
+
 /*
     Loads the default brush tip. 
 
@@ -225,6 +229,7 @@ void BrushManager::configureAsDefault(BrushTool& brush) {
 		}
 	}
 }
+
 
 
 /*

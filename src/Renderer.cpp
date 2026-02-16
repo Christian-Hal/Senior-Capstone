@@ -176,6 +176,31 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 			hasLastPos = false;
 		}
 	}
+
+	/*
+		If the right mouse button is clicked down shift into color pick state 
+
+		Color pick with the right mouse should not be a state which takes input to exit!
+		SPECIFICALLY when color picking is accessed with this mouse shortcut it should immediately 
+		change back to the drawing state after the right click is released. 
+
+		We also want there to exit a separate color picking state 
+	*/
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && !ImGui::GetIO().WantCaptureMouse) {
+
+		if (action == GLFW_PRESS) {
+			ui.setCursorMode(UI::CursorMode::ColorPick);
+		}
+
+
+		else {
+			ui.setCursorMode(UI::CursorMode::Draw); 
+		}
+
+
+
+	}
+
 }
 
 // random mouse setting stuff
@@ -398,6 +423,8 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	lastY = y;
 }
 
+
+
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 {
 	if (ImGui::GetIO().WantCaptureMouse)
@@ -487,6 +514,17 @@ static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int acti
 		return;
 	}
 
+	/*
+		separate selectable state for color picking that is
+		more persistant than the quick select version from the 
+		right mouse click
+	*/
+
+	else if (key == GLFW_KEY_I && action == GLFW_PRESS) {
+		ui.setCursorMode(UI::CursorMode::ColorPick); 
+		return; 
+	}
+
 	if (key == GLFW_KEY_SPACE)
 	{
 		if (action == GLFW_PRESS &&
@@ -508,6 +546,7 @@ static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int acti
 			isZoomDragging = false;
 	}
 }
+
 
 
 // compile the vertex and fragment shaders 

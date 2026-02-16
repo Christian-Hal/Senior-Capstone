@@ -64,6 +64,8 @@ const Color* Canvas::getData() const {
     return pixels.data(); 
 }
 
+
+
 /*
     Equality operator overload for Color datatype. 
 
@@ -94,6 +96,7 @@ bool operator!=(const Color& c2, const Color& c1)
 {
     return (c1.r != c2.r) || (c1.g != c2.g) || (c1.b != c2.b)  || (c1.a != c2.a);
 }
+
 
 
 /*
@@ -159,13 +162,19 @@ void Canvas::setPixel(int x, int y, const Color& color)
     
 }
 
+
+
 void Canvas::setPixels(std::vector<Color> newPixels){
     pixels = newPixels;
 }
 
+
+
 void Canvas::setLayerData(std::vector<std::vector<Color>> newLayerData){
     layerData = newLayerData;
 }
+
+
 
 /*
     Note: Not yet implemented 
