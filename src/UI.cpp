@@ -70,6 +70,9 @@ static Renderer renderer;
 // brush manager
 extern BrushManager brushManager;
 
+// keeping track of popup status 
+static bool popupActive; 
+
 
 
 // ----- ImGui code to load and access images in directory -----
@@ -158,8 +161,16 @@ Color UI::getColor()
 						      hovering over. 
 */
 void UI::setColor(Color currentPixelColor) {
-	
-	
+	color[0] = static_cast<float>(currentPixelColor.r);
+	color[1] = static_cast<float>(currentPixelColor.g);
+	color[2] = static_cast<float>(currentPixelColor.b);
+	color[3] = static_cast<float>(currentPixelColor.a);
+
+	cout << "r set to " << color[0] << endl; 
+	cout << "g set to " << color[1] << endl; 
+	cout << "b set to " << color[2] << endl; 
+	cout << "a set to " << color[3] << endl; 
+
 }
 
 
@@ -219,11 +230,15 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 	drawPopup(canvasManager);
 
 	// -- user input to hide UI panels --
-	if (glfwGetKey(windowStorage, GLFW_KEY_TAB) == GLFW_PRESS && glfwGetTime() - lastFrame >= 0.2) {
-		showPanels = !showPanels;
-		lastFrame = glfwGetTime();
+	// only allow this if the canvas creation popup is not active 
+	if (!ImGui::IsPopupOpen("New Canvas")) {
+		if (glfwGetKey(windowStorage, GLFW_KEY_TAB) == GLFW_PRESS && glfwGetTime() - lastFrame >= 0.2) {
+			showPanels = !showPanels;
+			lastFrame = glfwGetTime();
 
+		}
 	}
+	
 
 	// draw the four main menu panels
 	if (showPanels) {
@@ -551,7 +566,7 @@ void UI::drawPopup(CanvasManager& canvasManager)
 
 	// specifying canvas size 
 	if (ImGui::BeginPopupModal("New Canvas", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
+		
 		ImGui::InputInt("Width:", &temp_w);
 		ImGui::InputInt("Height:", &temp_h);
 		ImGui::InputText("File Name:", &temp_n);

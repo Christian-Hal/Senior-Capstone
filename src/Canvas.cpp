@@ -240,7 +240,7 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 
 // the const on this one makes it so that the original can't be changed
 // it makes it read only
-Color& Canvas::getPixel(int x, int y) const
+const Color& Canvas::getPixel(int x, int y) const
 {
     // making sure (x, y) is within bounds
     if (x < 0 || x >= width || y < 0 || y >= height) {

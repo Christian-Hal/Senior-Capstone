@@ -13,6 +13,7 @@
 #include "BrushTool.h"
 #include "BrushManager.h"
 #include "Zooming.h"
+#include "Canvas.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -61,8 +62,10 @@ GLuint lineVAO, lineVBO;
 unsigned int oldShaderProgram = 0;
 
 static Renderer* activeRenderer = nullptr;
+// for code readability 
 static CanvasManager activeCanvasManager;
 static UI ui;
+static Canvas canvas; 
 
 static bool hasLastPos = false;
 static int lastX = 0;
@@ -192,13 +195,9 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 			ui.setCursorMode(UI::CursorMode::ColorPick);
 		}
 
-
 		else {
 			ui.setCursorMode(UI::CursorMode::Draw); 
 		}
-
-
-
 	}
 
 }
@@ -303,6 +302,16 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 		return;
 	}
 
+	// I genuinely do not know how to code with good practices when I am 
+	// having to add to this behemoth of code 
+
+	/*
+		if the user is color picking, then grab the current cursor 
+		position and then grab the color at that position, set the 
+		current color equal to that grabbed color
+	*/
+
+
 	if (!activeRenderer->isDrawing) { return; }
 
 	Canvas& curCanvas = activeCanvasManager.getActive();
@@ -360,6 +369,15 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 		lastX = x;
 		lastY = y;
 		return;
+	}
+
+	if (mode == UI::CursorMode::ColorPick) {
+		// storing the current cursor pos 
+		double cursorX, cursorY;
+		cout << "Current pixel is x:" << x << " and y:" << y << endl;
+
+		// setting the current color to the color at the current cursor pos 
+		ui.setColor(canvas.getPixel(x, y));
 	}
 
 	// grab and compute the brush info
