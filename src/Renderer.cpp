@@ -13,7 +13,6 @@
 #include "UI.h"
 #include "BrushTool.h"
 #include "BrushManager.h"
-#include "Zooming.h"
 #include "DrawEngine.h"
 
 #include <glm/glm.hpp>
@@ -312,7 +311,12 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	} */
 
 	if (mode == UI::CursorMode::ColorPick) {
-
+		// storing the current user cursor position 
+		// converting coords for accurate canvas pixels 
+		/*double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+		std::pair<float, float> canvasCoords = activeRenderer->mouseToCanvasCoords(xpos, ypos);
+		ui.setColor(canvas.getPixel(canvasCoords)); */
 	}
 
 
@@ -326,6 +330,11 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 }
 
+
+static void colorPick() {
+	// take the mouse position and calculate the canvas coords 
+	double cursorX, cursorY; 
+}
 
 
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)

@@ -33,6 +33,7 @@ target_link_libraries(imgui PUBLIC glfw)
 file(GLOB_RECURSE PROJECT_SOURCES
      CONFIGURE_DEPENDS
      src/*.cpp
+
      src/*.c
 )
 
