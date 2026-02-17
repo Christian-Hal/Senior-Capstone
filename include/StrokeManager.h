@@ -13,18 +13,27 @@ class StrokeManager
         void endStroke();
 
         // Pushes a point to the back of the current stroke list
-        void addPoint(int x, int y);
+        void addPoint(std::pair<float, float> point);
 
-        // Pops and processes the first point in the current stroke list
-        void process();
+        // Processes the current stroke list and generates a smoothed event path, which is stored in curEventPath
+        // it then returns the smoothed event path as a list of points
+        std::list<std::pair<float, float>> process();
 
         // Returns true if there are still points in the current stroke list
-        bool hasStrokes();
+        bool hasValues();
 
     private:
         // A list of points that make up the current stroke
-        std::list<std::pair<int,int>> currentStroke;
+        std::list<std::pair<float, float>> currentStroke;
 
-        std::pair<int, int> pointSmoother();
+        // Smooths and returns the given point
+        std::pair<float, float> smoothPoint(std::pair<float, float> point);
+
+        // The last point processed by the smoother, used for calculating the smoothed point
+        std::pair<float, float> lastSmoothed;
+        bool isSmoothing = false;
+
+        // Keeps track of the current smoothed stroke path
+        std::list<std::pair<float, float>> curEventPath;
 
 };

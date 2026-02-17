@@ -13,11 +13,11 @@
 // define our static objects and vars 
 static Window window; 
 static Renderer renderer; 
-static UI ui; 
+UI ui; 
 Globals global;
 BrushManager brushManager;
 DrawEngine drawEngine;
-static CanvasManager canvasManager;
+CanvasManager canvasManager;
 
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;

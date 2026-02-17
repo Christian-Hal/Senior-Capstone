@@ -28,7 +28,8 @@ public:
 	std::vector<float> drawVertices;
 	bool isDrawing = false;
 
-
+	// takes in a mouse position and returns the converted pixel coordinates on the canvas
+	std::pair<float, float> mouseToCanvasCoords(double mouseX, double mouseY);
 
 private:
 	unsigned int canvasTexture = 0;

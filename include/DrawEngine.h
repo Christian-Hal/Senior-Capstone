@@ -17,13 +17,21 @@ class DrawEngine
         void stop();
 
         // Tells the stroke manager to add a point to the current stroke list
-        void processMouseInput(int x, int y);
+        void addPoint(std::pair<float, float> point);
 
         // Processes the current draw state
         void process();
 
+        // Draw the given event path (list of points) onto the canvas
+        void drawPath(const std::list<std::pair<float, float>>& eventPath);
+
     private:
         StrokeManager strokeManager;
         bool drawing = false;
+
+        // variables that store stuff fror the drawing code in drawPath
+        float lastX, lastY;
+        float lastDrawnX, lastDrawnY;
+        bool hasLastPos = false;
 
 };
