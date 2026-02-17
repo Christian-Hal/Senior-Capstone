@@ -74,7 +74,7 @@ static int lastY = 0;
 // callback for mouse button reading
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
-	Canvas& canvas = activeCanvasManager.getActive();
+	Canvas& curCanvas = activeCanvasManager.getActive();
 	// if no renderer    or imgui wants the mouse
 	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse)
 	{
@@ -101,7 +101,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 				std::pair<float, float> curMousePos = activeRenderer->mouseToCanvasCoords(xpos, ypos);
 				drawEngine.addPoint(curMousePos);
 			}
-			/*
+			
 			// for pan and zoom and come extra logic for smooth rotation
 			else if (mode == UI::CursorMode::Pan || mode == UI::CursorMode::Rotate)
 			{
@@ -112,8 +112,8 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 				{
 
 					glm::vec2 canvasCenter(
-						canvas.getWidth() * 0.5f + canvas.offset.x,
-						canvas.getHeight() * 0.5f + canvas.offset.y
+						curCanvas.getWidth() * 0.5f + curCanvas.offset.x,
+						curCanvas.getHeight() * 0.5f + curCanvas.offset.y
 					);
 
 					float mx = (float)lastMouseX;
@@ -127,14 +127,14 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 			else if (mode == UI::CursorMode::ZoomIn || mode == UI::CursorMode::ZoomOut)
 			{
 				const float zoomStep = 1.2f;
-				float oldZoom = canvas.zoom;
+				float oldZoom = curCanvas.zoom;
 
 				if (mode == UI::CursorMode::ZoomIn)
-					canvas.zoom *= zoomStep;
+					curCanvas.zoom *= zoomStep;
 				else
-					canvas.zoom /= zoomStep;
+					curCanvas.zoom /= zoomStep;
 
-				canvas.zoom = std::clamp(canvas.zoom, 0.1f, 10.0f);
+				curCanvas.zoom = std::clamp(curCanvas.zoom, 0.1f, 10.0f);
 
 				double mx, my;
 				glfwGetCursorPos(window, &mx, &my);
@@ -144,16 +144,15 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 					(float)(global.get_scr_height() - my)
 				);
 
-				Canvas& canvas = activeCanvasManager.getActive();
 				glm::vec2 canvasCenter(
-					canvas.getWidth() * 0.5f,
-					canvas.getHeight() * 0.5f
+					curCanvas.getWidth() * 0.5f,
+					curCanvas.getHeight() * 0.5f
 				);
 
 				glm::mat4 oldView(1.0f);
-				oldView = glm::translate(oldView, glm::vec3(canvas.offset, 0.0f));
+				oldView = glm::translate(oldView, glm::vec3(curCanvas.offset, 0.0f));
 				oldView = glm::translate(oldView, glm::vec3(canvasCenter, 0.0f));
-				oldView = glm::rotate(oldView, canvas.rotation, glm::vec3(0, 0, 1));
+				oldView = glm::rotate(oldView, curCanvas.rotation, glm::vec3(0, 0, 1));
 				oldView = glm::scale(oldView, glm::vec3(oldZoom));
 				oldView = glm::translate(oldView, glm::vec3(-canvasCenter, 0.0f));
 
@@ -161,22 +160,23 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 					glm::inverse(oldView) * glm::vec4(mouseScreen, 0.0f, 1.0f);
 
 				glm::mat4 newView(1.0f);
-				newView = glm::translate(newView, glm::vec3(canvas.offset, 0.0f));
+				newView = glm::translate(newView, glm::vec3(curCanvas.offset, 0.0f));
 				newView = glm::translate(newView, glm::vec3(canvasCenter, 0.0f));
-				newView = glm::rotate(newView, canvas.rotation, glm::vec3(0, 0, 1));
-				newView = glm::scale(newView, glm::vec3(canvas.zoom));
+				newView = glm::rotate(newView, curCanvas.rotation, glm::vec3(0, 0, 1));
+				newView = glm::scale(newView, glm::vec3(curCanvas.zoom));
 				newView = glm::translate(newView, glm::vec3(-canvasCenter, 0.0f));
 
 				glm::vec4 newScreen = newView * world;
 
-				canvas.offset += mouseScreen - glm::vec2(newScreen);
+				curCanvas.offset += mouseScreen - glm::vec2(newScreen);
 				return;
-			} */
+			}
 		}
 		else if (action == GLFW_RELEASE)
 		{
 			activeRenderer->isDrawing = false;
 			drawEngine.stop();
+			isPanning = false;
 		}
 	}
 }
@@ -186,31 +186,30 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 */
 static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	  or ImGUI wants to use the mouse	 or the file is not open			or it is not drawing
-	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive() || !drawEngine.isDrawing())
+	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())// || !drawEngine.isDrawing())
 		return;
 
 	UI::CursorMode mode = ui.getCursorMode();
-	Canvas& canvas = activeCanvasManager.getActive();
+	Canvas& curCanvas = activeCanvasManager.getActive();
 	
 	// panning and rotation logic cursor logic
-	/*if (isPanning)
+	if (isPanning)
 	{
 		double dx = xpos - lastMouseX;
 		double dy = ypos - lastMouseY;
 
 		if (mode == UI::CursorMode::Pan)
 		{
-			canvas.offset.x += (float)dx;
-			canvas.offset.y -= (float)dy;
+			curCanvas.offset.x += (float)dx;
+			curCanvas.offset.y -= (float)dy;
 		}
 
 		else if (mode == UI::CursorMode::Rotate)
 		{
-			Canvas& canvas = activeCanvasManager.getActive();
 
 			glm::vec2 canvasCenter(
-				canvas.getWidth() * 0.5f + canvas.offset.x,
-				canvas.getHeight() * 0.5f + canvas.offset.y
+				curCanvas.getWidth() * 0.5f + curCanvas.offset.x,
+				curCanvas.getHeight() * 0.5f + curCanvas.offset.y
 			);
 
 			float mx = (float)xpos;
@@ -219,7 +218,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 			float angle = atan2f(my - canvasCenter.y, mx - canvasCenter.x);
 			float delta = angle - lastAngle;
 
-			canvas.rotation += delta;
+			curCanvas.rotation += delta;
 			lastAngle = angle;
 		}
 
@@ -235,10 +234,10 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 		lastZoomMouseY = ypos;
 
 		const float zoomSpeed = 0.005f;
-		float oldZoom = canvas.zoom;
+		float oldZoom = curCanvas.zoom;
 
-		canvas.zoom *= (1.0f - (float)dy * zoomSpeed);
-		canvas.zoom = std::clamp(canvas.zoom, 0.1f, 10.0f);
+		curCanvas.zoom *= (1.0f - (float)dy * zoomSpeed);
+		curCanvas.zoom = std::clamp(curCanvas.zoom, 0.1f, 10.0f);
 
 		// Zoom around mouse position
 		double mx, my;
@@ -249,16 +248,15 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 			(float)(global.get_scr_height() - my)
 		);
 
-		Canvas& canvas = activeCanvasManager.getActive();
 		glm::vec2 canvasCenter(
-			canvas.getWidth() * 0.5f,
-			canvas.getHeight() * 0.5f
+			curCanvas.getWidth() * 0.5f,
+			curCanvas.getHeight() * 0.5f
 		);
 
 		glm::mat4 oldView(1.0f);
-		oldView = glm::translate(oldView, glm::vec3(canvas.offset, 0.0f));
+		oldView = glm::translate(oldView, glm::vec3(curCanvas.offset, 0.0f));
 		oldView = glm::translate(oldView, glm::vec3(canvasCenter, 0.0f));
-		oldView = glm::rotate(oldView, canvas.rotation, glm::vec3(0, 0, 1));
+		oldView = glm::rotate(oldView, curCanvas.rotation, glm::vec3(0, 0, 1));
 		oldView = glm::scale(oldView, glm::vec3(oldZoom));
 		oldView = glm::translate(oldView, glm::vec3(-canvasCenter, 0.0f));
 
@@ -266,21 +264,19 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 			glm::inverse(oldView) * glm::vec4(mouseScreen, 0.0f, 1.0f);
 
 		glm::mat4 newView(1.0f);
-		newView = glm::translate(newView, glm::vec3(canvas.offset, 0.0f));
+		newView = glm::translate(newView, glm::vec3(curCanvas.offset, 0.0f));
 		newView = glm::translate(newView, glm::vec3(canvasCenter, 0.0f));
-		newView = glm::rotate(newView, canvas.rotation, glm::vec3(0, 0, 1));
-		newView = glm::scale(newView, glm::vec3(canvas.zoom));
+		newView = glm::rotate(newView, curCanvas.rotation, glm::vec3(0, 0, 1));
+		newView = glm::scale(newView, glm::vec3(curCanvas.zoom));
 		newView = glm::translate(newView, glm::vec3(-canvasCenter, 0.0f));
 
 		glm::vec4 newScreen = newView * world;
-		canvas.offset += mouseScreen - glm::vec2(newScreen);
+		curCanvas.offset += mouseScreen - glm::vec2(newScreen);
 
 		return;
-	} */
+	}
 
-	if (!activeRenderer->isDrawing) { return; }
-
-	Canvas& curCanvas = activeCanvasManager.getActive();
+	if (!activeRenderer->isDrawing || !drawEngine.isDrawing()) { return; }
 
 	// conver the mouse coordinates into canvas coordinates and send the point to the draw engine
 	std::pair<float, float> canvasCoords = activeRenderer->mouseToCanvasCoords(xpos, ypos);
@@ -289,22 +285,22 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 {
-	Canvas& canvas = activeCanvasManager.getActive();
+	Canvas& curCanvas = activeCanvasManager.getActive();
 	if (ImGui::GetIO().WantCaptureMouse)
 		return;
 
 	// Rotate when holding R
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
 	{
-		canvas.rotation += (float)yoffset * 0.05f;
+		curCanvas.rotation += (float)yoffset * 0.05f;
 		return;
 	}
 
 	const float zoomSpeed = 0.1f;
-	float oldZoom = canvas.zoom;
+	float oldZoom = curCanvas.zoom;
 
-	canvas.zoom *= (1.0f + (float)yoffset * zoomSpeed);
-	canvas.zoom = std::clamp(canvas.zoom, 0.1f, 10.0f);
+	curCanvas.zoom *= (1.0f + (float)yoffset * zoomSpeed);
+	curCanvas.zoom = std::clamp(curCanvas.zoom, 0.1f, 10.0f);
 
 	// Mouse position (screen space)
 	double mx, my;
@@ -317,15 +313,15 @@ static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 
 
 	glm::vec2 canvasCenter(
-		canvas.getWidth() * 0.5f,
-		canvas.getHeight() * 0.5f
+		curCanvas.getWidth() * 0.5f,
+		curCanvas.getHeight() * 0.5f
 	);
 
 	// --- Build OLD view matrix ---
 	glm::mat4 oldView(1.0f);
-	oldView = glm::translate(oldView, glm::vec3(canvas.offset, 0.0f));
+	oldView = glm::translate(oldView, glm::vec3(curCanvas.offset, 0.0f));
 	oldView = glm::translate(oldView, glm::vec3(canvasCenter, 0.0f));
-	oldView = glm::rotate(oldView, canvas.rotation, glm::vec3(0, 0, 1));
+	oldView = glm::rotate(oldView, curCanvas.rotation, glm::vec3(0, 0, 1));
 	oldView = glm::scale(oldView, glm::vec3(oldZoom, oldZoom, 1.0f));
 	oldView = glm::translate(oldView, glm::vec3(-canvasCenter, 0.0f));
 
@@ -335,15 +331,15 @@ static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 
 	// --- Build NEW view matrix ---
 	glm::mat4 newView(1.0f);
-	newView = glm::translate(newView, glm::vec3(canvas.offset, 0.0f));
+	newView = glm::translate(newView, glm::vec3(curCanvas.offset, 0.0f));
 	newView = glm::translate(newView, glm::vec3(canvasCenter, 0.0f));
-	newView = glm::rotate(newView, canvas.rotation, glm::vec3(0, 0, 1));
-	newView = glm::scale(newView, glm::vec3(canvas.zoom, canvas.zoom, 1.0f));
+	newView = glm::rotate(newView, curCanvas.rotation, glm::vec3(0, 0, 1));
+	newView = glm::scale(newView, glm::vec3(curCanvas.zoom, curCanvas.zoom, 1.0f));
 	newView = glm::translate(newView, glm::vec3(-canvasCenter, 0.0f));
 
 	
 	glm::vec4 newScreen = newView * world;
-	canvas.offset += mouseScreen - glm::vec2(newScreen);
+	curCanvas.offset += mouseScreen - glm::vec2(newScreen);
 }
 
 //keyboard callbacks to set up hotkeys for switching cursorModes and temporary shortcut for zoom
