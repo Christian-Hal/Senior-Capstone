@@ -16,6 +16,10 @@ BrushTool activeBrush;
 void DrawEngine::init()
 {
     drawing = false;
+    spacing = 1;
+    hasPrev = false;
+    distanceSinceLastStamp = 0;
+    
     strokeManager.init();
 }
 
@@ -36,6 +40,9 @@ void DrawEngine::stop()
     drawing = false;
     hasLastPos = false;
     strokeManager.endStroke();
+
+    hasPrev = false;
+    distanceSinceLastStamp = 0;
 }
 
 void DrawEngine::update()
@@ -46,120 +53,50 @@ void DrawEngine::update()
 
         // Draw the smoothed point event path
         drawPath(eventPath);
-
-        // TODO : brush dabs and spacing and all that stuff
-        // generate the brush dab
-        // move along the path while stamping the brush dab
     }
 }
 
 void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
 {
-    // this is straight up just a copy paste of the old drawing code with some very tiny modifications
-    // I made it run over a set of positions instead of just one like the old code
-    // I plan on changing this a lot and making it better and having actual comments but for now I just wanted something working
-
-    Canvas& curCanvas = canvasManager.getActive();
-    float x, y;
 
     for (const auto& point : eventPath)
     {
-            x = point.x;
-            y = point.y;
-
-        if (!hasLastPos)
-        {
-            lastX = x;
-            lastY = y;
-            lastDrawnX = x;
-            lastDrawnY = y;
-            hasLastPos = true;
-            curCanvas.setPixel(x, y, ui.getColor());
-            continue;
-        }
-
-        float dx = x - lastX;
-        float dy = y - lastY;
-
-        int steps = (int)std::ceil(std::max(std::abs(dx), std::abs(dy)));
-
-        // logic to prevent system crashing if zoomed in too much
-        if (steps == 0)
-        {
-            // Draw a single dab and bail out
-            curCanvas.setPixel(x, y, ui.getColor());
-            lastX = x;
-            lastY = y;
-            continue;
-        }
-
-        // grab and compute the brush info
-        if (brushManager.brushChange == true)
-        {
-            activeBrush = brushManager.getActiveBrush();
-            brushManager.brushChange = false;
-        }
-
-        int size = ui.brushSize;
-        int w = activeBrush.tipWidth;
-        int h = activeBrush.tipHeight;
-        int brushSpacing = size * activeBrush.spacing;
-        std::vector<float> alpha = activeBrush.tipAlpha;
-
-        int brushCenter_x = w / 2;
-        int brushCenter_y = h / 2;
-
-        float invSteps = 1.0f / (float)steps;
-
-        // for each step between the last position and current position
-        for (int i = 0; i <= steps; i++)
-        {
-            // had to change some math becuase it was crashing if trying to draw too zoomed in
-            int baseX = lastX + (int)(dx * i * invSteps) - brushCenter_x * size;
-            int baseY = lastY + (int)(dy * i * invSteps) - brushCenter_y * size;
-
-            float distance = sqrt(((lastDrawnX - baseX) * (lastDrawnX - baseX)) +  ((lastDrawnY - baseY) * (lastDrawnY - baseY)));
-            if (distance < brushSpacing)
-                continue;
-
-            bool stamped = false;
-
-            // for each row in the brush mask
-            for (int r = 0; r < h; r++)
-            {
-                // for each column in the brush mask
-                for (int c = 0; c < w; c++)
-                {
-                    // if the current index is part of the pattern
-                    float a = alpha[r * w + c];
-                    if (a > 0.01f) 
-                    {
-                        for (int sy = 0; sy < size; sy++)
-                        {
-                            for (int sx = 0; sx < size; sx++)
-                            {
-                                // calculate the pixel x and y on the canvas
-                                int px = baseX + c * size + sx;
-                                int py = baseY + r * size + sy;
-                                
-                                curCanvas.setPixel(px, py, ui.getColor());
-                            }
-                        }
-
-                        stamped = true;
-                    }
-                }
-            }
-            if (stamped)
-            {
-                lastDrawnX = baseX;
-                lastDrawnY = baseY;
-            }
-        }
-
-        lastX = x;
-        lastY = y;
+        if (!hasPrev) {
+        prev = point;
+        hasPrev = true;
+        continue;
     }
+
+        glm::vec2 delta = point - prev;
+        float len = length(delta);
+
+        if (len == 0) return;
+
+        glm::vec2 dir = delta / len;
+
+        float remaining = len;
+
+        while (distanceSinceLastStamp + remaining >= spacing) {
+            float step = spacing - distanceSinceLastStamp;
+            glm::vec2 stampPos = prev + dir * step;
+
+            stampBrush(stampPos);
+
+            prev = stampPos;
+            remaining -= step;
+            distanceSinceLastStamp = 0;
+        }
+
+        distanceSinceLastStamp += remaining;
+        prev = point;
+    }
+}
+
+void DrawEngine::stampBrush(glm::vec2 position)
+{
+    // this is where the code for stamping the brush dab onto the canvas will go
+    Canvas& curCanvas = canvasManager.getActive();
+    curCanvas.setPixel((int)position.x, (int)position.y, ui.getColor());
 }
 
 // takes in a mouse position adds the converted canvas coords as a point in the current stroke
@@ -217,3 +154,136 @@ glm::vec2 DrawEngine::mouseToCanvasCoords(double mouseX, double mouseY)
 
     return glm::vec2(p.x, p.y);
  }
+
+
+
+/*
+ void processStrokePoint(Vec2 smoothPoint) {
+    if (!hasPrev) {
+        prev = smoothPoint;
+        return;
+    }
+
+    Vec2 delta = smoothPoint - prev;
+    float len = length(delta);
+
+    if (len == 0) return;
+
+    Vec2 dir = delta / len;
+
+    float remaining = len;
+
+    while (distanceSinceLastStamp + remaining >= spacing) {
+        float step = spacing - distanceSinceLastStamp;
+        Vec2 stampPos = prev + dir * step;
+
+        stampBrush(stampPos);
+
+        prev = stampPos;
+        remaining -= step;
+        distanceSinceLastStamp = 0;
+    }
+
+    distanceSinceLastStamp += remaining;
+    prev = smoothPoint;
+} 
+*/
+
+
+
+
+////// OLD DRAWING CODE //////
+/*
+    x = point.x;
+            y = point.y;
+
+        if (!hasLastPos)
+        {
+            lastX = x;
+            lastY = y;
+            lastDrawnX = x;
+            lastDrawnY = y;
+            hasLastPos = true;
+            curCanvas.setPixel(x, y, ui.getColor());
+            continue;
+        }
+
+        float dx = x - lastX;
+        float dy = y - lastY;
+
+        int steps = (int)std::ceil(std::max(std::abs(dx), std::abs(dy)));
+
+        // logic to prevent system crashing if zoomed in too much
+        if (steps == 0)
+        {
+            lastX = x;
+            lastY = y;
+            continue;
+        }
+
+        // grab and compute the brush info
+        if (brushManager.brushChange == true)
+        {
+            activeBrush = brushManager.getActiveBrush();
+            brushManager.brushChange = false;
+        }
+
+        int size = ui.brushSize;
+        int w = activeBrush.tipWidth;
+        int h = activeBrush.tipHeight;
+        int brushSpacing = size * activeBrush.spacing;
+        std::vector<float> alpha = activeBrush.tipAlpha;
+
+        int brushCenter_x = w / 2;
+        int brushCenter_y = h / 2;
+
+        float invSteps = 1.0f / (float)steps;
+
+        // for each step between the last position and current position
+        for (int i = 0; i <= steps; i++)
+        {
+            // had to change some math becuase it was crashing if trying to draw too zoomed in
+            float baseX = lastX + (dx * i * invSteps) - brushCenter_x * size;
+            float baseY = lastY + (dy * i * invSteps) - brushCenter_y * size;
+
+            float distance = sqrt(((lastDrawnX - baseX) * (lastDrawnX - baseX)) +  ((lastDrawnY - baseY) * (lastDrawnY - baseY)));
+            if (distance < brushSpacing)
+                continue;
+
+            bool stamped = false;
+
+            // for each row in the brush mask
+            for (int r = 0; r < h; r++)
+            {
+                // for each column in the brush mask
+                for (int c = 0; c < w; c++)
+                {
+                    // if the current index is part of the pattern
+                    float a = alpha[r * w + c];
+                    if (a > 0.01f) 
+                    {
+                        for (int sy = 0; sy < size; sy++)
+                        {
+                            for (int sx = 0; sx < size; sx++)
+                            {
+                                // calculate the pixel x and y on the canvas
+                                int px = baseX + c * size + sx;
+                                int py = baseY + r * size + sy;
+                                
+                                curCanvas.setPixel(px, py, ui.getColor());
+                            }
+                        }
+
+                        stamped = true;
+                    }
+                }
+            }
+            if (stamped)
+            {
+                lastDrawnX = baseX;
+                lastDrawnY = baseY;
+            }
+        }
+
+        lastX = x;
+        lastY = y; */

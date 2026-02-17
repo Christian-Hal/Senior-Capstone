@@ -33,12 +33,18 @@ class DrawEngine
         StrokeManager strokeManager;
         bool drawing = false;
 
-        // variables that store stuff fror the drawing code in drawPath
+        // variables that store stuff for the drawing code in drawPath
         float lastX, lastY;
         float lastDrawnX, lastDrawnY;
         bool hasLastPos = false;
 
+        glm::vec2 prev;                    // last point we advanced from
+        float distanceSinceLastStamp; // leftover distance since last stamp
+        float spacing;                // desired spacing between stamps
+        bool hasPrev;
+
         // Draw the given event path (list of points) onto the canvas
         void drawPath(const std::list<glm::vec2>& eventPath);
+        void stampBrush(glm::vec2 position);
 
 };
