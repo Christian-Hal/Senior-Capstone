@@ -69,10 +69,6 @@ static bool hasLastPos = false;
 static int lastX = 0;
 static int lastY = 0;
 
-// brush manager + brush info
-extern BrushManager brushManager;
-BrushTool activeBrush;
-
 //Camera2d camera;
 
 // callback for mouse button reading
@@ -289,116 +285,6 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	// conver the mouse coordinates into canvas coordinates and send the point to the draw engine
 	std::pair<float, float> canvasCoords = activeRenderer->mouseToCanvasCoords(xpos, ypos);
 	drawEngine.addPoint(canvasCoords);
-
-	glm::vec2 canvasCenter(
-		curCanvas.getWidth() * 0.5f,
-		curCanvas.getHeight() * 0.5f
-	);
-
-	glm::vec2 p = { screenX, screenY };
-
-	p -= canvas.offset;
-	p -= canvasCenter;
-
-	float c = cosf(-canvas.rotation);
-	float s = sinf(-canvas.rotation);
-
-	p = {
-		p.x * c - p.y * s,
-		p.x * s + p.y * c
-	};
-
-	p /= canvas.zoom;
-
-	p += canvasCenter;
-
-
-
-	int x = (int)p.x;
-	int y = (int)p.y;
-
-	if (!hasLastPos)
-	{
-		lastX = x;
-		lastY = y;
-		hasLastPos = true;
-		curCanvas.setPixel(x, y, ui.getColor());
-		return;
-	}
-
-	int dx = x - lastX;
-	int dy = y - lastY;
-	int steps = std::max(abs(dx), abs(dy));
-
-	// logic to prevent system crashing if zoomed in too much
-	if (steps == 0)
-	{
-		// Draw a single dab and bail out
-		curCanvas.setPixel(x, y, ui.getColor());
-		lastX = x;
-		lastY = y;
-		return;
-	}
-
-	// grab and compute the brush info
-	if (brushManager.brushChange == true)
-	{
-		activeBrush = brushManager.getActiveBrush();
-		brushManager.brushChange = false;
-	}
-	int size = ui.brushSize;
-	int w = activeBrush.tipWidth;
-	int h = activeBrush.tipHeight;
-	int brushSpacing = size * activeBrush.spacing;
-	std::vector<float> alpha = activeBrush.tipAlpha;
-
-	int brushCenter_x = w / 2;
-	int brushCenter_y = h / 2;
-
-	float invSteps = 1.0f / (float)steps;
-
-	// for each step between the last position and current position
-	for (int i = 0; i <= steps; i++)
-	{
-		// had to change some math becuase it was crashing if trying to draw too zoomed in
-		int baseX = lastX + (int)(dx * i * invSteps) - brushCenter_x * size;
-		int baseY = lastY + (int)(dy * i * invSteps) - brushCenter_y * size;
-
-		float distance = sqrt(((lastDrawnX - baseX) * (lastDrawnX - baseX)) +  ((lastDrawnY - baseY) * (lastDrawnY - baseY)));
-		if (distance < brushSpacing)
-			continue;
-
-		// for each row in the brush mask
-		for (int r = 0; r < h; r++)
-		{
-			// for each column in the brush mask
-			for (int c = 0; c < w; c++)
-			{
-				// if the current index is part of the pattern
-				float a = alpha[r * w + c];
-				if (a > 0.01f) 
-				{
-					for (int sy = 0; sy < size; sy++)
-					{
-						for (int sx = 0; sx < size; sx++)
-						{
-							// calculate the pixel x and y on the canvas
-							int px = baseX + c * size + sx;
-                    		int py = baseY + r * size + sy;
-							
-                    		curCanvas.setPixel(px, py, ui.getColor());
-						}
-					}
-
-					lastDrawnX = baseX;
-					lastDrawnY = baseY;
-				}
-			}
-		}
-	}
-
-	lastX = x;
-	lastY = y;
 }
 
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
@@ -534,12 +420,12 @@ std::pair<float, float> Renderer::mouseToCanvasCoords(double mouseX, double mous
 	glm::vec2 p = { screenX, screenY };
 
 	// removes the canvases offset and ensures its centered at (0,0)
-	p -= camera.offset;
+	p -= curCanvas.offset;
 	p -= canvasCenter;
 
 	// calculate the cosine and sine of the negative rotation angle for unrotating the point
-	float c = cosf(-camera.rotation);
-	float s = sinf(-camera.rotation);
+	float c = cosf(-curCanvas.rotation);
+	float s = sinf(-curCanvas.rotation);
 
 	// Simple rotation matrix to rotate the point
 	// if the canvas is rotated X degrees then we need to rotate the point -X degrees to match the canvas space
@@ -550,7 +436,7 @@ std::pair<float, float> Renderer::mouseToCanvasCoords(double mouseX, double mous
 
 	// undo the zoom by dividing the point by the zoom level
 	// if the the canvas is zoomed in by 2 then dividing by 2 will remove the zoom
-	p /= camera.zoom;
+	p /= curCanvas.zoom;
 
 	// move origin back to normal coordinate space
 	p += canvasCenter;
