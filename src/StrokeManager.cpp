@@ -41,14 +41,19 @@ std::list<std::pair<float, float>> StrokeManager::process()
     std::list<std::pair<float, float>> eventPath;
 
     while(!currentStroke.empty()) {
-        // Pop the first element out of the list
+        // Grab and remove the first element of the list
         std::pair<float, float> point = currentStroke.front();
         currentStroke.pop_front();
-        std::cout << "Processing point: (" << point.first << ", " << point.second << ")" << std::endl;
+        //std::cout << "Processing point: (" << point.first << ", " << point.second << ")" << std::endl;
 
         // Smooth the point
         std::pair<float, float> smoothedPoint = smoothPoint(point);
+
+        // add it into the event path for this frame
         eventPath.push_back(smoothedPoint);
+
+        // add it into the current event path for the entire stroke
+        // this will be used for undo and what not, holds the entire stroke from mouse down to mouse up
         curEventPath.push_back(smoothedPoint);
     }
 

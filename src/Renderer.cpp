@@ -11,8 +11,6 @@
 #include "Globals.h"
 #include "CanvasManager.h"
 #include "UI.h"
-#include "BrushTool.h"
-#include "BrushManager.h"
 #include "Zooming.h"
 #include "DrawEngine.h"
 
@@ -67,13 +65,6 @@ static Renderer* activeRenderer = nullptr;
 static CanvasManager activeCanvasManager;
 static UI ui;
 
-static bool hasLastPos = false;
-static int lastX = 0;
-static int lastY = 0;
-
-// brush manager + brush info
-extern BrushManager brushManager;
-
 Camera2d camera;
 
 // callback for mouse button reading
@@ -102,8 +93,8 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 				// this makes it so something is drawn immediately on click instead of waiting for the mouse to move
 				double xpos, ypos;
 				glfwGetCursorPos(window, &xpos, &ypos);
-				std::pair<float, float> canvasCoords = activeRenderer->mouseToCanvasCoords(xpos, ypos);
-				drawEngine.addPoint(canvasCoords);
+				std::pair<float, float> curMousePos = activeRenderer->mouseToCanvasCoords(xpos, ypos);
+				drawEngine.addPoint(curMousePos);
 			}
 			/*
 			// for pan and zoom and come extra logic for smooth rotation
@@ -185,10 +176,6 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 		}
 	}
 }
-
-// random mouse setting stuff
-int lastDrawnX = 0;
-int lastDrawnY = 0;
 
 /*
 	Where the main drawing logic currently lies 

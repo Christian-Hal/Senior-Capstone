@@ -23,13 +23,13 @@ bool DrawEngine::isDrawing()
 
 void DrawEngine::start()
 {
-    std::cout << "Draw engine start!" << std::endl;
+    //std::cout << "Draw engine start!" << std::endl;
     drawing = true;
 }
 
 void DrawEngine::stop()
 {
-    std::cout << "Draw engine stop!" << std::endl;
+    //std::cout << "Draw engine stop!" << std::endl;
     drawing = false;
     hasLastPos = false;
     strokeManager.endStroke();
@@ -47,10 +47,10 @@ void DrawEngine::process()
         // Get the smoothed event path from the stroke manager
         std::list<std::pair<float, float>> eventPath = strokeManager.process();
 
-        // Draw it (?)
+        // Draw the smoothed point event path
         drawPath(eventPath);
 
-        // TODO : Implement drawing code to draw the path
+        // TODO : brush dabs and spacing and all that stuff
         // generate the brush dab
         // move along the path while stamping the brush dab
     }
@@ -58,6 +58,10 @@ void DrawEngine::process()
 
 void DrawEngine::drawPath(const std::list<std::pair<float, float>>& eventPath)
 {
+    // this is straight up just a copy paste of the old drawing code with some very tiny modifications
+    // I made it run over a set of positions instead of just one like the old code
+    // I plan on changing this a lot and making it better and having actual comments but for now I just wanted something working
+
     Canvas& curCanvas = canvasManager.getActive();
     float x, y;
 
