@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <vector>
 #include <string>
+#include <list>
 
 #include "Globals.h"
 #include "CanvasManager.h"
@@ -14,6 +15,7 @@
 #include "BrushManager.h"
 #include "Zooming.h"
 #include "Canvas.h"
+#include "DrawEngine.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -54,6 +56,7 @@ void main(){
 
 // global instance reference
 extern Globals global;
+extern DrawEngine drawEngine;
 
 // Framebuffer Settings
 int fbWidth = 0, fbHeight = 0;
@@ -73,7 +76,6 @@ static int lastY = 0;
 
 // brush manager + brush info
 extern BrushManager brushManager;
-BrushTool activeBrush;
 
 Camera2d camera;
 
@@ -94,11 +96,19 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 		if (action == GLFW_PRESS)
 		{
 			// for drawing and erasing
-			if (mode == UI::CursorMode::Draw || mode == UI::CursorMode::Erase)
+			if ((mode == UI::CursorMode::Draw || mode == UI::CursorMode::Erase))
 			{
 				activeRenderer->isDrawing = true;
-			}
+				drawEngine.start();
 
+				// grab the mouse position and convert it to canvas coordinates and send the point to the draw engine
+				// this makes it so something is drawn immediately on click instead of waiting for the mouse to move
+				double xpos, ypos;
+				glfwGetCursorPos(window, &xpos, &ypos);
+				std::pair<float, float> canvasCoords = activeRenderer->mouseToCanvasCoords(xpos, ypos);
+				drawEngine.addPoint(canvasCoords);
+			}
+			/*
 			// for pan and zoom and come extra logic for smooth rotation
 			else if (mode == UI::CursorMode::Pan || mode == UI::CursorMode::Rotate)
 			{
@@ -169,14 +179,12 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 
 				camera.offset += mouseScreen - glm::vec2(newScreen);
 				return;
-			}
+			} */
 		}
-
 		else if (action == GLFW_RELEASE)
 		{
 			activeRenderer->isDrawing = false;
-			isPanning = false;
-			hasLastPos = false;
+			drawEngine.stop();
 		}
 	}
 
@@ -210,14 +218,14 @@ int lastDrawnY = 0;
 	Where the main drawing logic currently lies 
 */
 static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
-	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse		or the file is not open
-	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())
+	// if no renderer	  or ImGUI wants to use the mouse	 or the file is not open			or it is not drawing
+	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive() || !drawEngine.isDrawing())
 		return;
 
 	UI::CursorMode mode = ui.getCursorMode();
 	
 	// panning and rotation logic cursor logic
-	if (isPanning)
+	/*if (isPanning)
 	{
 		double dx = xpos - lastMouseX;
 		double dy = ypos - lastMouseY;
@@ -300,7 +308,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 		camera.offset += mouseScreen - glm::vec2(newScreen);
 
 		return;
-	}
+	} */
 
 	// I genuinely do not know how to code with good practices when I am 
 	// having to add to this behemoth of code 
@@ -316,129 +324,10 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 	Canvas& curCanvas = activeCanvasManager.getActive();
 
-	// logic for proper drawing on the manipulated canvas (canvas that is zoomed, panned, or rotated)
-	float screenX = (float)xpos;
-	float screenY = global.get_scr_height() - (float)ypos;
+	// conver the mouse coordinates into canvas coordinates and send the point to the draw engine
+	std::pair<float, float> canvasCoords = activeRenderer->mouseToCanvasCoords(xpos, ypos);
+	drawEngine.addPoint(canvasCoords);
 
-
-	glm::vec2 canvasCenter(
-		curCanvas.getWidth() * 0.5f,
-		curCanvas.getHeight() * 0.5f
-	);
-
-	glm::vec2 p = { screenX, screenY };
-
-	p -= camera.offset;
-	p -= canvasCenter;
-
-	float c = cosf(-camera.rotation);
-	float s = sinf(-camera.rotation);
-
-	p = {
-		p.x * c - p.y * s,
-		p.x * s + p.y * c
-	};
-
-	p /= camera.zoom;
-
-	p += canvasCenter;
-
-
-
-	int x = (int)p.x;
-	int y = (int)p.y;
-
-	if (!hasLastPos)
-	{
-		lastX = x;
-		lastY = y;
-		hasLastPos = true;
-		curCanvas.setPixel(x, y, ui.getColor());
-		return;
-	}
-
-	int dx = x - lastX;
-	int dy = y - lastY;
-	int steps = std::max(abs(dx), abs(dy));
-
-	// logic to prevent system crashing if zoomed in too much
-	if (steps == 0)
-	{
-		// Draw a single dab and bail out
-		curCanvas.setPixel(x, y, ui.getColor());
-		lastX = x;
-		lastY = y;
-		return;
-	}
-
-	if (mode == UI::CursorMode::ColorPick) {
-		// storing the current cursor pos 
-		double cursorX, cursorY;
-		cout << "Current pixel is x:" << x << " and y:" << y << endl;
-
-		// setting the current color to the color at the current cursor pos 
-		ui.setColor(canvas.getPixel(x, y));
-	}
-
-	// grab and compute the brush info
-	if (brushManager.brushChange == true)
-	{
-		activeBrush = brushManager.getActiveBrush();
-		brushManager.brushChange = false;
-	}
-	int size = ui.brushSize;
-	int w = activeBrush.tipWidth;
-	int h = activeBrush.tipHeight;
-	int brushSpacing = size * activeBrush.spacing;
-	std::vector<float> alpha = activeBrush.tipAlpha;
-
-	int brushCenter_x = w / 2;
-	int brushCenter_y = h / 2;
-
-	float invSteps = 1.0f / (float)steps;
-
-	// for each step between the last position and current position
-	for (int i = 0; i <= steps; i++)
-	{
-		// had to change some math becuase it was crashing if trying to draw too zoomed in
-		int baseX = lastX + (int)(dx * i * invSteps) - brushCenter_x * size;
-		int baseY = lastY + (int)(dy * i * invSteps) - brushCenter_y * size;
-
-		float distance = sqrt(((lastDrawnX - baseX) * (lastDrawnX - baseX)) +  ((lastDrawnY - baseY) * (lastDrawnY - baseY)));
-		if (distance < brushSpacing)
-			continue;
-
-		// for each row in the brush mask
-		for (int r = 0; r < h; r++)
-		{
-			// for each column in the brush mask
-			for (int c = 0; c < w; c++)
-			{
-				// if the current index is part of the pattern
-				float a = alpha[r * w + c];
-				if (a > 0.01f) 
-				{
-					for (int sy = 0; sy < size; sy++)
-					{
-						for (int sx = 0; sx < size; sx++)
-						{
-							// calculate the pixel x and y on the canvas
-							int px = baseX + c * size + sx;
-                    		int py = baseY + r * size + sy;
-							
-                    		curCanvas.setPixel(px, py, ui.getColor());
-						}
-					}
-
-					lastDrawnX = baseX;
-					lastDrawnY = baseY;
-				}
-			}
-		}
-	}
-
-	lastX = x;
-	lastY = y;
 }
 
 
@@ -565,6 +454,52 @@ static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int acti
 	}
 }
 
+// takes in a mouse position and returns the converted pixel coordinates on the current canvas
+std::pair<float, float> Renderer::mouseToCanvasCoords(double mouseX, double mouseY)
+{
+	// grab the current canvas
+	Canvas& curCanvas = activeCanvasManager.getActive();
+
+	// convert the mouse position to screen space (with y flipped)
+	float screenX = mouseX;
+	float screenY = global.get_scr_height() - mouseY;
+
+	// grab the center of the canvas
+	glm::vec2 canvasCenter(
+		curCanvas.getWidth() * 0.5f,
+		curCanvas.getHeight() * 0.5f
+	);
+
+	// stores the point as a vector for easier manipulation(?)
+	// not sure what the naming convetion is for this cause Gunter wrote this stuff
+	// will probably change it later lol
+	glm::vec2 p = { screenX, screenY };
+
+	// removes the canvases offset and ensures its centered at (0,0)
+	p -= camera.offset;
+	p -= canvasCenter;
+
+	// calculate the cosine and sine of the negative rotation angle for unrotating the point
+	float c = cosf(-camera.rotation);
+	float s = sinf(-camera.rotation);
+
+	// Simple rotation matrix to rotate the point
+	// if the canvas is rotated X degrees then we need to rotate the point -X degrees to match the canvas space
+	p = {
+		p.x * c - p.y * s,
+		p.x * s + p.y * c
+	};
+
+	// undo the zoom by dividing the point by the zoom level
+	// if the the canvas is zoomed in by 2 then dividing by 2 will remove the zoom
+	p /= camera.zoom;
+
+	// move origin back to normal coordinate space
+	p += canvasCenter;
+
+	// return the point as a pair of floats
+	return {p.x, p.y};
+}
 
 
 // compile the vertex and fragment shaders 

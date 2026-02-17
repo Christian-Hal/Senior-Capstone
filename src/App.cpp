@@ -7,17 +7,17 @@
 #include "Globals.h"
 #include "CanvasManager.h"
 #include "BrushManager.h"
-#include "FrameRenderer.h"
+#include "DrawEngine.h"
 
 
 // define our static objects and vars 
 static Window window; 
 static Renderer renderer; 
-static UI ui; 
+UI ui; 
 Globals global;
 BrushManager brushManager;
-static CanvasManager canvasManager;
-FrameRenderer frameRenderer;
+DrawEngine drawEngine;
+CanvasManager canvasManager;
 
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
@@ -41,6 +41,7 @@ bool App::init() {
 		return false; 
 	}
 
+	drawEngine.init();
 	brushManager.init();
 	ui.init(window.handle(), renderer, global);
 
@@ -60,15 +61,17 @@ Begin frame, draw UI, end frame.
 */
 void App::run() 
 {
-	// on start up
-
 	// RENDER LOOP 
 	while (!window.shouldClose()) {
 		window.pollEvents();
 
-		// order of these four methods must not change
+		// Let the draw system run a process
+		drawEngine.process();
+
+		// Render the canvas, the UI, and then clear stuff and swap buffers.
+		// The order of these next four methods must not change
 		renderer.beginFrame(canvasManager);
-		ui.draw(canvasManager, frameRenderer);
+		ui.draw(canvasManager);
 		renderer.endFrame();
 
 		window.swapBuffers();
@@ -81,7 +84,6 @@ void App::run()
 Shuts down the UI, renderer, and the window.
 */
 void App::shutdown() {
-	frameRenderer.shutdown();
 	ui.shutdown();
 	renderer.shutdown();
 	window.destroy();

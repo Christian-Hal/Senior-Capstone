@@ -1,0 +1,39 @@
+#pragma once
+
+#include <list>
+
+class StrokeManager
+{
+    public:
+        bool drawing = false;
+
+        void init();
+
+        // Just empties the current stroke list
+        void endStroke();
+
+        // Pushes a point to the back of the current stroke list
+        void addPoint(std::pair<float, float> point);
+
+        // Processes the current stroke list and generates a smoothed event path, which is stored in curEventPath
+        // it then returns the smoothed event path as a list of points
+        std::list<std::pair<float, float>> process();
+
+        // Returns true if there are still points in the current stroke list
+        bool hasValues();
+
+    private:
+        // A list of points that make up the current stroke
+        std::list<std::pair<float, float>> currentStroke;
+
+        // Smooths and returns the given point
+        std::pair<float, float> smoothPoint(std::pair<float, float> point);
+
+        // The last point processed by the smoother, used for calculating the smoothed point
+        std::pair<float, float> lastSmoothed;
+        bool isSmoothing = false;
+
+        // Keeps track of the current smoothed stroke path
+        std::list<std::pair<float, float>> curEventPath;
+
+};
