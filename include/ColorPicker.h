@@ -2,11 +2,17 @@
 #pragma once 
 
 
+#include "Renderer.h"
+#include "Canvas.h"
+
+
 
 class ColorPicker {
 
-public: 
+public:
 
-private: 
+	static void pickColor();
+
+private:
 
 };

@@ -69,13 +69,9 @@ static Renderer renderer;
 // brush manager
 extern BrushManager brushManager;
 
-// keeping track of popup status 
-static bool popupActive; 
-
 
 
 // ----- ImGui code to load and access images in directory -----
-
 
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
@@ -165,10 +161,10 @@ void UI::setColor(Color currentPixelColor) {
 	color[2] = static_cast<float>(currentPixelColor.b);
 	color[3] = static_cast<float>(currentPixelColor.a);
 
-	cout << "r set to " << color[0] << endl; 
+	/*cout << "r set to " << color[0] << endl; 
 	cout << "g set to " << color[1] << endl; 
 	cout << "b set to " << color[2] << endl; 
-	cout << "a set to " << color[3] << endl; 
+	cout << "a set to " << color[3] << endl; */
 
 }
 

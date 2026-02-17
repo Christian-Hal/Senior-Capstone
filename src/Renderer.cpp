@@ -14,7 +14,6 @@
 #include "BrushTool.h"
 #include "BrushManager.h"
 #include "Zooming.h"
-#include "Canvas.h"
 #include "DrawEngine.h"
 
 #include <glm/glm.hpp>
@@ -74,10 +73,16 @@ static bool hasLastPos = false;
 static int lastX = 0;
 static int lastY = 0;
 
+// additional mouse setting stuff
+int lastDrawnX = 0;
+int lastDrawnY = 0;
+
 // brush manager + brush info
 extern BrushManager brushManager;
 
 Camera2d camera;
+
+
 
 // callback for mouse button reading
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
@@ -201,6 +206,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 
 		if (action == GLFW_PRESS) {
 			ui.setCursorMode(UI::CursorMode::ColorPick);
+
 		}
 
 		else {
@@ -210,13 +216,8 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 
 }
 
-// random mouse setting stuff
-int lastDrawnX = 0;
-int lastDrawnY = 0;
 
-/*
-	Where the main drawing logic currently lies 
-*/
+
 static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	  or ImGUI wants to use the mouse	 or the file is not open			or it is not drawing
 	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive() || !drawEngine.isDrawing())
@@ -310,14 +311,9 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 		return;
 	} */
 
-	// I genuinely do not know how to code with good practices when I am 
-	// having to add to this behemoth of code 
+	if (mode == UI::CursorMode::ColorPick) {
 
-	/*
-		if the user is color picking, then grab the current cursor 
-		position and then grab the color at that position, set the 
-		current color equal to that grabbed color
-	*/
+	}
 
 
 	if (!activeRenderer->isDrawing) { return; }
@@ -390,6 +386,8 @@ static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 	glm::vec4 newScreen = newView * world;
 	camera.offset += mouseScreen - glm::vec2(newScreen);
 }
+
+
 
 //keyboard callbacks to set up hotkeys for switching cursorModes and temporary shortcut for zoom
 static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -521,7 +519,7 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 
 
 
-// 
+
 bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 {
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -584,7 +582,6 @@ static void centerCamera(const Canvas& canvas)
 
 
 
-//
 void Renderer::beginFrame(CanvasManager& canvasManager)
 {
 	activeCanvasManager = canvasManager;
