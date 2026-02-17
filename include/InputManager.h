@@ -7,8 +7,8 @@
 class InputManager {
 
 public:
-	void readInput(); 
-
+	void init(GLFWwindow* window); 
+	//void update();
 private:
 
 };

@@ -40,6 +40,7 @@ class Canvas {
         void removeLayer();
         void selectLayer(int layerNum);
 
+        // rotation, zoom, and offset data for each canvas
         glm::vec2 offset = { 0.0f, 0.0f };
         float zoom = 1.0f;
         float rotation = 0.0f;

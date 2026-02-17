@@ -72,12 +72,10 @@ static int lastY = 0;
 extern BrushManager brushManager;
 BrushTool activeBrush;
 
-//Camera2d camera;
-
 // callback for mouse button reading
 static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
 {
-	Canvas& canvas = activeCanvasManager.getActive();
+
 	// if no renderer    or imgui wants the mouse
 	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse)
 	{
@@ -85,6 +83,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 	}
 
 	UI::CursorMode mode = ui.getCursorMode();
+	Canvas& canvas = activeCanvasManager.getActive();
 
 	// if we have a button 				and im gui does NOT want the mouse
 	if (button == GLFW_MOUSE_BUTTON_LEFT && !ImGui::GetIO().WantCaptureMouse)
@@ -116,7 +115,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 
 					lastAngle = atan2f(my - canvasCenter.y, mx - canvasCenter.x);
 				}
-			}	
+			}
 
 			// for click zoom in and out plus logic for it
 			else if (mode == UI::CursorMode::ZoomIn || mode == UI::CursorMode::ZoomOut)
@@ -139,7 +138,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 					(float)(global.get_scr_height() - my)
 				);
 
-				Canvas& canvas = activeCanvasManager.getActive();
+				
 				glm::vec2 canvasCenter(
 					canvas.getWidth() * 0.5f,
 					canvas.getHeight() * 0.5f
@@ -183,7 +182,7 @@ int lastDrawnX = 0;
 int lastDrawnY = 0;
 
 /*
-	Where the main drawing logic currently lies 
+	Where the main drawing logic currently lies
 */
 static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	or it is not drawing 		  or ImGUI wants to use the mouse		or the file is not open
@@ -192,7 +191,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 	UI::CursorMode mode = ui.getCursorMode();
 	Canvas& canvas = activeCanvasManager.getActive();
-	
+
 	// panning and rotation logic cursor logic
 	if (isPanning)
 	{
@@ -207,8 +206,6 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 		else if (mode == UI::CursorMode::Rotate)
 		{
-			Canvas& canvas = activeCanvasManager.getActive();
-
 			glm::vec2 canvasCenter(
 				canvas.getWidth() * 0.5f + canvas.offset.x,
 				canvas.getHeight() * 0.5f + canvas.offset.y
@@ -250,7 +247,6 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 			(float)(global.get_scr_height() - my)
 		);
 
-		Canvas& canvas = activeCanvasManager.getActive();
 		glm::vec2 canvasCenter(
 			canvas.getWidth() * 0.5f,
 			canvas.getHeight() * 0.5f
@@ -281,16 +277,14 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 	if (!activeRenderer->isDrawing) { return; }
 
-	Canvas& curCanvas = activeCanvasManager.getActive();
-
 	// logic for proper drawing on the manipulated canvas (canvas that is zoomed, panned, or rotated)
 	float screenX = (float)xpos;
 	float screenY = global.get_scr_height() - (float)ypos;
 
 
 	glm::vec2 canvasCenter(
-		curCanvas.getWidth() * 0.5f,
-		curCanvas.getHeight() * 0.5f
+		canvas.getWidth() * 0.5f,
+		canvas.getHeight() * 0.5f
 	);
 
 	glm::vec2 p = { screenX, screenY };
@@ -320,7 +314,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 		lastX = x;
 		lastY = y;
 		hasLastPos = true;
-		curCanvas.setPixel(x, y, ui.getColor());
+		canvas.setPixel(x, y, ui.getColor());
 		return;
 	}
 
@@ -332,7 +326,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	if (steps == 0)
 	{
 		// Draw a single dab and bail out
-		curCanvas.setPixel(x, y, ui.getColor());
+		canvas.setPixel(x, y, ui.getColor());
 		lastX = x;
 		lastY = y;
 		return;
@@ -362,7 +356,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 		int baseX = lastX + (int)(dx * i * invSteps) - brushCenter_x * size;
 		int baseY = lastY + (int)(dy * i * invSteps) - brushCenter_y * size;
 
-		float distance = sqrt(((lastDrawnX - baseX) * (lastDrawnX - baseX)) +  ((lastDrawnY - baseY) * (lastDrawnY - baseY)));
+		float distance = sqrt(((lastDrawnX - baseX) * (lastDrawnX - baseX)) + ((lastDrawnY - baseY) * (lastDrawnY - baseY)));
 		if (distance < brushSpacing)
 			continue;
 
@@ -374,7 +368,7 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 			{
 				// if the current index is part of the pattern
 				float a = alpha[r * w + c];
-				if (a > 0.01f) 
+				if (a > 0.01f)
 				{
 					for (int sy = 0; sy < size; sy++)
 					{
@@ -382,9 +376,9 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 						{
 							// calculate the pixel x and y on the canvas
 							int px = baseX + c * size + sx;
-                    		int py = baseY + r * size + sy;
-							
-                    		curCanvas.setPixel(px, py, ui.getColor());
+							int py = baseY + r * size + sy;
+
+							canvas.setPixel(px, py, ui.getColor());
 						}
 					}
 
@@ -401,9 +395,10 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 {
-	Canvas& canvas = activeCanvasManager.getActive();
 	if (ImGui::GetIO().WantCaptureMouse)
 		return;
+
+	Canvas& canvas = activeCanvasManager.getActive();
 
 	// Rotate when holding R
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
@@ -453,7 +448,7 @@ static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
 	newView = glm::scale(newView, glm::vec3(canvas.zoom, canvas.zoom, 1.0f));
 	newView = glm::translate(newView, glm::vec3(-canvasCenter, 0.0f));
 
-	
+
 	glm::vec4 newScreen = newView * world;
 	canvas.offset += mouseScreen - glm::vec2(newScreen);
 }
@@ -576,7 +571,7 @@ static void centerCamera(Canvas& canvas)
 {
 
 	canvas.zoom = std::min((float)global.get_scr_width() / canvas.getWidth(), (float)global.get_scr_height() / canvas.getHeight()) * 0.95f;
-	 
+
 	canvas.rotation = 0.0f;
 
 	glm::vec2 screenCenter(
@@ -609,7 +604,6 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 		// if the active canvas has chaneged then recreate the vbo/vao
 		if (canvasManager.canvasChange || global.dirtyScreen) {
 			createCanvasQuad(canvasManager.getActive());
-			//centerCamera(activeCanvasManager.getActive());
 			canvasManager.canvasChange = false;
 			global.dirtyScreen = false;
 		}
@@ -637,7 +631,7 @@ void Renderer::shutdown() {
 
 /*
 	Canvas Rendering functions.
-	
+
 	Creates the VAO and VBO for the canvas quad.
 */
 void Renderer::createCanvasQuad(const Canvas& canvas)
