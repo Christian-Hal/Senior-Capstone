@@ -38,17 +38,11 @@ void DrawEngine::stop()
     strokeManager.endStroke();
 }
 
-void DrawEngine::addPoint(std::pair<float, float> point)
-{
-    // Add it to the stroke path
-    strokeManager.addPoint(point);
-}
-
 void DrawEngine::update()
 {
     if (strokeManager.hasValues()) {
         // Get the smoothed event path from the stroke manager
-        std::list<std::pair<float, float>> eventPath = strokeManager.process();
+        std::list<glm::vec2> eventPath = strokeManager.process();
 
         // Draw the smoothed point event path
         drawPath(eventPath);
@@ -59,7 +53,7 @@ void DrawEngine::update()
     }
 }
 
-void DrawEngine::drawPath(const std::list<std::pair<float, float>>& eventPath)
+void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
 {
     // this is straight up just a copy paste of the old drawing code with some very tiny modifications
     // I made it run over a set of positions instead of just one like the old code
@@ -70,8 +64,8 @@ void DrawEngine::drawPath(const std::list<std::pair<float, float>>& eventPath)
 
     for (const auto& point : eventPath)
     {
-            x = point.first;
-            y = point.second;
+            x = point.x;
+            y = point.y;
 
         if (!hasLastPos)
         {
@@ -168,10 +162,20 @@ void DrawEngine::drawPath(const std::list<std::pair<float, float>>& eventPath)
     }
 }
 
-// takes in a mouse position and returns the converted pixel coordinates on the current canvas
+// takes in a mouse position adds the converted canvas coords as a point in the current stroke
 void DrawEngine::processMousePos(double mouseX, double mouseY)
 {
-	// grab the current canvas
+    // convert the moust position to canvas coordinates
+	glm::vec2 point = mouseToCanvasCoords(mouseX, mouseY);
+
+	// add the point into the stroke path
+	strokeManager.addPoint(point);
+}
+
+// takes in a mouse position and returns the converted pixel coordinates on the current canvas
+glm::vec2 DrawEngine::mouseToCanvasCoords(double mouseX, double mouseY)
+ {
+    // grab the current canvas
 	Canvas& curCanvas = canvasManager.getActive();
 
 	// convert the mouse position to screen space (with y flipped)
@@ -211,6 +215,5 @@ void DrawEngine::processMousePos(double mouseX, double mouseY)
 	// move origin back to normal coordinate space
 	p += canvasCenter;
 
-	// add the point into the stroke path
-	strokeManager.addPoint({p.x, p.y});
-}
+    return glm::vec2(p.x, p.y);
+ }

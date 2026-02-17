@@ -93,13 +93,6 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 			{
 				activeRenderer->isDrawing = true;
 				drawEngine.start();
-
-				// grab the mouse position and convert it to canvas coordinates and send the point to the draw engine
-				// this makes it so something is drawn immediately on click instead of waiting for the mouse to move
-				double xpos, ypos;
-				glfwGetCursorPos(window, &xpos, &ypos);
-				//std::pair<float, float> curMousePos = activeRenderer->mouseToCanvasCoords(xpos, ypos);
-				//drawEngine.addPoint(curMousePos);
 			}
 			
 			// for pan and zoom and come extra logic for smooth rotation
@@ -275,12 +268,6 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 		return;
 	}
-
-	if (!activeRenderer->isDrawing || !drawEngine.isDrawing()) { return; }
-
-	// conver the mouse coordinates into canvas coordinates and send the point to the draw engine
-	//std::pair<float, float> canvasCoords = activeRenderer->mouseToCanvasCoords(xpos, ypos);
-	//drawEngine.addPoint(canvasCoords);
 }
 
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
@@ -392,53 +379,6 @@ static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int acti
 		if (action == GLFW_RELEASE)
 			isZoomDragging = false;
 	}
-}
-
-// takes in a mouse position and returns the converted pixel coordinates on the current canvas
-std::pair<float, float> Renderer::mouseToCanvasCoords(double mouseX, double mouseY)
-{
-	// grab the current canvas
-	Canvas& curCanvas = activeCanvasManager.getActive();
-
-	// convert the mouse position to screen space (with y flipped)
-	float screenX = mouseX;
-	float screenY = global.get_scr_height() - mouseY;
-
-	// grab the center of the canvas
-	glm::vec2 canvasCenter(
-		curCanvas.getWidth() * 0.5f,
-		curCanvas.getHeight() * 0.5f
-	);
-
-	// stores the point as a vector for easier manipulation(?)
-	// not sure what the naming convetion is for this cause Gunter wrote this stuff
-	// will probably change it later lol
-	glm::vec2 p = { screenX, screenY };
-
-	// removes the canvases offset and ensures its centered at (0,0)
-	p -= curCanvas.offset;
-	p -= canvasCenter;
-
-	// calculate the cosine and sine of the negative rotation angle for unrotating the point
-	float c = cosf(-curCanvas.rotation);
-	float s = sinf(-curCanvas.rotation);
-
-	// Simple rotation matrix to rotate the point
-	// if the canvas is rotated X degrees then we need to rotate the point -X degrees to match the canvas space
-	p = {
-		p.x * c - p.y * s,
-		p.x * s + p.y * c
-	};
-
-	// undo the zoom by dividing the point by the zoom level
-	// if the the canvas is zoomed in by 2 then dividing by 2 will remove the zoom
-	p /= curCanvas.zoom;
-
-	// move origin back to normal coordinate space
-	p += canvasCenter;
-
-	// return the point as a pair of floats
-	return {p.x, p.y};
 }
 
 // compile the vertex and fragment shaders 
