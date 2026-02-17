@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <glm/glm.hpp>
 
 struct Color {
     unsigned char r, g, b, a;
@@ -38,6 +39,10 @@ class Canvas {
         void createLayer();
         void removeLayer();
         void selectLayer(int layerNum);
+
+        glm::vec2 offset = { 0.0f, 0.0f };
+        float zoom = 1.0f;
+        float rotation = 0.0f;
 
     private:
         // canvas settings
