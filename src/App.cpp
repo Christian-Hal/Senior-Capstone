@@ -65,8 +65,16 @@ void App::run()
 	while (!window.shouldClose()) {
 		window.pollEvents();
 
+
+		// If there is an active canvas then let the draw engine grab and process the current mouse position 
+		if (drawEngine.isDrawing() && canvasManager.hasActive()) {
+			double mouseX, mouseY;
+			glfwGetCursorPos(window.handle(), &mouseX, &mouseY);
+			drawEngine.processMousePos(mouseX, mouseY);
+		}
+
 		// Let the draw system run a process
-		drawEngine.process();
+		drawEngine.update();
 
 		// Render the canvas, the UI, and then clear stuff and swap buffers.
 		// The order of these next four methods must not change

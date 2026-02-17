@@ -26,7 +26,7 @@ void StrokeManager::endStroke()
     isSmoothing = false;
 }
 
-void StrokeManager::addPoint(std::pair<float, float> point)
+void StrokeManager::addPoint(glm::vec2 point)
 {
     currentStroke.push_back(point);
 }
@@ -36,26 +36,31 @@ bool StrokeManager::hasValues()
     return !currentStroke.empty();
 }
 
-std::list<std::pair<float, float>> StrokeManager::process()
+std::list<glm::vec2> StrokeManager::process()
 {
-    std::list<std::pair<float, float>> eventPath;
+    std::list<glm::vec2> eventPath;
 
     while(!currentStroke.empty()) {
-        // Pop the first element out of the list
-        std::pair<float, float> point = currentStroke.front();
+        // Grab and remove the first element of the list
+        glm::vec2 point = currentStroke.front();
         currentStroke.pop_front();
-        std::cout << "Processing point: (" << point.first << ", " << point.second << ")" << std::endl;
+        //std::cout << "Processing point: (" << point.x << ", " << point.y << ")" << std::endl;
 
         // Smooth the point
-        std::pair<float, float> smoothedPoint = smoothPoint(point);
+        glm::vec2 smoothedPoint = smoothPoint(point);
+
+        // add it into the event path for this frame
         eventPath.push_back(smoothedPoint);
+
+        // add it into the current event path for the entire stroke
+        // this will be used for undo and what not, holds the entire stroke from mouse down to mouse up
         curEventPath.push_back(smoothedPoint);
     }
 
     return eventPath;
 }
 
-std::pair<float, float> StrokeManager::smoothPoint(std::pair<float, float> point)
+glm::vec2 StrokeManager::smoothPoint(glm::vec2 point)
 {
     // if it isn't smoothing then start smoothing
     // set the last smoothed point to the current point and return the current point as the smoothed point
@@ -70,10 +75,10 @@ std::pair<float, float> StrokeManager::smoothPoint(std::pair<float, float> point
 
     // implementation of a simple exponential moving average smoother
     // formula : last = raw * alpha + last * (1.0f - alpha)
-    std::pair<float, float> p1 = {alpha * point.first, alpha * point.second};
-    std::pair<float, float> p2 = {invAlpha * lastSmoothed.first, invAlpha * lastSmoothed.second};
+    glm::vec2 p1 = {alpha * point.x, alpha * point.y};
+    glm::vec2 p2 = {invAlpha * lastSmoothed.x, invAlpha * lastSmoothed.y};
 
     // combine the first two halves of the formula to get the smoothed point
-    lastSmoothed = {p1.first + p2.first, p1.second + p2.second};
+    lastSmoothed = {p1.x + p2.x, p1.y + p2.y};
     return lastSmoothed;
 }

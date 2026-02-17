@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <list>
 
 class StrokeManager
@@ -13,27 +14,27 @@ class StrokeManager
         void endStroke();
 
         // Pushes a point to the back of the current stroke list
-        void addPoint(std::pair<float, float> point);
+        void addPoint(glm::vec2 point);
 
         // Processes the current stroke list and generates a smoothed event path, which is stored in curEventPath
         // it then returns the smoothed event path as a list of points
-        std::list<std::pair<float, float>> process();
+        std::list<glm::vec2> process();
 
         // Returns true if there are still points in the current stroke list
         bool hasValues();
 
     private:
         // A list of points that make up the current stroke
-        std::list<std::pair<float, float>> currentStroke;
+        std::list<glm::vec2> currentStroke;
 
         // Smooths and returns the given point
-        std::pair<float, float> smoothPoint(std::pair<float, float> point);
+        glm::vec2 smoothPoint(glm::vec2 point);
 
         // The last point processed by the smoother, used for calculating the smoothed point
-        std::pair<float, float> lastSmoothed;
+        glm::vec2 lastSmoothed;
         bool isSmoothing = false;
 
         // Keeps track of the current smoothed stroke path
-        std::list<std::pair<float, float>> curEventPath;
+        std::list<glm::vec2> curEventPath;
 
 };

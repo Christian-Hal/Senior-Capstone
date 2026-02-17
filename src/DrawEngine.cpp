@@ -3,9 +3,11 @@
 #include "UI.h"
 #include "CanvasManager.h"
 #include "BrushManager.h"
+#include "Globals.h"
 
 #include <iostream>
 
+extern Globals global;
 extern UI ui;
 extern CanvasManager canvasManager;
 extern BrushManager brushManager;
@@ -13,6 +15,7 @@ BrushTool activeBrush;
 
 void DrawEngine::init()
 {
+    drawing = false;
     strokeManager.init();
 }
 
@@ -23,48 +26,46 @@ bool DrawEngine::isDrawing()
 
 void DrawEngine::start()
 {
-    std::cout << "Draw engine start!" << std::endl;
+    //std::cout << "Draw engine start!" << std::endl;
     drawing = true;
 }
 
 void DrawEngine::stop()
 {
-    std::cout << "Draw engine stop!" << std::endl;
+    //std::cout << "Draw engine stop!" << std::endl;
     drawing = false;
     hasLastPos = false;
     strokeManager.endStroke();
 }
 
-void DrawEngine::addPoint(std::pair<float, float> point)
-{
-    // Add it to the stroke path
-    strokeManager.addPoint(point);
-}
-
-void DrawEngine::process()
+void DrawEngine::update()
 {
     if (strokeManager.hasValues()) {
         // Get the smoothed event path from the stroke manager
-        std::list<std::pair<float, float>> eventPath = strokeManager.process();
+        std::list<glm::vec2> eventPath = strokeManager.process();
 
-        // Draw it (?)
+        // Draw the smoothed point event path
         drawPath(eventPath);
 
-        // TODO : Implement drawing code to draw the path
+        // TODO : brush dabs and spacing and all that stuff
         // generate the brush dab
         // move along the path while stamping the brush dab
     }
 }
 
-void DrawEngine::drawPath(const std::list<std::pair<float, float>>& eventPath)
+void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
 {
+    // this is straight up just a copy paste of the old drawing code with some very tiny modifications
+    // I made it run over a set of positions instead of just one like the old code
+    // I plan on changing this a lot and making it better and having actual comments but for now I just wanted something working
+
     Canvas& curCanvas = canvasManager.getActive();
     float x, y;
 
     for (const auto& point : eventPath)
     {
-            x = point.first;
-            y = point.second;
+            x = point.x;
+            y = point.y;
 
         if (!hasLastPos)
         {
@@ -160,3 +161,59 @@ void DrawEngine::drawPath(const std::list<std::pair<float, float>>& eventPath)
         lastY = y;
     }
 }
+
+// takes in a mouse position adds the converted canvas coords as a point in the current stroke
+void DrawEngine::processMousePos(double mouseX, double mouseY)
+{
+    // convert the moust position to canvas coordinates
+	glm::vec2 point = mouseToCanvasCoords(mouseX, mouseY);
+
+	// add the point into the stroke path
+	strokeManager.addPoint(point);
+}
+
+// takes in a mouse position and returns the converted pixel coordinates on the current canvas
+glm::vec2 DrawEngine::mouseToCanvasCoords(double mouseX, double mouseY)
+ {
+    // grab the current canvas
+	Canvas& curCanvas = canvasManager.getActive();
+
+	// convert the mouse position to screen space (with y flipped)
+	float screenX = mouseX;
+	float screenY = global.get_scr_height() - mouseY;
+
+	// grab the center of the canvas
+	glm::vec2 canvasCenter(
+		curCanvas.getWidth() * 0.5f,
+		curCanvas.getHeight() * 0.5f
+	);
+
+	// stores the point as a vector for easier manipulation(?)
+	// not sure what the naming convetion is for this cause Gunter wrote this stuff
+	// will probably change it later lol
+	glm::vec2 p = { screenX, screenY };
+
+	// removes the canvases offset and ensures its centered at (0,0)
+	p -= curCanvas.offset;
+	p -= canvasCenter;
+
+	// calculate the cosine and sine of the negative rotation angle for unrotating the point
+	float c = cosf(-curCanvas.rotation);
+	float s = sinf(-curCanvas.rotation);
+
+	// Simple rotation matrix to rotate the point
+	// if the canvas is rotated X degrees then we need to rotate the point -X degrees to match the canvas space
+	p = {
+		p.x * c - p.y * s,
+		p.x * s + p.y * c
+	};
+
+	// undo the zoom by dividing the point by the zoom level
+	// if the the canvas is zoomed in by 2 then dividing by 2 will remove the zoom
+	p /= curCanvas.zoom;
+
+	// move origin back to normal coordinate space
+	p += canvasCenter;
+
+    return glm::vec2(p.x, p.y);
+ }
