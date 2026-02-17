@@ -89,7 +89,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 		if (action == GLFW_PRESS)
 		{
 			// for drawing and erasing
-			if ((mode == UI::CursorMode::Draw || mode == UI::CursorMode::Erase))
+			if ((mode == UI::CursorMode::Draw || mode == UI::CursorMode::Erase) && activeCanvasManager.hasActive())
 			{
 				activeRenderer->isDrawing = true;
 				drawEngine.start();
@@ -98,8 +98,8 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 				// this makes it so something is drawn immediately on click instead of waiting for the mouse to move
 				double xpos, ypos;
 				glfwGetCursorPos(window, &xpos, &ypos);
-				std::pair<float, float> curMousePos = activeRenderer->mouseToCanvasCoords(xpos, ypos);
-				drawEngine.addPoint(curMousePos);
+				//std::pair<float, float> curMousePos = activeRenderer->mouseToCanvasCoords(xpos, ypos);
+				//drawEngine.addPoint(curMousePos);
 			}
 			
 			// for pan and zoom and come extra logic for smooth rotation
@@ -279,8 +279,8 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	if (!activeRenderer->isDrawing || !drawEngine.isDrawing()) { return; }
 
 	// conver the mouse coordinates into canvas coordinates and send the point to the draw engine
-	std::pair<float, float> canvasCoords = activeRenderer->mouseToCanvasCoords(xpos, ypos);
-	drawEngine.addPoint(canvasCoords);
+	//std::pair<float, float> canvasCoords = activeRenderer->mouseToCanvasCoords(xpos, ypos);
+	//drawEngine.addPoint(canvasCoords);
 }
 
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)

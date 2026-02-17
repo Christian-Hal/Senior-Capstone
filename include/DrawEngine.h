@@ -19,8 +19,11 @@ class DrawEngine
         // Tells the stroke manager to add a point to the current stroke list
         void addPoint(std::pair<float, float> point);
 
+        // takes in a mouse position and returns the converted pixel coordinates on the current canvas
+        void processMousePos(double mouseX, double mouseY);
+
         // Processes the current draw state
-        void process();
+        void update();
 
         // Draw the given event path (list of points) onto the canvas
         void drawPath(const std::list<std::pair<float, float>>& eventPath);

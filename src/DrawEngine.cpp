@@ -3,9 +3,11 @@
 #include "UI.h"
 #include "CanvasManager.h"
 #include "BrushManager.h"
+#include "Globals.h"
 
 #include <iostream>
 
+extern Globals global;
 extern UI ui;
 extern CanvasManager canvasManager;
 extern BrushManager brushManager;
@@ -13,6 +15,7 @@ BrushTool activeBrush;
 
 void DrawEngine::init()
 {
+    drawing = false;
     strokeManager.init();
 }
 
@@ -41,7 +44,7 @@ void DrawEngine::addPoint(std::pair<float, float> point)
     strokeManager.addPoint(point);
 }
 
-void DrawEngine::process()
+void DrawEngine::update()
 {
     if (strokeManager.hasValues()) {
         // Get the smoothed event path from the stroke manager
@@ -163,4 +166,51 @@ void DrawEngine::drawPath(const std::list<std::pair<float, float>>& eventPath)
         lastX = x;
         lastY = y;
     }
+}
+
+// takes in a mouse position and returns the converted pixel coordinates on the current canvas
+void DrawEngine::processMousePos(double mouseX, double mouseY)
+{
+	// grab the current canvas
+	Canvas& curCanvas = canvasManager.getActive();
+
+	// convert the mouse position to screen space (with y flipped)
+	float screenX = mouseX;
+	float screenY = global.get_scr_height() - mouseY;
+
+	// grab the center of the canvas
+	glm::vec2 canvasCenter(
+		curCanvas.getWidth() * 0.5f,
+		curCanvas.getHeight() * 0.5f
+	);
+
+	// stores the point as a vector for easier manipulation(?)
+	// not sure what the naming convetion is for this cause Gunter wrote this stuff
+	// will probably change it later lol
+	glm::vec2 p = { screenX, screenY };
+
+	// removes the canvases offset and ensures its centered at (0,0)
+	p -= curCanvas.offset;
+	p -= canvasCenter;
+
+	// calculate the cosine and sine of the negative rotation angle for unrotating the point
+	float c = cosf(-curCanvas.rotation);
+	float s = sinf(-curCanvas.rotation);
+
+	// Simple rotation matrix to rotate the point
+	// if the canvas is rotated X degrees then we need to rotate the point -X degrees to match the canvas space
+	p = {
+		p.x * c - p.y * s,
+		p.x * s + p.y * c
+	};
+
+	// undo the zoom by dividing the point by the zoom level
+	// if the the canvas is zoomed in by 2 then dividing by 2 will remove the zoom
+	p /= curCanvas.zoom;
+
+	// move origin back to normal coordinate space
+	p += canvasCenter;
+
+	// add the point into the stroke path
+	strokeManager.addPoint({p.x, p.y});
 }
