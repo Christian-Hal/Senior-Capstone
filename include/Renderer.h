@@ -42,6 +42,9 @@ public:
 	void uploadTexture(const Canvas& canvas);
 	void renderCanvas(const Canvas& canvas);
 
+	// color picking 
+	void pickColor(double mouseX, double mouseY, Canvas& canvas); 
+
 
 	//bool drawVertices = false;
 	std::vector<float> drawVertices;

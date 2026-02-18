@@ -156,15 +156,11 @@ Color UI::getColor()
 						      hovering over. 
 */
 void UI::setColor(Color currentPixelColor) {
-	color[0] = static_cast<float>(currentPixelColor.r);
-	color[1] = static_cast<float>(currentPixelColor.g);
-	color[2] = static_cast<float>(currentPixelColor.b);
-	color[3] = static_cast<float>(currentPixelColor.a);
+	color[0] = currentPixelColor.r / 255.0f; 
+	color[1] = currentPixelColor.g / 255.0f; 
+	color[2] = currentPixelColor.b / 255.0f; 
+	color[3] = currentPixelColor.a / 255.0f; 
 
-	/*cout << "r set to " << color[0] << endl; 
-	cout << "g set to " << color[1] << endl; 
-	cout << "b set to " << color[2] << endl; 
-	cout << "a set to " << color[3] << endl; */
 
 }
 

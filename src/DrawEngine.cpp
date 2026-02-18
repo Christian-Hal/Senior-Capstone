@@ -13,22 +13,30 @@ extern CanvasManager canvasManager;
 extern BrushManager brushManager;
 BrushTool activeBrush;
 
+
+
 void DrawEngine::init()
 {
     drawing = false;
     strokeManager.init();
 }
 
+
+
 bool DrawEngine::isDrawing()
 {
     return drawing;
 }
+
+
 
 void DrawEngine::start()
 {
     //std::cout << "Draw engine start!" << std::endl;
     drawing = true;
 }
+
+
 
 void DrawEngine::stop()
 {
@@ -37,6 +45,8 @@ void DrawEngine::stop()
     hasLastPos = false;
     strokeManager.endStroke();
 }
+
+
 
 void DrawEngine::update()
 {
@@ -162,6 +172,8 @@ void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
     }
 }
 
+
+
 // takes in a mouse position adds the converted canvas coords as a point in the current stroke
 void DrawEngine::processMousePos(double mouseX, double mouseY)
 {
@@ -171,6 +183,8 @@ void DrawEngine::processMousePos(double mouseX, double mouseY)
 	// add the point into the stroke path
 	strokeManager.addPoint(point);
 }
+
+
 
 // takes in a mouse position and returns the converted pixel coordinates on the current canvas
 glm::vec2 DrawEngine::mouseToCanvasCoords(double mouseX, double mouseY)

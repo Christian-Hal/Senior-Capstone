@@ -66,7 +66,6 @@ static Renderer* activeRenderer = nullptr;
 // for code readability 
 static CanvasManager activeCanvasManager;
 static UI ui;
-static Canvas canvas; 
 
 static bool hasLastPos = false;
 static int lastX = 0;
@@ -98,6 +97,16 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 			{
 				activeRenderer->isDrawing = true;
 				drawEngine.start();
+			}
+
+			// color picking with the persistant keyboard input state utilizes left click 
+			// as opposed to right click with the temporary state 
+			else if (mode == UI::CursorMode::ColorPick) {
+				double xpos, ypos; 
+				glfwGetCursorPos(window, &xpos, &ypos); 
+
+				activeRenderer->pickColor(xpos, ypos, curCanvas); 
+				return; 
 			}
 			
 			// for pan and zoom and come extra logic for smooth rotation
@@ -190,13 +199,15 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && !ImGui::GetIO().WantCaptureMouse) {
 
 		if (action == GLFW_PRESS) {
-			ui.setCursorMode(UI::CursorMode::ColorPick);
+			// note that there is no actual state change during this temporary color 
+			// picking. It simply reverts back to drawing right after release 
 
+			double xpos, ypos; 
+			glfwGetCursorPos(window, &xpos, &ypos); 
+			activeRenderer->pickColor(xpos, ypos, curCanvas); 
 		}
 
-		else {
-			ui.setCursorMode(UI::CursorMode::Draw); 
-		}
+		return; 
 	}
 
 }
@@ -297,10 +308,41 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 }
 
 
-static void colorPick() {
-	// take the mouse position and calculate the canvas coords 
-	double cursorX, cursorY; 
+
+/*
+	takes in an overall mouse location and an active canvas then 
+	grabs the color of the pixel that the mouse cursor is 
+	currently hovering over. 
+
+	@param mouseX: X-coordinate of the mouse on the overall screen. 
+	@param mouseY: Y-coordinate of the mouse on the overall screen. 
+	@param canvas: The current canvas. Used to check that the mouse is on the canvas. 
+*/
+void Renderer::pickColor(double mouseX, double mouseY, Canvas& canvas) {
+
+	// don't waste time if there is no canvas 
+	if (!activeCanvasManager.hasActive()){
+		return; 
+	}
+
+	// free balling with an auto data type because nothing is sacred 
+	glm::vec2 canvasCoords = drawEngine.mouseToCanvasCoords(mouseX, mouseY); 
+	// grab coords from returned vector 
+	int canvasX = static_cast<int>(canvasCoords.x); 
+	int canvasY = static_cast<int>(canvasCoords.y);
+
+	// ensure that we are within current canvas bounds 
+	// this will be called with curCanvas 
+	if (canvasX >= 0 && canvasX < canvas.getWidth() && canvasY >= 0 && canvasY < canvas.getHeight()) {
+		Color pickedColor = canvas.getPixel(canvasX, canvasY); 
+		ui.setColor(pickedColor); 
+	}
+
+	
+
+
 }
+
 
 
 static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
@@ -427,6 +469,8 @@ static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int acti
 	}
 }
 
+
+
 // compile the vertex and fragment shaders 
 static unsigned int compileShader(unsigned int type, const char* source) {
 
@@ -443,7 +487,6 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 	}
 	return shader;
 }
-
 
 
 
@@ -470,7 +513,9 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glDeleteShader(fragmentShader);
 
 	// ----- Texture Setup -----
-	glGenTextures(0, &canvasTexture);
+
+	glGenTextures(1, &canvasTexture);
+
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
