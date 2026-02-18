@@ -19,7 +19,7 @@ void DrawEngine::init()
     spacing = 1;
     hasPrev = false;
     distanceSinceLastStamp = 0;
-    
+
     strokeManager.init();
 }
 
@@ -58,35 +58,48 @@ void DrawEngine::update()
 
 void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
 {
-
+    // for each smoothed point in the event path
     for (const auto& point : eventPath)
     {
-        if (!hasPrev) {
-        prev = point;
-        hasPrev = true;
-        continue;
-    }
+        // if there isn't a previous point then we can't draw anything yet
+        if (!hasPrev) 
+        {
+            // set up prev for the next point and continue through the loop
+            prev = point;
+            hasPrev = true;
+            continue;
+        }
 
+        // get the vector between the two points and its length
         glm::vec2 delta = point - prev;
         float len = length(delta);
 
-        if (len == 0) return;
+        // if the points are the same then don't draw anything
+        if (len == 0) continue;
 
+        // normalize the delta to get the direction of the stroke
         glm::vec2 dir = delta / len;
 
+        // keeps track of how much distance is left
         float remaining = len;
 
-        while (distanceSinceLastStamp + remaining >= spacing) {
+        // this basically checks if theres enough space left to stamp another brush dab
+        while (distanceSinceLastStamp + remaining >= spacing) 
+        {
+            // how far we need to step to get to the next position
             float step = spacing - distanceSinceLastStamp;
-            glm::vec2 stampPos = prev + dir * step;
 
+            // calculate the position of the next stamp and stamp
+            glm::vec2 stampPos = prev + dir * step;
             stampBrush(stampPos);
 
+            // update the remaining distance and prev for the next loop iteration
             prev = stampPos;
             remaining -= step;
             distanceSinceLastStamp = 0;
         }
 
+        // carry any left over distance to the next point
         distanceSinceLastStamp += remaining;
         prev = point;
     }
@@ -155,135 +168,3 @@ glm::vec2 DrawEngine::mouseToCanvasCoords(double mouseX, double mouseY)
     return glm::vec2(p.x, p.y);
  }
 
-
-
-/*
- void processStrokePoint(Vec2 smoothPoint) {
-    if (!hasPrev) {
-        prev = smoothPoint;
-        return;
-    }
-
-    Vec2 delta = smoothPoint - prev;
-    float len = length(delta);
-
-    if (len == 0) return;
-
-    Vec2 dir = delta / len;
-
-    float remaining = len;
-
-    while (distanceSinceLastStamp + remaining >= spacing) {
-        float step = spacing - distanceSinceLastStamp;
-        Vec2 stampPos = prev + dir * step;
-
-        stampBrush(stampPos);
-
-        prev = stampPos;
-        remaining -= step;
-        distanceSinceLastStamp = 0;
-    }
-
-    distanceSinceLastStamp += remaining;
-    prev = smoothPoint;
-} 
-*/
-
-
-
-
-////// OLD DRAWING CODE //////
-/*
-    x = point.x;
-            y = point.y;
-
-        if (!hasLastPos)
-        {
-            lastX = x;
-            lastY = y;
-            lastDrawnX = x;
-            lastDrawnY = y;
-            hasLastPos = true;
-            curCanvas.setPixel(x, y, ui.getColor());
-            continue;
-        }
-
-        float dx = x - lastX;
-        float dy = y - lastY;
-
-        int steps = (int)std::ceil(std::max(std::abs(dx), std::abs(dy)));
-
-        // logic to prevent system crashing if zoomed in too much
-        if (steps == 0)
-        {
-            lastX = x;
-            lastY = y;
-            continue;
-        }
-
-        // grab and compute the brush info
-        if (brushManager.brushChange == true)
-        {
-            activeBrush = brushManager.getActiveBrush();
-            brushManager.brushChange = false;
-        }
-
-        int size = ui.brushSize;
-        int w = activeBrush.tipWidth;
-        int h = activeBrush.tipHeight;
-        int brushSpacing = size * activeBrush.spacing;
-        std::vector<float> alpha = activeBrush.tipAlpha;
-
-        int brushCenter_x = w / 2;
-        int brushCenter_y = h / 2;
-
-        float invSteps = 1.0f / (float)steps;
-
-        // for each step between the last position and current position
-        for (int i = 0; i <= steps; i++)
-        {
-            // had to change some math becuase it was crashing if trying to draw too zoomed in
-            float baseX = lastX + (dx * i * invSteps) - brushCenter_x * size;
-            float baseY = lastY + (dy * i * invSteps) - brushCenter_y * size;
-
-            float distance = sqrt(((lastDrawnX - baseX) * (lastDrawnX - baseX)) +  ((lastDrawnY - baseY) * (lastDrawnY - baseY)));
-            if (distance < brushSpacing)
-                continue;
-
-            bool stamped = false;
-
-            // for each row in the brush mask
-            for (int r = 0; r < h; r++)
-            {
-                // for each column in the brush mask
-                for (int c = 0; c < w; c++)
-                {
-                    // if the current index is part of the pattern
-                    float a = alpha[r * w + c];
-                    if (a > 0.01f) 
-                    {
-                        for (int sy = 0; sy < size; sy++)
-                        {
-                            for (int sx = 0; sx < size; sx++)
-                            {
-                                // calculate the pixel x and y on the canvas
-                                int px = baseX + c * size + sx;
-                                int py = baseY + r * size + sy;
-                                
-                                curCanvas.setPixel(px, py, ui.getColor());
-                            }
-                        }
-
-                        stamped = true;
-                    }
-                }
-            }
-            if (stamped)
-            {
-                lastDrawnX = baseX;
-                lastDrawnY = baseY;
-            }
-        }
-
-        lastX = x;
-        lastY = y; */
