@@ -213,7 +213,16 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 }
 
 
+/*
+	Note: cursorPosCallBack is called every time that the cursor moves 
 
+	@param window: The openGL context that contains the project. 
+	@param xpos: The X-Coordinate of the mouse in reference to the context as a whole. 
+	@param ypos: The Y-Coordinate of the mouse in reference to the context as a whole. 
+
+	Note: These our coordinates of the screen as a whole and not of the canvas in particular!
+
+*/
 static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 	// if no renderer	  or ImGUI wants to use the mouse	 or the file is not open			or it is not drawing
 	if (!activeRenderer || ImGui::GetIO().WantCaptureMouse || !activeCanvasManager.hasActive())// || !drawEngine.isDrawing())
@@ -221,7 +230,15 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 	UI::CursorMode mode = ui.getCursorMode();
 	Canvas& curCanvas = activeCanvasManager.getActive();
-	
+	// NOTE: This input check in the or condition hard codes this mouse input to right click 
+	// this is the universal button for color sampling but it should be acknoledged later 
+	// for key binding purposes. 
+	if (mode == UI::CursorMode::ColorPick || glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)) {
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+		activeRenderer->pickColor(xpos, ypos, curCanvas);
+	}
+
 	// panning and rotation logic cursor logic
 	if (isPanning)
 	{
