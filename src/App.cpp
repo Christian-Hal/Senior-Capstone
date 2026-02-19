@@ -19,7 +19,6 @@ Globals global;
 BrushManager brushManager;
 DrawEngine drawEngine;
 CanvasManager canvasManager;
-static CanvasManager canvasManager;
 FrameRenderer frameRenderer;
 
 static int SCR_WIDTH = 1280;
