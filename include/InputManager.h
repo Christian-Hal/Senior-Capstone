@@ -1,14 +1,30 @@
-
-#pragma once 
+#pragma once
 
 #include <glfw/glfw3.h>
 
+class Renderer;
+class CanvasManager;
+class UI;
+class Globals;
 
-class InputManager {
-
+class InputManager
+{
 public:
-	void init(GLFWwindow* window); 
-	//void update();
+    static void init(GLFWwindow* window, Renderer* renderer);
+    static void update();
+
+    static bool IsMousePressed(int button);
+
+    static double getMouseX();
+    static double getMouseY();
+                  
+    static double getMouseDeltaX();
+    static double getMouseDeltaY();
+
 private:
+    static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods);
+    static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos);
+    static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset);
+    static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 };

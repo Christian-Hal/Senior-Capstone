@@ -1,12 +1,17 @@
 
-#pragma once 
-#include <glm/glm.hpp>
+#pragma once
+#include <glfw/glfw3.h>
 
+class Globals;
+class Canvas;
 
-static bool isPanning = false;
-static double lastMouseX = 0.0;
-static double lastMouseY = 0.0;
+class CanvasManipulation {
+public:
+	void zooming(double yoffset, float zoomSpeed, double xpos, double ypos, GLFWwindow* window);
+	void panning(double deltaX, double deltaY);
+	void startRotate(double xpos, double ypos);
+	void rotating(double xpos, double ypos);
 
-static float lastAngle = 0.0f;
-static bool isZoomDragging = false;
-static double lastZoomMouseY = 0.0;
+private:
+	void viewMatrix(double x, double y, float oldZoom, Canvas& canvas);
+};

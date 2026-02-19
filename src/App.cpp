@@ -9,7 +9,7 @@
 #include "BrushManager.h"
 #include "FrameRenderer.h"
 
-//#include "InputManager.h"
+#include "InputManager.h"
 
 
 // define our static objects and vars 
@@ -21,7 +21,7 @@ BrushManager brushManager;
 static CanvasManager canvasManager;
 FrameRenderer frameRenderer;
 
-//static InputManager inputManager;
+static InputManager inputManager;
 
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
@@ -76,6 +76,7 @@ void App::run()
 		renderer.beginFrame(canvasManager);
 		ui.draw(canvasManager, frameRenderer);
 		renderer.endFrame();
+		inputManager.update();
 
 		window.swapBuffers();
 	}
