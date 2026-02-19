@@ -179,7 +179,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 				return;
 			}
 		}
-		else if (action == GLFW_RELEASE)
+		else if (action == GLFW_RELEASE && activeCanvasManager.hasActive())
 		{
 			activeRenderer->isDrawing = false;
 			drawEngine.stop();

@@ -29,16 +29,24 @@ class DrawEngine
         // Processes the current stroke list, generate a smoothed event path, and draw said path onto the active canvas
         void update();
 
+        bool doStamp = false;
+
     private:
         StrokeManager strokeManager;
         bool drawing = false;
+        int drawSize = 1;
 
-        // variables that store stuff fror the drawing code in drawPath
-        float lastX, lastY;
-        float lastDrawnX, lastDrawnY;
-        bool hasLastPos = false;
+        // variables that store stuff for the drawing code in drawPath
+        glm::vec2 prev;                         // last point we moved from
+        float distanceSinceLastStamp;           // leftover distance since last stamp
+        float spacing;                          // spacing between stamps
+        bool hasPrev;
+
+        // the brush dab
+        std::vector<float> brushDab;
 
         // Draw the given event path (list of points) onto the canvas
         void drawPath(const std::list<glm::vec2>& eventPath);
+        void stampBrush(glm::vec2 position, int brushSize);
 
 };
