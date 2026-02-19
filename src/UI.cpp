@@ -127,7 +127,7 @@ bool LoadTextureFromFile(const char* file_name, GLuint* out_texture, int* out_wi
 }
 
 
-
+// note: not all options here return a value. 
 Color UI::getColor()
 {
 	if (cursorMode == UI::CursorMode::Draw) 
