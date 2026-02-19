@@ -11,7 +11,6 @@ extern Globals global;
 extern UI ui;
 extern CanvasManager canvasManager;
 extern BrushManager brushManager;
-BrushTool activeBrush;
 
 void DrawEngine::init()
 {
@@ -38,7 +37,6 @@ void DrawEngine::stop()
 {
     //std::cout << "Draw engine stop!" << std::endl;
     drawing = false;
-    hasLastPos = false;
     strokeManager.endStroke();
 
     hasPrev = false;
@@ -47,6 +45,11 @@ void DrawEngine::stop()
 
 void DrawEngine::update()
 {
+    if (brushManager.brushChange) {
+        brushDab = brushManager.generateBrushDab();
+        spacing = brushManager.getActiveBrush().spacing;
+        brushManager.brushChange = false;
+    }
     if (strokeManager.hasValues()) {
         // Get the smoothed event path from the stroke manager
         std::list<glm::vec2> eventPath = strokeManager.process();
@@ -107,9 +110,32 @@ void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
 
 void DrawEngine::stampBrush(glm::vec2 position)
 {
-    // this is where the code for stamping the brush dab onto the canvas will go
+    // grab the active canvsas
     Canvas& curCanvas = canvasManager.getActive();
-    curCanvas.setPixel((int)position.x, (int)position.y, ui.getColor());
+
+    // grab all needed information from the brush dab
+    float W = brushDab[0];
+    float H = brushDab[1];
+    // this copies everything but the first two values, which are the width and height
+    std::vector<float> alpha(brushDab.begin() + 2, brushDab.end());
+
+    // calculate other needed information
+    int topLeftX = position.x - (W  / 2);
+    int topLeftY = position.y - (H / 2);
+
+    for (int r = 0; r < H; r++) 
+    {
+        for (int c = 0; c < W; c++) 
+        {
+            float a = alpha[r * W + c];
+            if (a > 0.01f) {
+                int finalX = topLeftX + c;
+                int finalY = topLeftY + r;
+
+                curCanvas.setPixel(finalX, finalY, ui.getColor());
+            }
+        }
+    }
 }
 
 // takes in a mouse position adds the converted canvas coords as a point in the current stroke

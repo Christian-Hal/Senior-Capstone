@@ -29,6 +29,22 @@ void BrushManager::init()
     brushChange = true;
 }
 
+// generates and returns a brush dab of the active brush
+// the dab contains the width, height, and then the values of the tip alpha
+const std::vector<float> BrushManager::generateBrushDab()
+{
+    std::vector<float> dab;
+    dab.push_back(activeBrush->tipWidth);
+    dab.push_back(activeBrush->tipHeight);
+
+    for (float val : activeBrush->tipAlpha)
+    {
+        dab.push_back(val);
+    }
+
+    return dab;
+}
+
 
 /*
     Getter for loaded brushes.

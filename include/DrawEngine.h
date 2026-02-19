@@ -34,14 +34,13 @@ class DrawEngine
         bool drawing = false;
 
         // variables that store stuff for the drawing code in drawPath
-        float lastX, lastY;
-        float lastDrawnX, lastDrawnY;
-        bool hasLastPos = false;
-
-        glm::vec2 prev;                    // last point we advanced from
-        float distanceSinceLastStamp; // leftover distance since last stamp
-        float spacing;                // desired spacing between stamps
+        glm::vec2 prev;                         // last point we moved from
+        float distanceSinceLastStamp;           // leftover distance since last stamp
+        float spacing;                          // spacing between stamps
         bool hasPrev;
+
+        // the brush dab
+        std::vector<float> brushDab;
 
         // Draw the given event path (list of points) onto the canvas
         void drawPath(const std::list<glm::vec2>& eventPath);
