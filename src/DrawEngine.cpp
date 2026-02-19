@@ -40,7 +40,7 @@ void DrawEngine::stop()
     drawing = false;
     strokeManager.endStroke();
 
-    if (doStamp) stampBrush(prev);
+    if (doStamp) stampBrush(prev, drawSize);
 
     hasPrev = false;
     distanceSinceLastStamp = 0;
@@ -48,6 +48,8 @@ void DrawEngine::stop()
 
 void DrawEngine::update()
 {
+    drawSize = ui.brushSize;
+
     if (brushManager.brushChange) {
         brushDab = brushManager.generateBrushDab();
         spacing = brushManager.getActiveBrush().spacing;
@@ -83,6 +85,7 @@ void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
 
         // if the points are the same then don't draw anything
         if (len == 0) continue;
+        doStamp = false;
 
         // normalize the delta to get the direction of the stroke
         glm::vec2 dir = delta / len;
@@ -91,15 +94,14 @@ void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
         float remaining = len;
 
         // this basically checks if theres enough space left to stamp another brush dab
-        while (distanceSinceLastStamp + remaining >= spacing) 
+        while (distanceSinceLastStamp + remaining >= (spacing * drawSize)) 
         {
             // how far we need to step to get to the next position
-            float step = spacing - distanceSinceLastStamp;
+            float step = (spacing * drawSize) - distanceSinceLastStamp;
 
             // calculate the position of the next stamp and stamp
             glm::vec2 stampPos = prev + dir * step;
-            stampBrush(stampPos);
-            doStamp = false;
+            stampBrush(stampPos, drawSize);
 
             // update the remaining distance and prev for the next loop iteration
             prev = stampPos;
@@ -113,7 +115,7 @@ void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
     }
 }
 
-void DrawEngine::stampBrush(glm::vec2 position)
+void DrawEngine::stampBrush(glm::vec2 position, int brushSize)
 {
     // grab the active canvsas
     Canvas& curCanvas = canvasManager.getActive();
@@ -121,12 +123,18 @@ void DrawEngine::stampBrush(glm::vec2 position)
     // grab all needed information from the brush dab
     float W = brushDab[0];
     float H = brushDab[1];
+
+    // scale the W and H for later
+    float scaledW = brushDab[0] * brushSize;
+    float scaledH = brushDab[1] * brushSize;
+
+
     // this copies everything but the first two values, which are the width and height
     std::vector<float> alpha(brushDab.begin() + 2, brushDab.end());
 
     // calculate other needed information
-    int topLeftX = position.x - (W  / 2);
-    int topLeftY = position.y - (H / 2);
+    int topLeftX = position.x - (scaledW/ 2);
+    int topLeftY = position.y - (scaledH / 2);
 
     for (int r = 0; r < H; r++) 
     {
@@ -134,10 +142,21 @@ void DrawEngine::stampBrush(glm::vec2 position)
         {
             float a = alpha[r * W + c];
             if (a > 0.01f) {
-                int finalX = topLeftX + c;
-                int finalY = topLeftY + r;
+                // top-left part of the pixel being drawn
+                // this changes with the size of the brush set in the UI
+                // this whole size system needs to change though
+                int bitX = topLeftX + c * brushSize;
+                int bitY = topLeftY + r * brushSize;
 
-                curCanvas.setPixel(finalX, finalY, ui.getColor());
+                for (int dy = 0; dy < brushSize; dy++) {
+                    for (int dx = 0; dx < brushSize; dx++) {
+
+                        int finalX = bitX + dx;
+                        int finalY = bitY + dy;
+
+                        curCanvas.setPixel(finalX, finalY, ui.getColor());
+                    }
+                }
             }
         }
     }

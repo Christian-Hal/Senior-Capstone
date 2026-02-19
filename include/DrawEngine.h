@@ -34,6 +34,7 @@ class DrawEngine
     private:
         StrokeManager strokeManager;
         bool drawing = false;
+        int drawSize = 1;
 
         // variables that store stuff for the drawing code in drawPath
         glm::vec2 prev;                         // last point we moved from
@@ -46,6 +47,6 @@ class DrawEngine
 
         // Draw the given event path (list of points) onto the canvas
         void drawPath(const std::list<glm::vec2>& eventPath);
-        void stampBrush(glm::vec2 position);
+        void stampBrush(glm::vec2 position, int brushSize);
 
 };
