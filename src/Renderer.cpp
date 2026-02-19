@@ -165,7 +165,7 @@ static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int 
 				return;
 			}
 		}
-		else if (action == GLFW_RELEASE)
+		else if (action == GLFW_RELEASE && activeCanvasManager.hasActive())
 		{
 			activeRenderer->isDrawing = false;
 			drawEngine.stop();
@@ -184,6 +184,8 @@ static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos) {
 
 	UI::CursorMode mode = ui.getCursorMode();
 	Canvas& curCanvas = activeCanvasManager.getActive();
+
+	//if (drawEngine.isDrawing()) drawEngine.doStamp = false;
 	
 	// panning and rotation logic cursor logic
 	if (isPanning)

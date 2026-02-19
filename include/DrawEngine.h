@@ -29,6 +29,8 @@ class DrawEngine
         // Processes the current stroke list, generate a smoothed event path, and draw said path onto the active canvas
         void update();
 
+        bool doStamp = false;
+
     private:
         StrokeManager strokeManager;
         bool drawing = false;

@@ -31,6 +31,7 @@ void DrawEngine::start()
 {
     //std::cout << "Draw engine start!" << std::endl;
     drawing = true;
+    doStamp = true;
 }
 
 void DrawEngine::stop()
@@ -38,6 +39,8 @@ void DrawEngine::stop()
     //std::cout << "Draw engine stop!" << std::endl;
     drawing = false;
     strokeManager.endStroke();
+
+    if (doStamp) stampBrush(prev);
 
     hasPrev = false;
     distanceSinceLastStamp = 0;
@@ -50,6 +53,7 @@ void DrawEngine::update()
         spacing = brushManager.getActiveBrush().spacing;
         brushManager.brushChange = false;
     }
+
     if (strokeManager.hasValues()) {
         // Get the smoothed event path from the stroke manager
         std::list<glm::vec2> eventPath = strokeManager.process();
@@ -95,6 +99,7 @@ void DrawEngine::drawPath(const std::list<glm::vec2>& eventPath)
             // calculate the position of the next stamp and stamp
             glm::vec2 stampPos = prev + dir * step;
             stampBrush(stampPos);
+            doStamp = false;
 
             // update the remaining distance and prev for the next loop iteration
             prev = stampPos;
