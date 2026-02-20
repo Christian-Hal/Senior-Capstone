@@ -87,6 +87,10 @@ void InputManager::mouseButtonCallBack(GLFWwindow* window, int button, int actio
 		case UI::CursorMode::Rotate:
 			canvasManipulation.startRotate(currX, currY);
 			break;
+		case UI::CursorMode::Pan:
+			lastX = currX;
+			lastY = currY;
+			break;
 		case UI::CursorMode::ZoomIn:
 			canvasManipulation.zooming(1, 0.1, currX, currY, window);
 			break;
