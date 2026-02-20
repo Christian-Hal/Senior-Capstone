@@ -1,5 +1,5 @@
 
-#include "Zooming.h"
+#include "CanvasManipulation.h"
 #include "CanvasManager.h"
 
 #include <glm/glm.hpp>

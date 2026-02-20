@@ -13,7 +13,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Zooming.h"
+#include "CanvasManipulation.h"
 
 Renderer* currRenderer = nullptr;
 extern CanvasManager activeCanvasManager;
