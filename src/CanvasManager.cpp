@@ -25,6 +25,16 @@ Canvas& CanvasManager::createCanvas(int width, int height, std::string name)
     return *activeCanvas;
 }
 
+void CanvasManager::undo()
+{
+    activeCanvas->undo();
+}
+
+void CanvasManager::redo()
+{
+    activeCanvas->redo();
+}
+
 
 
 Canvas& CanvasManager::getActive()

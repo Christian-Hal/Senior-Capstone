@@ -10,7 +10,14 @@ static CanvasManager activeCanvasManager;
 void StrokeManager::init()
 {
     currentStroke = {};
-    curEventPath = {};
+    totalEventPath = {};
+}
+
+void StrokeManager::beginStroke()
+{
+    // Clear the current stroke and event path
+    currentStroke.clear();
+    totalEventPath.clear();
 }
 
 void StrokeManager::endStroke()
@@ -19,11 +26,14 @@ void StrokeManager::endStroke()
     if (hasValues()) {process();}
 
     // TODO : Add final event path into list of recent actions (for UNDO)
+    std::vector<glm::vec2> action = totalEventPath;
 
     // Clear the current stroke and event path
     currentStroke.clear();
-    curEventPath.clear();
+    totalEventPath.clear();
     isSmoothing = false;
+
+    //return action;
 }
 
 void StrokeManager::addPoint(glm::vec2 point)
@@ -36,14 +46,14 @@ bool StrokeManager::hasValues()
     return !currentStroke.empty();
 }
 
-std::list<glm::vec2> StrokeManager::process()
+std::vector<glm::vec2> StrokeManager::process()
 {
-    std::list<glm::vec2> eventPath;
+    std::vector<glm::vec2> eventPath;
 
     while(!currentStroke.empty()) {
         // Grab and remove the first element of the list
         glm::vec2 point = currentStroke.front();
-        currentStroke.pop_front();
+        currentStroke.erase(currentStroke.begin());
         //std::cout << "Processing point: (" << point.x << ", " << point.y << ")" << std::endl;
 
         // Smooth the point
@@ -54,7 +64,7 @@ std::list<glm::vec2> StrokeManager::process()
 
         // add it into the current event path for the entire stroke
         // this will be used for undo and what not, holds the entire stroke from mouse down to mouse up
-        curEventPath.push_back(smoothedPoint);
+        totalEventPath.push_back(smoothedPoint);
     }
 
     return eventPath;

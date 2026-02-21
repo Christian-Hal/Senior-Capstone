@@ -23,6 +23,18 @@ class CanvasManager {
         // saving 
         void getFrameData(CanvasManager& canvasManagerA);
 
+        // add completed stroke to canvas stroke history for undo/redo
+        void addStroke(std::vector<glm::vec2>& strokePath);
+
+        // draw to the active canvas
+        void draw(int x, int y, const Color& color);
+
+        // for undo / redo commands
+        // they just tell the active canvas to run an undo or redo
+        void undo();
+        void redo();
+        
+
 
     private:
         // list of active canvases for when we implement the tab system

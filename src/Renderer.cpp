@@ -361,6 +361,19 @@ static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int acti
 		return;
 	}
 
+	// UNDO BUTTON!!!!!!! checking for control + z
+	else if (key == GLFW_KEY_Z && (mods & GLFW_MOD_CONTROL) && action == GLFW_PRESS)
+	{
+		activeCanvasManager.undo();
+		return;
+	}
+	// REDO BUTTON!!!!!!! checking for control + y
+	else if (key == GLFW_KEY_Y && (mods & GLFW_MOD_CONTROL) && action == GLFW_PRESS)
+	{
+		activeCanvasManager.redo();
+		return;
+	}
+
 	if (key == GLFW_KEY_SPACE)
 	{
 		if (action == GLFW_PRESS &&

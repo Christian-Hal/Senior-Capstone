@@ -3,7 +3,7 @@
 #include "StrokeManager.h"
 
 #include <glm/glm.hpp>
-#include <list>
+#include <vector>
 
 class DrawEngine
 {
@@ -29,12 +29,12 @@ class DrawEngine
         // Processes the current stroke list, generate a smoothed event path, and draw said path onto the active canvas
         void update();
 
-        bool doStamp = false;
+        bool didStamp = false;
 
     private:
         StrokeManager strokeManager;
         bool drawing = false;
-        int drawSize = 1;
+        int drawSize;
 
         // variables that store stuff for the drawing code in drawPath
         glm::vec2 prev;                         // last point we moved from
@@ -46,7 +46,7 @@ class DrawEngine
         std::vector<float> brushDab;
 
         // Draw the given event path (list of points) onto the canvas
-        void drawPath(const std::list<glm::vec2>& eventPath);
-        void stampBrush(glm::vec2 position, int brushSize);
+        void drawPath(const std::vector<glm::vec2>& eventPath);
+        void stampBrush(glm::vec2 position);
 
 };

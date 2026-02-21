@@ -10,13 +10,118 @@
 
 // constructor
 Canvas::Canvas() : width(0), height(0), numLayers(0), curLayer(0), pixels(), layerData(), canvasName("") {}
-Canvas::Canvas(int w, int h, std::string name) : width(w), height(h), numLayers(2), curLayer(1), pixels(w * h, backgroundColor), canvasName(name) 
+Canvas::Canvas(int w, int h, std::string name) : width(w), height(h), 
+                    numLayers(2), curLayer(1), pixels(w * h, backgroundColor), 
+                    canvasName(name), currentStrokeIndex(-1), seenPixels(w * h, -1)
 {
     layerData.push_back(pixels);
     layerData.push_back(std::vector<Color>(w * h, emptyColor));
 }
 
+// Undo and Redo stuff
+void Canvas::beginStrokeRecord() 
+{
+    // create a new StrokePath on the current layer
+    activeStroke = StrokePath{};
+    activeStroke.layerNum = curLayer;
 
+    // sets a new stroke index for the seenPixel list
+    currentStrokeIndex++;
+}
+
+// Records the change of a single pixel during a stroke, storing the index of the pixel and its previous color value
+void Canvas::recordPixelChange(int index, const Color& before)
+{
+    // check if we've seen the pixel before during this stroke, keeps from reassigning the same pixel multiple times
+    if (seenPixels[index] == currentStrokeIndex) {
+        return;
+    }
+
+    // if we haven't seen the pixel before, then we mark it as seen and save it to the active stroke
+    seenPixels[index] = currentStrokeIndex;
+    Pixel pixel = {index, before, before};
+    activeStroke.pixels.push_back(pixel);
+}
+
+void Canvas::endStrokeRecord()
+{
+    // set the after color for each pixel to said pixels current color
+    for (Pixel& p : activeStroke.pixels)
+    {
+        p.after = layerData[activeStroke.layerNum][p.index];
+    }
+
+    // if the active stroke isn't empty then push it to the Undo stack
+    if (!activeStroke.pixels.empty())
+    {
+        undoStack.push_back(activeStroke);
+        redoStack.clear();
+        if (undoStack.size() > 5) {
+            undoStack.erase(undoStack.begin());
+        }
+    }
+
+    // resets the activeStroke
+    activeStroke = StrokePath{};
+}
+
+// returns true if the action can be done, false other wise
+bool Canvas::canUndo() const { return !undoStack.empty(); }
+bool Canvas::canRedo() const { return !redoStack.empty(); }
+
+void Canvas::undo() 
+{
+    if (undoStack.empty()) {
+        return;
+    }
+
+    // Pop the last stroke from the undo stack
+    StrokePath stroke = undoStack.back();
+    undoStack.pop_back();
+
+    // save the real current layer num in a temp variable and move to the strokes layer
+    int realLayer = curLayer;
+    curLayer = stroke.layerNum;
+
+    // for each pixel in the stroke, set it back to its before color
+    for (Pixel p : stroke.pixels)
+    {
+        resetPixel(p.index, p.before);
+    }
+
+    // move back to the real current layer
+    curLayer = realLayer;
+    
+    // move it to the redo stack
+    redoStack.push_back(stroke);
+}
+
+void Canvas::redo() 
+{
+    if (redoStack.empty()) {
+        return;
+    }
+
+    // Pop the last stroke from the redo stack
+    StrokePath stroke = redoStack.back();
+    redoStack.pop_back();
+
+    // save the real current layer num in a temp variable and move to the strokes layer
+    int realLayer = curLayer;
+    curLayer = stroke.layerNum;
+
+    // for each pixel in the stroke, set it back to its after color
+    for (Pixel p : stroke.pixels)
+    {
+        resetPixel(p.index, p.after);
+    }
+
+    // move back to the real current layer
+    curLayer = realLayer;
+    
+    // move it to the undo stack
+    undoStack.push_back(stroke);
+}
 
 /*
     Canvas getter. 
@@ -52,8 +157,6 @@ int Canvas::getHeight() const { return height; }
 */
 int Canvas::getNumLayers() const { return numLayers; }
 int Canvas::getCurLayer() const { return curLayer; }
-
-
 
 /*
     Getter for pixel data. 
@@ -145,19 +248,48 @@ void Canvas::setPixel(int x, int y, const Color& color)
     if (x < 0 || x >= width || y < 0 || y >= height) {
         return;
     }
+
+    int index = y * width + x;
+
+    // record the pixel change before changing the color
+    recordPixelChange(index, layerData[curLayer][index]);
+
     // fit the color into the layerData vector so it can be accessed later
-    layerData[curLayer][y * width + x] = color;
+    layerData[curLayer][index] = color;
 
     // initialize the background color for later use in the for loop
-    Color col = layerData[0][y * width + x];
+    Color col = layerData[0][index];
     for(int i = 1; i < numLayers; i++){ 
-        col = col * layerData[i][y * width + x];
+        col = col * layerData[i][index];
     }
     
     // formula that lets us keep it as a sizable, flat vector 
     // flat vectors are easier to handle memory wise so it
     //      ends up being better than a 2D vector / matrix
-    pixels[y * width + x] = col;
+    pixels[index] = col;
+    
+}
+
+void Canvas::resetPixel(int index, const Color color)
+{
+    // making sure (x, y) is within bounds
+    if (index < 0 || static_cast<size_t>(index) >= pixels.size()) {
+        return;
+    }
+
+    // fit the color into the layerData vector so it can be accessed later
+    layerData[curLayer][index] = color;
+
+    // initialize the background color for later use in the for loop
+    Color col = layerData[0][index];
+    for(int i = 1; i < numLayers; i++){ 
+        col = col * layerData[i][index];
+    }
+    
+    // formula that lets us keep it as a sizable, flat vector 
+    // flat vectors are easier to handle memory wise so it
+    //      ends up being better than a 2D vector / matrix
+    pixels[index] = col;
     
 }
 
