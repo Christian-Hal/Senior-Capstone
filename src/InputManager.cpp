@@ -25,25 +25,37 @@ extern Globals global;
 double currX, currY, lastX, lastY, deltaX, deltaY = 0;
 
 //beginnings of the virtual key system
-std::unordered_map<int, bool> s_CurrentKeys;
-std::unordered_map<int, bool> s_PreviousKeys;
+std::unordered_map<int, bool> CurrentKeys;
+std::unordered_map<int, bool> PreviousKeys;
 
-std::unordered_map<int, bool> s_CurrentMouse;
-std::unordered_map<int, bool> s_PreviousMouse;
+std::unordered_map<int, bool> CurrentMouse;
+std::unordered_map<int, bool> PreviousMouse;
+
+
+std::unordered_map<int, UI::CursorMode> KeyToCursorMode;
+std::unordered_map<UI::CursorMode, int> CursorModeToKey;
 
 
 CanvasManipulation canvasManipulation;
 
+static bool WaitingForRebind = false;
+static UI::CursorMode RebindTarget;
+static bool RebindFailed = false;
 
 // set the glfw callback funcitons up
 void InputManager::init(GLFWwindow* window, Renderer* renderer)
 {
 	currRenderer = renderer;
 
-    glfwSetMouseButtonCallback(window, mouseButtonCallBack);
-    glfwSetCursorPosCallback(window, cursorPosCallBack);
-    glfwSetScrollCallback(window, scrollCallBack);
-    glfwSetKeyCallback(window, keyboardCallBack);
+	glfwSetMouseButtonCallback(window, mouseButtonCallBack);
+	glfwSetCursorPosCallback(window, cursorPosCallBack);
+	glfwSetScrollCallback(window, scrollCallBack);
+	glfwSetKeyCallback(window, keyboardCallBack);
+
+	bindKey(UI::CursorMode::Rotate, GLFW_KEY_R);
+	bindKey(UI::CursorMode::Pan, GLFW_KEY_H);
+	bindKey(UI::CursorMode::Draw, GLFW_KEY_D);
+	bindKey(UI::CursorMode::Erase, GLFW_KEY_E);
 }
 
 //constant update function
@@ -60,13 +72,13 @@ void InputManager::update()
 // rn used for left click
 bool InputManager::IsMousePressed(int button)
 {
-	return s_CurrentMouse[button];
+	return CurrentMouse[button];
 }
 
 // just return statements for potentially needed things for drawing
 double InputManager::getMouseX() { return currX; }
 double InputManager::getMouseY() { return currY; }
-					 
+
 double InputManager::getMouseDeltaX() { return deltaX; }
 double InputManager::getMouseDeltaY() { return deltaY; }
 
@@ -75,12 +87,12 @@ void InputManager::mouseButtonCallBack(GLFWwindow* window, int button, int actio
 {
 	if (!currRenderer || ImGui::GetIO().WantCaptureMouse)
 		return;
-	
+
 	// turning the respective mouse buttons to true on press and false on release
 	//currently all functions used in the switch case work on every mouse click if in the right CursorMode,
 	// changes needed in the future
 	if (action == GLFW_PRESS) {
-		s_CurrentMouse[button] = true;
+		CurrentMouse[button] = true;
 
 		switch (ui.getCursorMode())
 		{
@@ -101,8 +113,8 @@ void InputManager::mouseButtonCallBack(GLFWwindow* window, int button, int actio
 	}
 
 	else if (action == GLFW_RELEASE)
-		s_CurrentMouse[button] = false;
-	
+		CurrentMouse[button] = false;
+
 }
 
 // cursor x,y position callback, when left mouse button is pressed based on the mode, does the respective thing
@@ -146,52 +158,71 @@ void InputManager::keyboardCallBack(GLFWwindow* window, int key, int scancode, i
 	if (ImGui::GetIO().WantCaptureKeyboard)
 		return;
 
-	if (key == GLFW_KEY_R && action == GLFW_PRESS)
-	{
-		ui.setCursorMode(UI::CursorMode::Rotate);
-		return;
-	}
+	if (action == GLFW_PRESS)
+		CurrentKeys[key] = true;
+	else if (action == GLFW_RELEASE)
+		CurrentKeys[key] = false;
 
-	else if (key == GLFW_KEY_H && action == GLFW_PRESS)
+	// If waiting for rebind, capture this key
+	if (WaitingForRebind && action == GLFW_PRESS)
 	{
-		ui.setCursorMode(UI::CursorMode::Pan);
-		return;
-	}
-
-	else if (key == GLFW_KEY_D && action == GLFW_PRESS)
-	{
-		ui.setCursorMode(UI::CursorMode::Draw);
-		return;
-	}
-
-	else if (key == GLFW_KEY_E && action == GLFW_PRESS)
-	{
-		ui.setCursorMode(UI::CursorMode::Erase);
-		return;
-	}
-
-	if (key == GLFW_KEY_SPACE)
-	{
-		if (action == GLFW_PRESS &&
-			(mods & GLFW_MOD_CONTROL))
+		if (key == GLFW_KEY_ESCAPE || bindKey(RebindTarget, key))
 		{
-			//isZoomDragging = true;
-			//glfwGetCursorPos(window, nullptr, &lastZoomMouseY);
+			WaitingForRebind = false;
+			RebindFailed = false;
+		}
+		else
+		{
+			RebindFailed = true;
 		}
 
-		if (action == GLFW_RELEASE)
+		return;
+	}
+
+	// Normal operation
+	if (action == GLFW_PRESS)
+	{
+		auto temp = KeyToCursorMode.find(key);
+
+		if (temp != KeyToCursorMode.end())
 		{
-			//isZoomDragging = false;
+			ui.setCursorMode(temp->second);
 		}
 	}
 
-	if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
-	{
-		//if (action == GLFW_RELEASE)
-			//isZoomDragging = false;
-	
-	}
 }
 
 
+bool InputManager::bindKey(UI::CursorMode mode, int key)
+{
+	if (KeyToCursorMode.find(key) != KeyToCursorMode.end())
+		return false;
 
+	if (CursorModeToKey.find(mode) != CursorModeToKey.end())
+	{
+		int oldKey = CursorModeToKey[mode];
+		KeyToCursorMode.erase(oldKey);
+	}
+
+	KeyToCursorMode[key] = mode;
+	CursorModeToKey[mode] = key;
+	return true;
+}
+
+
+void InputManager::StartRebind(UI::CursorMode mode)
+{
+	WaitingForRebind = true;
+	RebindTarget = mode;
+}
+
+
+bool InputManager::IsWaitingForRebind()
+{
+	return WaitingForRebind;
+}
+
+bool InputManager::getRebindFail()
+{
+	return RebindFailed;
+}

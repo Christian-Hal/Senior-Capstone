@@ -8,6 +8,7 @@
 #include "CanvasManager.h"
 #include "FrameRenderer.h"
 #include "BrushManager.h"
+#include "InputManager.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -69,6 +70,9 @@ static Renderer renderer;
 
 // brush manager
 extern BrushManager brushManager;
+
+
+static InputManager inputManager;
 
 
 
@@ -340,6 +344,16 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGui::Text("State: Pan");
 	}
 
+	if (InputManager::IsWaitingForRebind())
+	{
+		ImGui::Text("Press any key...");
+	}
+
+	if (InputManager::getRebindFail())
+	{
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Key already bound!");
+	}
+
 	if (ImGui::Button("Draw")) {
 		cursorMode = UI::CursorMode::Draw;
 	}
@@ -362,6 +376,12 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 
 	if (ImGui::Button("Zoom Out")) {
 		cursorMode = UI::CursorMode::ZoomOut;
+	}
+
+
+	if (ImGui::Button("Rebind"))
+	{
+		InputManager::StartRebind(cursorMode);
 	}
 
 	

@@ -1,10 +1,11 @@
+
 #pragma once
 
 #include <glfw/glfw3.h>
-
+#include "UI.h"
 class Renderer;
 class CanvasManager;
-class UI;
+
 class Globals;
 
 class InputManager
@@ -17,9 +18,16 @@ public:
 
     static double getMouseX();
     static double getMouseY();
-                  
+
     static double getMouseDeltaX();
     static double getMouseDeltaY();
+
+    static bool bindKey(UI::CursorMode mode, int key);
+
+    static void StartRebind(UI::CursorMode mode);
+    static bool IsWaitingForRebind();
+    static bool getRebindFail();
+
 
 private:
     static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods);

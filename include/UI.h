@@ -29,7 +29,8 @@ public:
 		ZoomIn,
 		ZoomOut,
 		Rotate,
-		Pan
+		Pan,
+		Rebind
 	};
 
 	CursorMode getCursorMode() const;
