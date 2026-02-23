@@ -118,3 +118,24 @@ void CanvasManipulation::viewMatrix(double x, double y, float oldZoom, Canvas& c
 	glm::vec4 newScreen = newView * world;
 	canvas.offset += mouseScreen - glm::vec2(newScreen);
 }
+
+void CanvasManipulation::centerCamera()
+{
+	Canvas& canvas = activeCanvasManager.getActive();
+
+	canvas.zoom = std::min((float)global.get_scr_width() / canvas.getWidth(), (float)global.get_scr_height() / canvas.getHeight()) * 0.95f;
+
+	canvas.rotation = 0.0f;
+
+	glm::vec2 screenCenter(
+		global.get_scr_width() * 0.5f,
+		global.get_scr_height() * 0.5f
+	);
+
+	glm::vec2 canvasCenter(
+		canvas.getWidth() * 0.5f,
+		canvas.getHeight() * 0.5f
+	);
+
+	canvas.offset = screenCenter - canvasCenter;
+}

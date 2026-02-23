@@ -11,6 +11,7 @@ public:
 	void panning(double deltaX, double deltaY);
 	void startRotate(double xpos, double ypos);
 	void rotating(double xpos, double ypos);
+	void centerCamera();
 
 private:
 	void viewMatrix(double x, double y, float oldZoom, Canvas& canvas);

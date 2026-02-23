@@ -20,27 +20,28 @@ extern CanvasManager activeCanvasManager;
 
 static UI ui;
 extern Globals global;
+CanvasManipulation canvasManipulation;
 
 // current, previous, and the delta of the x,y coordinates of the cursor
 double currX, currY, lastX, lastY, deltaX, deltaY = 0;
 
-//beginnings of the virtual key system
-std::unordered_map<int, bool> CurrentKeys;
-std::unordered_map<int, bool> PreviousKeys;
-
+// map for the mouse buttons to see if pressed
 std::unordered_map<int, bool> CurrentMouse;
-std::unordered_map<int, bool> PreviousMouse;
+
+// maps for key bindings look up and deletion
+// the first map uses keycombo to use functions related to the InputAction
+std::unordered_map<KeyCombo, std::function<void()>, KeyComboHash> KeyBindings;
+std::unordered_map<InputAction, KeyCombo> ActionToKey;
 
 
-std::unordered_map<int, UI::CursorMode> KeyToCursorMode;
-std::unordered_map<UI::CursorMode, int> CursorModeToKey;
-
-
-CanvasManipulation canvasManipulation;
-
+// used for "turning on" rebind mode
 static bool WaitingForRebind = false;
-static UI::CursorMode RebindTarget;
+
+// used for ui left panel print if attempted keyCombo didn't work
 static bool RebindFailed = false;
+
+// InputAction attempting to rebind
+static InputAction RebindTarget;
 
 // set the glfw callback funcitons up
 void InputManager::init(GLFWwindow* window, Renderer* renderer)
@@ -52,10 +53,14 @@ void InputManager::init(GLFWwindow* window, Renderer* renderer)
 	glfwSetScrollCallback(window, scrollCallBack);
 	glfwSetKeyCallback(window, keyboardCallBack);
 
-	bindKey(UI::CursorMode::Rotate, GLFW_KEY_R);
-	bindKey(UI::CursorMode::Pan, GLFW_KEY_H);
-	bindKey(UI::CursorMode::Draw, GLFW_KEY_D);
-	bindKey(UI::CursorMode::Erase, GLFW_KEY_E);
+
+	bindAction(InputAction::setRotate, GLFW_KEY_R, 0);
+	bindAction(InputAction::setPan, GLFW_KEY_H, 0);
+	bindAction(InputAction::setDraw, GLFW_KEY_D, 0);
+	bindAction(InputAction::setErase, GLFW_KEY_E, 0);
+	bindAction(InputAction::undo, GLFW_KEY_Z, GLFW_MOD_CONTROL);
+	bindAction(InputAction::redo, GLFW_KEY_X, GLFW_MOD_CONTROL);
+	bindAction(InputAction::resetView, GLFW_KEY_SPACE, GLFW_MOD_CONTROL);
 }
 
 //constant update function
@@ -88,9 +93,8 @@ void InputManager::mouseButtonCallBack(GLFWwindow* window, int button, int actio
 	if (!currRenderer || ImGui::GetIO().WantCaptureMouse)
 		return;
 
-	// turning the respective mouse buttons to true on press and false on release
-	//currently all functions used in the switch case work on every mouse click if in the right CursorMode,
-	// changes needed in the future
+	// turning the mouse buttons to true on press and false on release
+	// depending on the cursormode currently selected, the respective operation will start
 	if (action == GLFW_PRESS) {
 		CurrentMouse[button] = true;
 
@@ -150,79 +154,139 @@ void InputManager::scrollCallBack(GLFWwindow* window, double xoffset, double yof
 
 }
 
-// current hard code keyboardCallback, will be changing in the future when virtual keys are implemented
-// changed the cursor mode in the ui when specific keys on the keyboard are pressed
-// drag and zoom does not currently work
+// keyboard call back to work with virtual key system
 void InputManager::keyboardCallBack(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (ImGui::GetIO().WantCaptureKeyboard)
 		return;
 
-	if (action == GLFW_PRESS)
-		CurrentKeys[key] = true;
-	else if (action == GLFW_RELEASE)
-		CurrentKeys[key] = false;
-
-	// If waiting for rebind, capture this key
+	// if statement that for rebind the hotkeys 
 	if (WaitingForRebind && action == GLFW_PRESS)
 	{
-		if (key == GLFW_KEY_ESCAPE || bindKey(RebindTarget, key))
+		// if ESC key is presed cancel rebind
+		if (key == GLFW_KEY_ESCAPE)
+		{
+			WaitingForRebind = false;
+			RebindFailed = false;
+			return;
+		}
+
+		// this will not allow the modifyer keys to be selected alone to be hotkeys
+		if (isModifierKey(key))
+		{
+			RebindFailed = true;
+			return;
+		}
+
+		// calling the bind function to rebind the various actions
+		if (bindAction(RebindTarget, key, mods))
 		{
 			WaitingForRebind = false;
 			RebindFailed = false;
 		}
+
+		// if the atempted keybind is already set
 		else
-		{
 			RebindFailed = true;
-		}
 
 		return;
 	}
 
-	// Normal operation
+	// regular check statement to see if pressed keys have a key bind
 	if (action == GLFW_PRESS)
 	{
-		auto temp = KeyToCursorMode.find(key);
+		KeyCombo combo{ key, mods };
 
-		if (temp != KeyToCursorMode.end())
+		auto temp = KeyBindings.find(combo);
+
+		if (temp != KeyBindings.end())
 		{
-			ui.setCursorMode(temp->second);
+			temp->second();
 		}
 	}
 
 }
 
-
-bool InputManager::bindKey(UI::CursorMode mode, int key)
+// binding/rebinding function for different Actions
+bool InputManager::bindAction(InputAction action, int key, int mods)
 {
-	if (KeyToCursorMode.find(key) != KeyToCursorMode.end())
+	KeyCombo combo{ key, mods };
+
+	// prevent duplicate binding, if combination of keys attempeted is already listed, that means 
+	// there is already an that combination of keys connected to that action
+	if (KeyBindings.find(combo) != KeyBindings.end())
 		return false;
 
-	if (CursorModeToKey.find(mode) != CursorModeToKey.end())
+	// Removes the old key binding if this action already has one
+	auto old = ActionToKey.find(action);
+	if (old != ActionToKey.end())
+		KeyBindings.erase(old->second);
+
+	// each InputAction like setRotate, setPan, and etc. have a repective function to them
+	// this set the new combination of keys (combo) to that function
+	// undo and redo are just print statements to the terminal for now
+	switch (action)
 	{
-		int oldKey = CursorModeToKey[mode];
-		KeyToCursorMode.erase(oldKey);
+	case InputAction::setRotate:
+		KeyBindings[combo] = []() { ui.setCursorMode(UI::CursorMode::Rotate); };
+		break;
+
+	case InputAction::setPan:
+		KeyBindings[combo] = []() { ui.setCursorMode(UI::CursorMode::Pan); };
+		break;
+
+	case InputAction::setDraw:
+		KeyBindings[combo] = []() { ui.setCursorMode(UI::CursorMode::Draw); };
+		break;
+
+	case InputAction::setErase:
+		KeyBindings[combo] = []() { ui.setCursorMode(UI::CursorMode::Erase); };
+		break;
+
+	case InputAction::undo:
+		KeyBindings[combo] = []() { std::cout << "undo" << std::endl; };
+		break;
+
+	case InputAction::redo:
+		KeyBindings[combo] = []() { std::cout << "redo" << std::endl; };
+		break;
+
+	case InputAction::resetView:
+		KeyBindings[combo] = []() { canvasManipulation.centerCamera(); };
 	}
 
-	KeyToCursorMode[key] = mode;
-	CursorModeToKey[mode] = key;
 	return true;
 }
 
-
-void InputManager::StartRebind(UI::CursorMode mode)
+// takes in the action wanting rebind and turns the bool for rebind logic in keyboardCallBack true
+void InputManager::StartRebind(InputAction action)
 {
 	WaitingForRebind = true;
-	RebindTarget = mode;
+	RebindTarget = action;
 }
 
-
+// returns the bool for seeing if rebinding is on for UI print
 bool InputManager::IsWaitingForRebind()
 {
 	return WaitingForRebind;
 }
 
+// returns the bool for seeing if an invalid hotkey attemp was tried for UI print
 bool InputManager::getRebindFail()
 {
 	return RebindFailed;
+}
+
+// keys that can be listed as modifyer keys that I didn't want to be able to make a hotkey
+bool InputManager::isModifierKey(int key)
+{
+	return key == GLFW_KEY_LEFT_CONTROL ||
+		key == GLFW_KEY_RIGHT_CONTROL ||
+		key == GLFW_KEY_LEFT_SHIFT ||
+		key == GLFW_KEY_RIGHT_SHIFT ||
+		key == GLFW_KEY_LEFT_ALT ||
+		key == GLFW_KEY_RIGHT_ALT ||
+		key == GLFW_KEY_LEFT_SUPER ||
+		key == GLFW_KEY_RIGHT_SUPER ||
+		key == GLFW_KEY_ESCAPE;
 }

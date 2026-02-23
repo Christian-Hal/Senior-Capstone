@@ -378,10 +378,11 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		cursorMode = UI::CursorMode::ZoomOut;
 	}
 
-
-	if (ImGui::Button("Rebind"))
+	// proof of concept that the hot keys can be rebound, in the future we could have a menu
+	// dedicated to rebinds with buttons like this to rebind the various operations
+	if (ImGui::Button("Rebind Rotate"))
 	{
-		InputManager::StartRebind(cursorMode);
+		InputManager::StartRebind(InputAction::setRotate);
 	}
 
 	
