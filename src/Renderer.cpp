@@ -11,6 +11,8 @@
 #include "Globals.h"
 #include "CanvasManager.h"
 #include "UI.h"
+#include "BrushTool.h"
+#include "BrushManager.h"
 #include "DrawEngine.h"
 #include "InputManager.h"
 
@@ -65,6 +67,8 @@ CanvasManager activeCanvasManager;
 
 InputManager inputthings;
 
+
+
 // compile the vertex and fragment shaders 
 static unsigned int compileShader(unsigned int type, const char* source) {
 
@@ -84,7 +88,6 @@ static unsigned int compileShader(unsigned int type, const char* source) {
 
 
 
-// 
 bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 {
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -108,7 +111,9 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glDeleteShader(fragmentShader);
 
 	// ----- Texture Setup -----
-	glGenTextures(0, &canvasTexture);
+
+	glGenTextures(1, &canvasTexture);
+
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

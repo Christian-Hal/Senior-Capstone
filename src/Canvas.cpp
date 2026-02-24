@@ -145,7 +145,6 @@ void Canvas::setName(std::string name)
 
 
 
-
 /*
     Canvas width and height getters. 
 */
@@ -199,6 +198,7 @@ bool operator!=(const Color& c2, const Color& c1)
 {
     return (c1.r != c2.r) || (c1.g != c2.g) || (c1.b != c2.b)  || (c1.a != c2.a);
 }
+
 
 
 /*
@@ -293,13 +293,19 @@ void Canvas::resetPixel(int index, const Color color)
     
 }
 
+
+
 void Canvas::setPixels(std::vector<Color> newPixels){
     pixels = newPixels;
 }
 
+
+
 void Canvas::setLayerData(std::vector<std::vector<Color>> newLayerData){
     layerData = newLayerData;
 }
+
+
 
 /*
     Note: Not yet implemented 
@@ -321,11 +327,14 @@ void Canvas::setLayerData(std::vector<std::vector<Color>> newLayerData){
 */
 void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 
+    // idea: 	result = color_s * alpha_s + color_d * (1 - alpha_s)
+
     // making sure (x, y) is within bounds 
     if (x < 0 || x >= width || y < 0 || y >= height) {
         return;
     }
 
+    // if the incoming pixel is full opacity, just set the pixel. 
     if (src.a == 255) {
         this->setPixel(x, y, src);
         return;
@@ -336,15 +345,17 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
     // read existing color 
     Color& layerColor = layerData[curLayer][index];
 
-    // convert normalized alpha into 0-255 rep 
-    Color srcColor = src;
-    srcColor.a = static_cast<unsigned char>(srcColor.a * brushAlpha);
+    // scaling color with alpha values 
+    Color srcColor; 
+    srcColor.r = static_cast<unsigned char>(static_cast<float>(src.r) * brushAlpha); 
+	srcColor.g = static_cast<unsigned char>(static_cast<float>(src.g) * brushAlpha);
+	srcColor.b = static_cast<unsigned char>(static_cast<float>(src.b) * brushAlpha);
+	srcColor.a = static_cast<unsigned char>(static_cast<float>(src.a) * brushAlpha);
 
     // blend source over destination 
     Color out = srcColor * layerColor;
 
     layerData[curLayer][index] = out; 
-
 
     // initialize the background color for later use in the for loop
     Color col = layerData[0][index];
@@ -355,8 +366,6 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
     }
 
     // formula that lets us keep it as a sizable, flat vector 
-    // flat vectors are easier to handle memory wise so it
-    //      ends up being better than a 2D vector / matrix
     pixels[index] = col;
 
 }
@@ -365,7 +374,7 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 
 // the const on this one makes it so that the original can't be changed
 // it makes it read only
-Color& Canvas::getPixel(int x, int y) const
+const Color& Canvas::getPixel(int x, int y) const
 {
     // making sure (x, y) is within bounds
     if (x < 0 || x >= width || y < 0 || y >= height) {
@@ -375,6 +384,7 @@ Color& Canvas::getPixel(int x, int y) const
 
     return const_cast<Color&>(pixels[y * width + x]);
 }
+
 
 
 // adds a layer to layerData

@@ -19,6 +19,7 @@ public:
 	void draw(CanvasManager& canvasManager, FrameRenderer frameRenderer);
 	void shutdown();
 	Color getColor();
+	void setColor(Color pixelColor);
 	void drawPopup(CanvasManager& canvasManager);
 	static int brushSize; 
 
@@ -30,7 +31,8 @@ public:
 		ZoomOut,
 		Rotate,
 		Pan,
-		Rebind
+		Rebind,
+		ColorPick
 	};
 
 	CursorMode getCursorMode() const;

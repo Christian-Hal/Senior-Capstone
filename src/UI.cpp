@@ -78,7 +78,6 @@ static InputManager inputManager;
 
 // ----- ImGui code to load and access images in directory -----
 
-
 // Simple helper function to load an image into a OpenGL texture with common settings
 bool LoadTextureFromMemory(const void* data, size_t data_size, GLuint* out_texture, int* out_width, int* out_height)
 {
@@ -132,7 +131,7 @@ bool LoadTextureFromFile(const char* file_name, GLuint* out_texture, int* out_wi
 }
 
 
-
+// note: not all options here return a value. 
 Color UI::getColor()
 {
 	if (cursorMode == UI::CursorMode::Draw) 
@@ -153,6 +152,21 @@ Color UI::getColor()
 			static_cast<unsigned char>(0.f)
 		};
 	}
+}
+
+/*
+	Setter for color
+
+	@param currentPixelColor: The color of the pixel that the cursor is currently 
+						      hovering over. 
+*/
+void UI::setColor(Color currentPixelColor) {
+	color[0] = currentPixelColor.r / 255.0f; 
+	color[1] = currentPixelColor.g / 255.0f; 
+	color[2] = currentPixelColor.b / 255.0f; 
+	color[3] = currentPixelColor.a / 255.0f; 
+
+
 }
 
 
@@ -212,11 +226,15 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 	drawPopup(canvasManager);
 
 	// -- user input to hide UI panels --
-	if (glfwGetKey(windowStorage, GLFW_KEY_TAB) == GLFW_PRESS && glfwGetTime() - lastFrame >= 0.2) {
-		showPanels = !showPanels;
-		lastFrame = glfwGetTime();
+	// only allow this if the canvas creation popup is not active 
+	if (!ImGui::IsPopupOpen("New Canvas")) {
+		if (glfwGetKey(windowStorage, GLFW_KEY_TAB) == GLFW_PRESS && glfwGetTime() - lastFrame >= 0.2) {
+			showPanels = !showPanels;
+			lastFrame = glfwGetTime();
 
+		}
 	}
+	
 
 	// draw the four main menu panels
 	if (showPanels) {
@@ -354,6 +372,11 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	{
 		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Key already bound!");
 	}
+	else if (getCursorMode() == UI::CursorMode::ColorPick) {
+		ImGui::Text("State: Color Pick"); 
+	}
+
+
 
 	if (ImGui::Button("Draw")) {
 		cursorMode = UI::CursorMode::Draw;
@@ -416,6 +439,9 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGui::EndMenu();
 	}
 
+	if (ImGui::Button("Color Picker")) {
+		cursorMode = UI::CursorMode::ColorPick; 
+	}
 	
 
 	// Save button
@@ -582,7 +608,7 @@ void UI::drawPopup(CanvasManager& canvasManager)
 
 	// specifying canvas size 
 	if (ImGui::BeginPopupModal("New Canvas", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-
+		
 		ImGui::InputInt("Width:", &temp_w);
 		ImGui::InputInt("Height:", &temp_h);
 		ImGui::InputText("File Name:", &temp_n);

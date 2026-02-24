@@ -36,6 +36,8 @@ bool Window::create(int w, int h, const char* title, Globals gb) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_ALPHA_BITS, 8);
+	// adds HiDPI support
+	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 
 
 #ifdef __APPLE__

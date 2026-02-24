@@ -12,6 +12,8 @@ extern UI ui;
 extern CanvasManager canvasManager;
 extern BrushManager brushManager;
 
+
+
 void DrawEngine::init()
 {
     drawing = false;
@@ -23,10 +25,14 @@ void DrawEngine::init()
     strokeManager.init();
 }
 
+
+
 bool DrawEngine::isDrawing()
 {
     return drawing;
 }
+
+
 
 void DrawEngine::start()
 {
@@ -36,6 +42,8 @@ void DrawEngine::start()
     strokeManager.beginStroke();
     canvasManager.getActive().beginStrokeRecord();
 }
+
+
 
 void DrawEngine::stop()
 {
@@ -50,6 +58,8 @@ void DrawEngine::stop()
     distanceSinceLastStamp = 0;
     canvasManager.getActive().endStrokeRecord();
 }
+
+
 
 void DrawEngine::update()
 {
@@ -145,10 +155,13 @@ void DrawEngine::stampBrush(glm::vec2 position)
                 int finalY = topLeftY + r;
 
                 curCanvas.setPixel(finalX, finalY, ui.getColor());
+                //curCanvas.blendPixel(finalX, finalY, ui.getColor(), ui.getColor().a/255.0);
             }
         }
     }
 }
+
+
 
 // takes in a mouse position adds the converted canvas coords as a point in the current stroke
 void DrawEngine::processMousePos(double mouseX, double mouseY)
@@ -159,6 +172,8 @@ void DrawEngine::processMousePos(double mouseX, double mouseY)
 	// add the point into the stroke path
 	strokeManager.addPoint(point);
 }
+
+
 
 // takes in a mouse position and returns the converted pixel coordinates on the current canvas
 glm::vec2 DrawEngine::mouseToCanvasCoords(double mouseX, double mouseY)
