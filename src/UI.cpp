@@ -378,14 +378,13 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		cursorMode = UI::CursorMode::ZoomOut;
 	}
 
-	// proof of concept that the hot keys can be rebound, in the future we could have a menu
-	// dedicated to rebinds with buttons like this to rebind the various operations
+	// menu to rebind the various actions that can be done with hotkeys
 	if (ImGui::BeginMenu("Rebind"))
 	{
 		if (ImGui::MenuItem("Rotate"))
-			{
-				InputManager::StartRebind(InputAction::setRotate);
-			}
+		{
+			InputManager::StartRebind(InputAction::setRotate);
+		}
 		if (ImGui::MenuItem("Pan"))
 		{
 			InputManager::StartRebind(InputAction::setPan);
@@ -415,8 +414,6 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	}
 
 	
-
-
 
 	// Save button
 	if (ImGui::Button("Save")) {
