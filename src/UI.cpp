@@ -8,6 +8,7 @@
 #include "CanvasManager.h"
 #include "FrameRenderer.h"
 #include "BrushManager.h"
+#include "InputManager.h"
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -69,6 +70,9 @@ static Renderer renderer;
 
 // brush manager
 extern BrushManager brushManager;
+
+
+static InputManager inputManager;
 
 
 
@@ -340,6 +344,17 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGui::Text("State: Pan");
 	}
 
+
+	if (InputManager::IsWaitingForRebind())
+	{
+		ImGui::Text("Press any key...");
+	}
+
+	if (InputManager::getRebindFail())
+	{
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Key already bound!");
+	}
+
 	if (ImGui::Button("Draw")) {
 		cursorMode = UI::CursorMode::Draw;
 	}
@@ -362,6 +377,43 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 
 	if (ImGui::Button("Zoom Out")) {
 		cursorMode = UI::CursorMode::ZoomOut;
+	}
+
+	// menu to rebind the various actions that can be done with hotkeys
+	// the getHotkeyString(InputAction::setRotate).c_str() is the funciton 
+	// call to get the string version of the key combos
+	if (ImGui::BeginMenu("Shortcuts"))
+	{
+		if (ImGui::MenuItem("Rotate", inputManager.getHotkeyString(InputAction::setRotate).c_str()))
+		{
+			InputManager::StartRebind(InputAction::setRotate);
+		}
+		if (ImGui::MenuItem("Pan", inputManager.getHotkeyString(InputAction::setPan).c_str()))
+		{
+			InputManager::StartRebind(InputAction::setPan);
+		}
+		if (ImGui::MenuItem("Draw", inputManager.getHotkeyString(InputAction::setDraw).c_str()))
+		{
+			InputManager::StartRebind(InputAction::setDraw);
+		}
+		if (ImGui::MenuItem("Erase", inputManager.getHotkeyString(InputAction::setErase).c_str()))
+		{
+			InputManager::StartRebind(InputAction::setErase);
+		}
+		if (ImGui::MenuItem("Undo", inputManager.getHotkeyString(InputAction::undo).c_str()))
+		{
+			InputManager::StartRebind(InputAction::undo);
+		}
+		if (ImGui::MenuItem("Redo", inputManager.getHotkeyString(InputAction::redo).c_str()))
+		{
+			InputManager::StartRebind(InputAction::redo);
+		}
+		if (ImGui::MenuItem("Center Canvas", inputManager.getHotkeyString(InputAction::resetView).c_str()))
+		{
+			InputManager::StartRebind(InputAction::resetView);
+		}
+
+		ImGui::EndMenu();
 	}
 
 	

@@ -10,6 +10,8 @@
 #include "DrawEngine.h"
 #include "FrameRenderer.h"
 
+#include "InputManager.h"
+
 
 // define our static objects and vars 
 static Window window; 
@@ -20,6 +22,8 @@ BrushManager brushManager;
 DrawEngine drawEngine;
 CanvasManager canvasManager;
 FrameRenderer frameRenderer;
+
+static InputManager inputManager;
 
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
@@ -46,6 +50,8 @@ bool App::init() {
 	drawEngine.init();
 	brushManager.init();
 	ui.init(window.handle(), renderer, global);
+
+	//inputManager.init(window.handle());
 
 	global.set_scr_width(SCR_WIDTH);
 	global.set_scr_height(SCR_HEIGHT);
@@ -83,6 +89,7 @@ void App::run()
 		renderer.beginFrame(canvasManager);
 		ui.draw(canvasManager, frameRenderer);
 		renderer.endFrame();
+		inputManager.update();
 
 		window.swapBuffers();
 	}
