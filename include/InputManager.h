@@ -33,7 +33,6 @@ struct KeyComboHash
     }
 };
 
-
 enum class InputAction
 {
     setRotate,
@@ -43,9 +42,8 @@ enum class InputAction
     undo,
     redo,
     resetView
+    //setZoomDragging
 };
-
-
 
 
 class InputManager
@@ -63,6 +61,8 @@ public:
     static bool IsWaitingForRebind();
     static bool getRebindFail();
     static bool isModifierKey(int key);
+    static std::string getKeybind(const KeyCombo& combo);
+    static std::string getHotkeyString(InputAction action);
 
 private:
     static void mouseButtonCallBack(GLFWwindow* window, int button, int action, int mods);

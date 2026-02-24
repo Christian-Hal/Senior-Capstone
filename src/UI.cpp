@@ -344,6 +344,7 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGui::Text("State: Pan");
 	}
 
+
 	if (InputManager::IsWaitingForRebind())
 	{
 		ImGui::Text("Press any key...");
@@ -379,33 +380,35 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	}
 
 	// menu to rebind the various actions that can be done with hotkeys
-	if (ImGui::BeginMenu("Rebind"))
+	// the getHotkeyString(InputAction::setRotate).c_str() is the funciton 
+	// call to get the string version of the key combos
+	if (ImGui::BeginMenu("Shortcuts"))
 	{
-		if (ImGui::MenuItem("Rotate"))
+		if (ImGui::MenuItem("Rotate", inputManager.getHotkeyString(InputAction::setRotate).c_str()))
 		{
 			InputManager::StartRebind(InputAction::setRotate);
 		}
-		if (ImGui::MenuItem("Pan"))
+		if (ImGui::MenuItem("Pan", inputManager.getHotkeyString(InputAction::setPan).c_str()))
 		{
 			InputManager::StartRebind(InputAction::setPan);
 		}
-		if (ImGui::MenuItem("Draw"))
+		if (ImGui::MenuItem("Draw", inputManager.getHotkeyString(InputAction::setDraw).c_str()))
 		{
 			InputManager::StartRebind(InputAction::setDraw);
 		}
-		if (ImGui::MenuItem("Erase"))
+		if (ImGui::MenuItem("Erase", inputManager.getHotkeyString(InputAction::setErase).c_str()))
 		{
 			InputManager::StartRebind(InputAction::setErase);
 		}
-		if (ImGui::MenuItem("Undo"))
+		if (ImGui::MenuItem("Undo", inputManager.getHotkeyString(InputAction::undo).c_str()))
 		{
 			InputManager::StartRebind(InputAction::undo);
 		}
-		if (ImGui::MenuItem("Redo"))
+		if (ImGui::MenuItem("Redo", inputManager.getHotkeyString(InputAction::redo).c_str()))
 		{
 			InputManager::StartRebind(InputAction::redo);
 		}
-		if (ImGui::MenuItem("Center Canvas"))
+		if (ImGui::MenuItem("Center Canvas", inputManager.getHotkeyString(InputAction::resetView).c_str()))
 		{
 			InputManager::StartRebind(InputAction::resetView);
 		}

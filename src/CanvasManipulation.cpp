@@ -1,3 +1,4 @@
+#include "CanvasManipulation.h"
 
 #include "CanvasManipulation.h"
 #include "CanvasManager.h"
@@ -81,6 +82,22 @@ void CanvasManipulation::zooming(double yoffset, float zoomSpeed, double xpos, d
 	viewMatrix(xpos, ypos, oldZoom, canvas);
 }
 
+// same as zooming but without the GLFWwindow for the check R for rotate
+//void CanvasManipulation::zoomDragging(double yoffset, float zoomSpeed, double xpos, double ypos)
+//{
+//	Canvas& canvas = activeCanvasManager.getActive();
+//
+//	float oldZoom = canvas.zoom;
+//
+//	canvas.zoom *= (1.0f + (float)yoffset * zoomSpeed);
+//	canvas.zoom = std::clamp(canvas.zoom, 0.1f, 10.0f);
+//
+//	// Mouse position (screen space)
+//
+//	viewMatrix(xpos, ypos, oldZoom, canvas);
+//	std::cout << "testing" << std::endl;
+//}
+
 
 // this function is used to adjust the view of the canvas around the mouse instead of zooming just around the center 
 void CanvasManipulation::viewMatrix(double x, double y, float oldZoom, Canvas& canvas)
@@ -119,6 +136,7 @@ void CanvasManipulation::viewMatrix(double x, double y, float oldZoom, Canvas& c
 	canvas.offset += mouseScreen - glm::vec2(newScreen);
 }
 
+// centers the canvas to the screen
 void CanvasManipulation::centerCamera()
 {
 	Canvas& canvas = activeCanvasManager.getActive();

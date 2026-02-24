@@ -60,7 +60,8 @@ void InputManager::init(GLFWwindow* window, Renderer* renderer)
 	bindAction(InputAction::setErase, GLFW_KEY_E, 0);
 	bindAction(InputAction::undo, GLFW_KEY_Z, GLFW_MOD_CONTROL);
 	bindAction(InputAction::redo, GLFW_KEY_X, GLFW_MOD_CONTROL);
-	bindAction(InputAction::resetView, GLFW_KEY_SPACE, GLFW_MOD_CONTROL);
+	bindAction(InputAction::resetView, GLFW_KEY_R, GLFW_MOD_CONTROL);
+	//bindAction(InputAction::setZoomDragging, GLFW_KEY_SPACE, GLFW_MOD_CONTROL);
 }
 
 //constant update function
@@ -253,7 +254,14 @@ bool InputManager::bindAction(InputAction action, int key, int mods)
 
 	case InputAction::resetView:
 		KeyBindings[combo] = []() { canvasManipulation.centerCamera(); };
+		break;
+
+	//case InputAction::setZoomDragging:
+	//	KeyBindings[combo] = []() { canvasManipulation.zoomDragging(deltaY, 0.005, currX, currY); };
+	//	break;
 	}
+
+	ActionToKey[action] = combo;
 
 	return true;
 }
@@ -288,5 +296,50 @@ bool InputManager::isModifierKey(int key)
 		key == GLFW_KEY_RIGHT_ALT ||
 		key == GLFW_KEY_LEFT_SUPER ||
 		key == GLFW_KEY_RIGHT_SUPER ||
-		key == GLFW_KEY_ESCAPE;
+		key == GLFW_KEY_ESCAPE ||
+		key == GLFW_KEY_CAPS_LOCK ||
+		key == GLFW_KEY_TAB ||
+		key == GLFW_KEY_ENTER || 
+		key == GLFW_KEY_INSERT ||
+		key == GLFW_KEY_DELETE;
+}
+
+
+// takes in an input action, checks to see if there keycombo connected to it, 
+// if so returns the string, if not returns Unbound
+std::string InputManager::getHotkeyString(InputAction action)
+{
+	auto temp = ActionToKey.find(action);
+
+	if (temp == ActionToKey.end())
+		return "Unbound";
+
+	return getKeybind(temp->second);
+}
+
+// converts the key combo given into string, available mod keys 
+// are hard coded to be listed first with a "+" and following keys listed 
+// after, if no mod keys are used, key string is returned alone
+std::string InputManager::getKeybind(const KeyCombo& combo)
+{
+	std::string result;
+
+	if (combo.mods & GLFW_MOD_CONTROL)
+		result += "Ctrl+";
+
+	if (combo.mods & GLFW_MOD_SHIFT)
+		result += "Shift+";
+
+	if (combo.mods & GLFW_MOD_ALT)
+		result += "Alt+";
+
+	if (combo.mods & GLFW_MOD_SUPER)
+		result += "Super+";
+
+	std::string keyName = glfwGetKeyName(combo.key, 0);
+	
+	keyName[0] = std::toupper(keyName[0]);
+	result += keyName;
+
+	return result;
 }
