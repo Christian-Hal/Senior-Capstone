@@ -11,7 +11,6 @@
 #include "Globals.h"
 #include "CanvasManager.h"
 #include "UI.h"
-#include "Zooming.h"
 #include "DrawEngine.h"
 #include "InputManager.h"
 

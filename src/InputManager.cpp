@@ -4,6 +4,7 @@
 #include "CanvasManager.h"
 #include "UI.h"
 #include "BrushManager.h"
+#include "DrawEngine.h"
 
 #include "imgui.h"
 
@@ -16,9 +17,9 @@
 #include "CanvasManipulation.h"
 
 Renderer* currRenderer = nullptr;
-extern CanvasManager activeCanvasManager;
+extern CanvasManager canvasManager;
 
-static UI ui;
+extern UI ui;
 extern Globals global;
 CanvasManipulation canvasManipulation;
 
@@ -42,6 +43,9 @@ static bool RebindFailed = false;
 
 // InputAction attempting to rebind
 static InputAction RebindTarget;
+
+// Reference to the DrawEngine object
+extern DrawEngine drawEngine;
 
 // set the glfw callback funcitons up
 void InputManager::init(GLFWwindow* window, Renderer* renderer)
@@ -114,11 +118,22 @@ void InputManager::mouseButtonCallBack(GLFWwindow* window, int button, int actio
 		case UI::CursorMode::ZoomOut:
 			canvasManipulation.zooming(-1, 0.1, currX, currY, window);
 			break;
+		case UI::CursorMode::Draw:
+			drawEngine.start();
+			break;
+		case UI::CursorMode::Erase:
+			drawEngine.start();
+			break;
 		}
 	}
 
-	else if (action == GLFW_RELEASE)
+	else if (action == GLFW_RELEASE) {
+		// tell the drawEngine to stop drawing when mouse released
+		if (drawEngine.isDrawing())
+			drawEngine.stop();
+
 		CurrentMouse[button] = false;
+	}
 
 }
 
@@ -245,11 +260,11 @@ bool InputManager::bindAction(InputAction action, int key, int mods)
 		break;
 
 	case InputAction::undo:
-		KeyBindings[combo] = []() { std::cout << "undo" << std::endl; };
+		KeyBindings[combo] = []() { canvasManager.undo(); };
 		break;
 
 	case InputAction::redo:
-		KeyBindings[combo] = []() { std::cout << "redo" << std::endl; };
+		KeyBindings[combo] = []() { canvasManager.redo(); };
 		break;
 
 	case InputAction::resetView:
