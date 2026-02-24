@@ -380,12 +380,43 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 
 	// proof of concept that the hot keys can be rebound, in the future we could have a menu
 	// dedicated to rebinds with buttons like this to rebind the various operations
-	if (ImGui::Button("Rebind Rotate"))
+	if (ImGui::BeginMenu("Rebind"))
 	{
-		InputManager::StartRebind(InputAction::setRotate);
+		if (ImGui::MenuItem("Rotate"))
+			{
+				InputManager::StartRebind(InputAction::setRotate);
+			}
+		if (ImGui::MenuItem("Pan"))
+		{
+			InputManager::StartRebind(InputAction::setPan);
+		}
+		if (ImGui::MenuItem("Draw"))
+		{
+			InputManager::StartRebind(InputAction::setDraw);
+		}
+		if (ImGui::MenuItem("Erase"))
+		{
+			InputManager::StartRebind(InputAction::setErase);
+		}
+		if (ImGui::MenuItem("Undo"))
+		{
+			InputManager::StartRebind(InputAction::undo);
+		}
+		if (ImGui::MenuItem("Redo"))
+		{
+			InputManager::StartRebind(InputAction::redo);
+		}
+		if (ImGui::MenuItem("Center Canvas"))
+		{
+			InputManager::StartRebind(InputAction::resetView);
+		}
+
+		ImGui::EndMenu();
 	}
 
 	
+
+
 
 	// Save button
 	if (ImGui::Button("Save")) {
