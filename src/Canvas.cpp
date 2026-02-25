@@ -344,6 +344,9 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 
     int index = y * width + x; 
 
+    // record the pixel change before changing the color
+    recordPixelChange(index, layerData[curLayer][index]);
+
     // read existing color 
     Color& layerColor = layerData[curLayer][index];
 
