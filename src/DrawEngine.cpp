@@ -154,8 +154,8 @@ void DrawEngine::stampBrush(glm::vec2 position)
                 int finalX = topLeftX + c;
                 int finalY = topLeftY + r;
 
-                curCanvas.setPixel(finalX, finalY, ui.getColor());
-                //curCanvas.blendPixel(finalX, finalY, ui.getColor(), ui.getColor().a/255.0);
+                //curCanvas.setPixel(finalX, finalY, ui.getColor());
+                curCanvas.blendPixel(finalX, finalY, ui.getColor(), ui.getColor().a/255.0);
             }
         }
     }
