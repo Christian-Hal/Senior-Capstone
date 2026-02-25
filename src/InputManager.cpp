@@ -34,7 +34,6 @@ double deltaY = 0;
 
 // map for the mouse buttons to see if pressed
 std::unordered_map<int, bool> CurrentMouse;
-std::unordered_map<int, bool> PreviousMouse;
 
 // maps for key bindings look up and deletion
 // the first map uses keycombo to use functions related to the InputAction
@@ -88,9 +87,9 @@ void InputManager::update()
 	lastY = currY;
 
 
-	if (IsMousePressed(GLFW_MOUSE_BUTTON_LEFT))
+	if (IsMousePressed(GLFW_MOUSE_BUTTON_LEFT) )
 	{
-		switch (ifRightClickPress())
+		switch (ui.getCursorMode())
 		{
 		case UI::CursorMode::Pan:
 			canvasManipulation.panning(deltaX, deltaY);
@@ -103,15 +102,10 @@ void InputManager::update()
 		}
 	}  
 
-	PreviousMouse = CurrentMouse;
-}
-
-UI::CursorMode InputManager::ifRightClickPress()
-{
-	if (InputManager::IsMousePressed(GLFW_MOUSE_BUTTON_RIGHT))
-		return UI::CursorMode::ColorPick;
-
-	return ui.getCursorMode();
+	else if (IsMousePressed(GLFW_MOUSE_BUTTON_RIGHT))
+	{
+		ColorPicker::pickColor(currX, currY);
+	}
 }
 
 // returns the true/false for the part of the mouse run through this function
@@ -119,11 +113,6 @@ UI::CursorMode InputManager::ifRightClickPress()
 bool InputManager::IsMousePressed(int button)
 {
 	return CurrentMouse[button];
-}
-
-bool InputManager::IsMouseReleased(int button)
-{
-	return !CurrentMouse[button] && PreviousMouse[button];
 }
 
 // just return statements for potentially needed things for drawing
@@ -144,7 +133,7 @@ void InputManager::mouseButtonCallBack(GLFWwindow* window, int button, int actio
 	if (action == GLFW_PRESS) {
 		CurrentMouse[button] = true;
 
-		if (button == GLFW_MOUSE_BUTTON_LEFT)
+		if (button == GLFW_MOUSE_BUTTON_LEFT && !CurrentMouse[GLFW_MOUSE_BUTTON_RIGHT])
 		{
 			switch (ui.getCursorMode())
 			{
@@ -302,8 +291,6 @@ bool InputManager::bindAction(InputAction action, int key, int mods)
 	case InputAction::redo:
 		KeyBindings[combo] = []() { if (canvasManager.hasActive()) canvasManager.redo(); };
 		break;
-
-	
 
 	//case InputAction::setZoomDragging:
 	//	KeyBindings[combo] = []() { canvasManipulation.zoomDragging(deltaY, 0.005, currX, currY); };

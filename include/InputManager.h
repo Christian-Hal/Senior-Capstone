@@ -48,9 +48,7 @@ class InputManager
 public:
     static void init(GLFWwindow* window, Renderer* renderer);
     static void update();
-    static UI::CursorMode ifRightClickPress();
     static bool IsMousePressed(int button);
-    static bool IsMouseReleased(int button);
     static double getMouseX();
     static double getMouseY();
     static double getMouseDeltaX();

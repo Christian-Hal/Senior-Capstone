@@ -65,7 +65,7 @@ unsigned int oldShaderProgram = 0;
 
 CanvasManager activeCanvasManager;
 
-InputManager inputthings;
+extern InputManager inputManager;
 
 
 
@@ -120,7 +120,7 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	inputthings.init(window, this);
+	inputManager.init(window, this);
 
 	return true;
 }
