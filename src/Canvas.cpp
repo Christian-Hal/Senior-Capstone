@@ -344,6 +344,11 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 
     int index = y * width + x; 
 
+    // if this pixel was already blended during this stroke, skip it to prevent over-blending
+    if (seenPixels[index] == currentStrokeIndex) {
+        return;
+    }
+
     // record the pixel change before changing the color
     recordPixelChange(index, layerData[curLayer][index]);
 
@@ -357,8 +362,9 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 	srcColor.b = static_cast<unsigned char>(static_cast<float>(src.b) * brushAlpha);
 	srcColor.a = static_cast<unsigned char>(static_cast<float>(src.a) * brushAlpha);
 
-    // blend source over destination 
-    Color out = srcColor * layerColor;
+    // blend destination over source
+    // this takes the original color and blends the draw color over it
+    Color out = layerColor * srcColor;
 
     layerData[curLayer][index] = out; 
 
