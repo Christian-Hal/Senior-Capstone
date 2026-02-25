@@ -7,9 +7,6 @@ class Renderer;
 class CanvasManager;
 class Globals;
 
-
-
-
 struct KeyCombo
 {
     int key;
@@ -41,17 +38,19 @@ enum class InputAction
     setErase,
     undo,
     redo,
-    resetView
+    resetView,
+    setColor
     //setZoomDragging
 };
-
 
 class InputManager
 {
 public:
     static void init(GLFWwindow* window, Renderer* renderer);
     static void update();
+    static UI::CursorMode ifRightClickPress();
     static bool IsMousePressed(int button);
+    static bool IsMouseReleased(int button);
     static double getMouseX();
     static double getMouseY();
     static double getMouseDeltaX();
@@ -69,5 +68,4 @@ private:
     static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos);
     static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset);
     static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int action, int mods);
-
 };

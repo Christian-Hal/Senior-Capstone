@@ -1,21 +1,27 @@
 
 #include "ColorPicker.h"
+#include "DrawEngine.h"
+#include "UI.h"
 
-/*
-	------ File Desc: -----
-	Small helper file to modularize the color picking system
 
-*/
+extern UI ui;
+extern CanvasManager activeCanvasManager;
+extern DrawEngine drawEngine;
 
-/*
+void ColorPicker::pickColor(double mouseX, double mouseY)
+{
+	if (activeCanvasManager.hasActive())
+	{
+		Canvas& canvas = activeCanvasManager.getActive();
 
-*/
-//ColorPicker::pickColor() {
-	// storing the current cursor pos 
-	//double cursorX, cursorY;
-	//cout << "Current pixel is x:" << x << " and y:" << y << endl;
+		glm::vec2 canvasCoords = drawEngine.mouseToCanvasCoords(mouseX, mouseY);
+		int canvasX = static_cast<int>(canvasCoords.x);
+		int canvasY = static_cast<int>(canvasCoords.y);
 
-	//// setting the current color to the color at the current cursor pos 
-	//ui.setColor(canvas.getPixel(x, y));
-
-//}
+		if (canvasX >= 0 && canvasX < canvas.getWidth() && canvasY >= 0 && canvasY < canvas.getHeight())
+		{
+			Color pickedColor = canvas.getPixel(canvasX, canvasY);
+			ui.setColor(pickedColor);
+		}
+	}
+}

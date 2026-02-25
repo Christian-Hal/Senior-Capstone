@@ -251,7 +251,7 @@ void Canvas::setPixel(int x, int y, const Color& color)
         return;
     }
 
-    int index = y * width + x;
+    int index = y * width + x;  
 
     // record the pixel change before changing the color
     recordPixelChange(index, layerData[curLayer][index]);

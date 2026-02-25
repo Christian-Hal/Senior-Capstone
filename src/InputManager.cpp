@@ -1,10 +1,11 @@
 #include "InputManager.h"
-
+#include "CanvasManipulation.h"
 #include "Renderer.h"
 #include "CanvasManager.h"
 #include "UI.h"
 #include "BrushManager.h"
 #include "DrawEngine.h"
+#include "ColorPicker.h"
 
 #include "imgui.h"
 
@@ -14,7 +15,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "CanvasManipulation.h"
+
 
 Renderer* currRenderer = nullptr;
 extern CanvasManager canvasManager;
@@ -33,12 +34,15 @@ double deltaY = 0;
 
 // map for the mouse buttons to see if pressed
 std::unordered_map<int, bool> CurrentMouse;
+std::unordered_map<int, bool> PreviousMouse;
 
 // maps for key bindings look up and deletion
 // the first map uses keycombo to use functions related to the InputAction
 std::unordered_map<KeyCombo, std::function<void()>, KeyComboHash> KeyBindings;
 std::unordered_map<InputAction, KeyCombo> ActionToKey;
 
+bool temp1;
+bool temp2;
 
 // used for "turning on" rebind mode
 static bool WaitingForRebind = false;
@@ -70,6 +74,7 @@ void InputManager::init(GLFWwindow* window, Renderer* renderer)
 	bindAction(InputAction::undo, GLFW_KEY_Z, GLFW_MOD_CONTROL);
 	bindAction(InputAction::redo, GLFW_KEY_X, GLFW_MOD_CONTROL);
 	bindAction(InputAction::resetView, GLFW_KEY_R, GLFW_MOD_CONTROL);
+	bindAction(InputAction::setColor, GLFW_KEY_C, 0);
 	//bindAction(InputAction::setZoomDragging, GLFW_KEY_SPACE, GLFW_MOD_CONTROL);
 }
 
@@ -82,9 +87,10 @@ void InputManager::update()
 	lastX = currX;
 	lastY = currY;
 
+
 	if (IsMousePressed(GLFW_MOUSE_BUTTON_LEFT))
 	{
-		switch (ui.getCursorMode())
+		switch (ifRightClickPress())
 		{
 		case UI::CursorMode::Pan:
 			canvasManipulation.panning(deltaX, deltaY);
@@ -92,8 +98,20 @@ void InputManager::update()
 		case UI::CursorMode::Rotate:
 			canvasManipulation.rotating(currX, currY);
 			break;
+		case UI::CursorMode::ColorPick:
+			ColorPicker::pickColor(currX, currY);
 		}
-	}
+	}  
+
+	PreviousMouse = CurrentMouse;
+}
+
+UI::CursorMode InputManager::ifRightClickPress()
+{
+	if (InputManager::IsMousePressed(GLFW_MOUSE_BUTTON_RIGHT))
+		return UI::CursorMode::ColorPick;
+
+	return ui.getCursorMode();
 }
 
 // returns the true/false for the part of the mouse run through this function
@@ -101,6 +119,11 @@ void InputManager::update()
 bool InputManager::IsMousePressed(int button)
 {
 	return CurrentMouse[button];
+}
+
+bool InputManager::IsMouseReleased(int button)
+{
+	return !CurrentMouse[button] && PreviousMouse[button];
 }
 
 // just return statements for potentially needed things for drawing
@@ -121,29 +144,32 @@ void InputManager::mouseButtonCallBack(GLFWwindow* window, int button, int actio
 	if (action == GLFW_PRESS) {
 		CurrentMouse[button] = true;
 
-		switch (ui.getCursorMode())
+		if (button == GLFW_MOUSE_BUTTON_LEFT)
 		{
-		case UI::CursorMode::Rotate:
-			canvasManipulation.startRotate(currX, currY);
-			break;
-		case UI::CursorMode::ZoomIn:
-			canvasManipulation.zooming(1, 0.1, currX, currY, window);
-			break;
-		case UI::CursorMode::ZoomOut:
-			canvasManipulation.zooming(-1, 0.1, currX, currY, window);
-			break;
-		case UI::CursorMode::Draw:
-			drawEngine.start();
-			break;
-		case UI::CursorMode::Erase:
-			drawEngine.start();
-			break;
+			switch (ui.getCursorMode())
+			{
+			case UI::CursorMode::Rotate:
+				canvasManipulation.startRotate(currX, currY);
+				break;
+			case UI::CursorMode::ZoomIn:
+				canvasManipulation.zooming(1, 0.1, currX, currY, window);
+				break;
+			case UI::CursorMode::ZoomOut:
+				canvasManipulation.zooming(-1, 0.1, currX, currY, window);
+				break;
+			case UI::CursorMode::Draw:
+				drawEngine.start();
+				break;
+			case UI::CursorMode::Erase:
+				drawEngine.start();
+				break;
+			}
 		}
 	}
 
 	else if (action == GLFW_RELEASE) {
 		// tell the drawEngine to stop drawing when mouse released
-		if (drawEngine.isDrawing())
+		if (button == GLFW_MOUSE_BUTTON_LEFT && drawEngine.isDrawing())
 			drawEngine.stop();
 
 		CurrentMouse[button] = false;
@@ -261,17 +287,23 @@ bool InputManager::bindAction(InputAction action, int key, int mods)
 		KeyBindings[combo] = []() { ui.setCursorMode(UI::CursorMode::Erase); };
 		break;
 
-	case InputAction::undo:
-		KeyBindings[combo] = []() { canvasManager.undo(); };
-		break;
-
-	case InputAction::redo:
-		KeyBindings[combo] = []() { canvasManager.redo(); };
-		break;
-
 	case InputAction::resetView:
 		KeyBindings[combo] = []() { canvasManipulation.centerCamera(); };
 		break;
+
+	case InputAction::setColor:
+		KeyBindings[combo] = []() { ui.setCursorMode(UI::CursorMode::ColorPick); };
+		break;
+
+	case InputAction::undo:
+		KeyBindings[combo] = []() { if (canvasManager.hasActive()) canvasManager.undo(); };
+		break;
+
+	case InputAction::redo:
+		KeyBindings[combo] = []() { if (canvasManager.hasActive()) canvasManager.redo(); };
+		break;
+
+	
 
 	//case InputAction::setZoomDragging:
 	//	KeyBindings[combo] = []() { canvasManipulation.zoomDragging(deltaY, 0.005, currX, currY); };

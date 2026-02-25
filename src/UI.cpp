@@ -72,7 +72,7 @@ static Renderer renderer;
 extern BrushManager brushManager;
 
 
-static InputManager inputManager;
+extern InputManager inputManager;
 
 
 
@@ -402,6 +402,10 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		cursorMode = UI::CursorMode::ZoomOut;
 	}
 
+	if (ImGui::Button("Color Picker")) {
+		cursorMode = UI::CursorMode::ColorPick;
+	}
+
 	// menu to rebind the various actions that can be done with hotkeys
 	// the getHotkeyString(InputAction::setRotate).c_str() is the funciton 
 	// call to get the string version of the key combos
@@ -435,12 +439,12 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		{
 			InputManager::StartRebind(InputAction::resetView);
 		}
+		if (ImGui::MenuItem("Color Picker", inputManager.getHotkeyString(InputAction::setColor).c_str()))
+		{
+			InputManager::StartRebind(InputAction::setColor);
+		}
 
 		ImGui::EndMenu();
-	}
-
-	if (ImGui::Button("Color Picker")) {
-		cursorMode = UI::CursorMode::ColorPick; 
 	}
 	
 

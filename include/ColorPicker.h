@@ -1,18 +1,9 @@
 
-#pragma once 
-
-
-#include "Renderer.h"
-#include "Canvas.h"
-
+#pragma once
 
 
 class ColorPicker {
-
 public:
-
-	static void pickColor();
-
-private:
+	static void pickColor(double mouseX, double mouseY);
 
 };
