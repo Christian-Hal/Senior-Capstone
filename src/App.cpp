@@ -89,7 +89,7 @@ void App::run()
 		renderer.beginFrame(canvasManager);
 		ui.draw(canvasManager, frameRenderer);
 		renderer.endFrame();
-		//inputManager.update();
+		inputManager.update();
 
 		window.swapBuffers();
 	}

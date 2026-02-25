@@ -24,7 +24,12 @@ extern Globals global;
 CanvasManipulation canvasManipulation;
 
 // current, previous, and the delta of the x,y coordinates of the cursor
-double currX, currY, lastX, lastY, deltaX, deltaY = 0;
+double currX = 0; 
+double currY = 0;
+double lastX = 0; 
+double lastY = 0; 
+double deltaX = 0; 
+double deltaY = 0;
 
 // map for the mouse buttons to see if pressed
 std::unordered_map<int, bool> CurrentMouse;
@@ -76,6 +81,19 @@ void InputManager::update()
 
 	lastX = currX;
 	lastY = currY;
+
+	if (IsMousePressed(GLFW_MOUSE_BUTTON_LEFT))
+	{
+		switch (ui.getCursorMode())
+		{
+		case UI::CursorMode::Pan:
+			canvasManipulation.panning(deltaX, deltaY);
+			break;
+		case UI::CursorMode::Rotate:
+			canvasManipulation.rotating(currX, currY);
+			break;
+		}
+	}
 }
 
 // returns the true/false for the part of the mouse run through this function
@@ -107,10 +125,6 @@ void InputManager::mouseButtonCallBack(GLFWwindow* window, int button, int actio
 		{
 		case UI::CursorMode::Rotate:
 			canvasManipulation.startRotate(currX, currY);
-			break;
-		case UI::CursorMode::Pan:
-			lastX = currX;
-			lastY = currY;
 			break;
 		case UI::CursorMode::ZoomIn:
 			canvasManipulation.zooming(1, 0.1, currX, currY, window);
@@ -144,18 +158,6 @@ void InputManager::cursorPosCallBack(GLFWwindow* window, double xpos, double ypo
 	if (!currRenderer || ImGui::GetIO().WantCaptureMouse)
 		return;
 
-	if (IsMousePressed(GLFW_MOUSE_BUTTON_LEFT))
-	{
-		switch (ui.getCursorMode())
-		{
-		case UI::CursorMode::Pan:
-			canvasManipulation.panning(deltaX, deltaY);
-			break;
-		case UI::CursorMode::Rotate:
-			canvasManipulation.rotating(currX, currY);
-			break;
-		}
-	}
 	currX = xpos;
 	currY = ypos;
 }
