@@ -147,10 +147,12 @@ void InputManager::mouseButtonCallBack(GLFWwindow* window, int button, int actio
 				canvasManipulation.zooming(-1, 0.1, currX, currY, window);
 				break;
 			case UI::CursorMode::Draw:
-				drawEngine.start();
+				if (canvasManager.hasActive())
+					drawEngine.start();
 				break;
 			case UI::CursorMode::Erase:
-				drawEngine.start();
+				if (canvasManager.hasActive())
+					drawEngine.start();
 				break;
 			}
 		}
