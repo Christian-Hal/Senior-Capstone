@@ -5,8 +5,10 @@
 
 #include "Canvas.h"
 #include "FrameRenderer.h"
+#include "UI.h"
 
-
+// for clarity 
+static UI ui; 
 
 // constructor
 Canvas::Canvas() : width(0), height(0), numLayers(0), curLayer(0), pixels(), layerData(), canvasName("") {}
@@ -335,7 +337,7 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
     }
 
     // if the incoming pixel is full opacity, just set the pixel. 
-    if (src.a == 255) {
+    if (src.a == 255 || ui.getCursorMode() == UI::CursorMode::Erase) {
         this->setPixel(x, y, src);
         return;
     }
