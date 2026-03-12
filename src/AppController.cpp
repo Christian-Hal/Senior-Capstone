@@ -12,14 +12,12 @@
 
 #include "InputManager.h"
 #include "CanvasManipulation.h"
-#include "ColorPicker.h"
 
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
 
 // Temporary local utility object until CanvasManipulation is AppState-managed.
 static CanvasManipulation canvasManipulation;
-
 
 /*
 Creates the window according to screen height and width values.
@@ -110,6 +108,9 @@ void AppController::run()
 	auto& frameRenderer = appState.getFrameRenderer();
 	auto& inputManager = appState.getInputManager();
 
+	// helper variables to keep track of changes (right now its just ui size)
+	int brushSize = ui.brushSize;
+
 	// RENDER LOOP 
 	while (!window.shouldClose()) {
 		window.pollEvents();
@@ -119,15 +120,21 @@ void AppController::run()
             drawEngine.setCanvas(canvasManager.getActive());
             drawEngine.setColor(ui.getColor());
 
-            if (brushManager.brushChange) { // if the brush has changed then update the draw engine's brush dab
-                drawEngine.setBrushDab(brushManager.generateBrushDab(ui.brushSize));
+            if (brushManager.brushChange || brushSize != ui.brushSize) { // if the brush has changed then update the draw engine's brush dab
+				drawEngine.setBrushDab(
+					brushManager.generateBrushDab(ui.brushSize),
+					brushManager.getActiveBrush().spacing,
+					ui.brushSize
+				);
                 brushManager.brushChange = false;
+                brushSize = ui.brushSize;
             }
 
             if (drawEngine.isDrawing()) {
                 double mouseX, mouseY;
                 glfwGetCursorPos(window.handle(), &mouseX, &mouseY);
-                drawEngine.processMousePos(mouseX, mouseY);
+				glm::vec2 canvasCoords = mouseToCanvasCoords(mouseX, mouseY);
+                drawEngine.processMousePos(canvasCoords.x, canvasCoords.y);
             }
 		}
 
@@ -219,6 +226,7 @@ void AppController::onMouseButton(const MouseState& m, int button, int action, i
 	auto& canvasManager = appState.getCanvasManager();
 	auto& drawEngine = appState.getDrawEngine();
 	auto& window = appState.getWindow();
+	auto& ui = appState.getUI();
 
 	// Handle start/stop actions that occur on press/release boundaries.
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT && !m.rightDown && canvasManager.hasActive())
@@ -240,16 +248,17 @@ void AppController::onMouseButton(const MouseState& m, int button, int action, i
 			drawEngine.start();
 			break;
 		case CursorMode::ColorPick:
-			ColorPicker::pickColor(m.x, m.y);
+			pickColor(canvas, m.x, m.y);
 			break;
 		default:
 			break;
 		}
 	}
 
-	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT)
+	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_RIGHT && canvasManager.hasActive())
 	{
-		ColorPicker::pickColor(m.x, m.y);
+		Canvas& canvas = canvasManager.getActive();
+		pickColor(canvas, m.x, m.y);
 	}
 
 	if (action == GLFW_RELEASE && button == GLFW_MOUSE_BUTTON_LEFT && drawEngine.isDrawing())
@@ -278,16 +287,17 @@ void AppController::onMouseMove(const MouseState& m)
 			canvasManipulation.rotating(canvas, m.x, m.y);
 			break;
 		case CursorMode::ColorPick:
-			ColorPicker::pickColor(m.x, m.y);
+			pickColor(canvas, m.x, m.y);
 			break;
 		default:
 			break;
 		}
 	}
-	else if (m.rightDown)
+	else if (m.rightDown && canvasManager.hasActive())
 	{
 		// Right-drag always samples color regardless of current tool.
-		ColorPicker::pickColor(m.x, m.y);
+		Canvas& canvas = canvasManager.getActive();
+		pickColor(canvas, m.x, m.y);
 	}
 }
 
@@ -348,5 +358,71 @@ void AppController::onInputAction(InputAction action)
 		break;
 	default:
 		break;
+	}
+}
+
+// Takes in a mouse position and returns the converted pixel coordinates on the current canvas
+glm::vec2 AppController::mouseToCanvasCoords(double mouseX, double mouseY)
+ {
+	auto& canvasManager = appState.getCanvasManager();
+	auto& global = appState.getGlobals();
+	
+	if (!canvasManager.hasActive()) {
+		return glm::vec2(0.0f, 0.0f);
+	}
+
+	Canvas& curCanvas = canvasManager.getActive();
+
+	// convert the mouse position to screen space (with y flipped)
+	float screenX = mouseX;
+	float screenY = global.get_scr_height() - mouseY;
+
+	// grab the center of the canvas
+	glm::vec2 canvasCenter(
+        curCanvas.getWidth() * 0.5f,
+        curCanvas.getHeight() * 0.5f
+	);
+
+	// stores the point as a vector for easier manipulation(?)
+	// not sure what the naming convetion is for this cause Gunter wrote this stuff
+	// will probably change it later lol
+	glm::vec2 p = { screenX, screenY };
+
+	// removes the canvases offset and ensures its centered at (0,0)
+    p -= curCanvas.offset;
+	p -= canvasCenter;
+
+	// calculate the cosine and sine of the negative rotation angle for unrotating the point
+    float c = cosf(-curCanvas.rotation);
+    float s = sinf(-curCanvas.rotation);
+
+	// Simple rotation matrix to rotate the point
+	// if the canvas is rotated X degrees then we need to rotate the point -X degrees to match the canvas space
+	p = {
+		p.x * c - p.y * s,
+		p.x * s + p.y * c
+	};
+
+	// undo the zoom by dividing the point by the zoom level
+	// if the the canvas is zoomed in by 2 then dividing by 2 will remove the zoom
+    p /= curCanvas.zoom;
+
+	// move origin back to normal coordinate space
+	p += canvasCenter;
+
+    return glm::vec2(p.x, p.y);
+}
+
+void AppController::pickColor(Canvas& canvas, double mouseX, double mouseY)
+{
+	auto& ui = appState.getUI();
+
+	glm::vec2 canvasCoords = mouseToCanvasCoords(mouseX, mouseY);
+	int canvasX = static_cast<int>(canvasCoords.x);
+	int canvasY = static_cast<int>(canvasCoords.y);
+
+	if (canvasX >= 0 && canvasX < canvas.getWidth() && canvasY >= 0 && canvasY < canvas.getHeight())
+	{
+		ui.setColor(canvas.getPixel(canvasX, canvasY));
 	}
 }

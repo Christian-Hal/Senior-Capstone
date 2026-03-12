@@ -2,6 +2,7 @@
 
 #include "AppState.h"
 #include <string>
+#include "glm/glm.hpp"
 
 class AppController {
 public:
@@ -34,4 +35,11 @@ private:
     void onMouseButton(const MouseState& m, int button, int action, int mods);
     void onMouseScroll(const MouseState& m, double xoffset, double yoffset);
     void onInputAction(InputAction action);
+
+    // takes in a mouse position and returns the converted pixel coordinates on the canvas
+	glm::vec2 mouseToCanvasCoords(double mouseX, double mouseY);
+
+    // takes in a canvas and mouse position and updates the current color in the UI to the color of the pixel at that position on the canvas
+    void pickColor(Canvas& canvas, double xPos, double yPos);
+
 };

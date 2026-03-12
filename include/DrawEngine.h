@@ -24,16 +24,13 @@ class DrawEngine
         // takes in a mouse position and adds the converted canvas coord as a point in the current stroke
         void processMousePos(double mouseX, double mouseY);
 
-        // takes in a mouse position and returns the converted pixel coordinates on the canvas
-	    glm::vec2 mouseToCanvasCoords(double mouseX, double mouseY);
-
         // Processes the current stroke list, generate a smoothed event path, and draw said path onto the active canvas
         void update();
 
         bool didStamp = false;
 
         // functions for updating the current brush dab, color, and canvas for drawing
-        void setBrushDab(std::vector<float> newBrushDab);
+        void setBrushDab(std::vector<float> newBrushDab, float spacing, int drawSize);
         void setColor(Color newColor);
         void setCanvas(Canvas& newCanvas);
 

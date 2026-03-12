@@ -42,6 +42,7 @@ const std::vector<float> BrushManager::generateBrushDab(int brushSize)
     std::vector<float> dab;
     dab.reserve(2 + W * H);
 
+    // the first two values in the dab are the width and height of the tip
     dab.push_back(W);
     dab.push_back(H);
 
@@ -96,10 +97,10 @@ const BrushTool& BrushManager::getActiveBrush()
 */
 void BrushManager::setActiveBrush(int index) 
 {
-    if (index > 0 && index < loaded_Brushes.size()){}
-    
-    activeBrush = &loaded_Brushes[index];
-    brushChange = true;
+    if (index >= 0 && index < loaded_Brushes.size()) {
+        activeBrush = &loaded_Brushes[index];
+        brushChange = true;
+    }
 }
 
 

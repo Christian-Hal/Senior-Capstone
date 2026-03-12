@@ -493,7 +493,7 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	
 
 	// Save button
-	if (ImGui::Button("Save")) {
+	if (canvasManager.hasActive() && ImGui::Button("Save")) {
 		canvasManager.getFrameData(canvasManager);
 	}
 
@@ -589,22 +589,28 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 
 	// add widgets
 	ImGui::Text("UNFINISHED");
-	if(ImGui::Button("Next Frame")){
-		FrameRenderer::selectFrame(canvasManager.getActive(), 1);
-	}
-	if(ImGui::Button("Previous Frame")){
-		FrameRenderer::selectFrame(canvasManager.getActive(), -1);
+
+	// only display animation settings if there is an active canvas
+	if(canvasManager.hasActive())
+	{
+		if(ImGui::Button("Next Frame")){
+			FrameRenderer::selectFrame(canvasManager.getActive(), 1);
+		}
+		if(ImGui::Button("Previous Frame")){
+			FrameRenderer::selectFrame(canvasManager.getActive(), -1);
+		}
+
+		if(ImGui::Button("Create Frame")){
+			FrameRenderer::createFrame(canvasManager.getActive());
+		}
+		if(ImGui::Button("Remove Frame")){
+			FrameRenderer::removeFrame(canvasManager.getActive());
+		}
+		if(ImGui::Button("Play")){
+			FrameRenderer::play(canvasManager.getActive());
+		}
 	}
 
-	if(ImGui::Button("Create Frame")){
-		FrameRenderer::createFrame(canvasManager.getActive());
-	}
-	if(ImGui::Button("Remove Frame")){
-		FrameRenderer::removeFrame(canvasManager.getActive());
-	}
-	if(ImGui::Button("Play")){
-		FrameRenderer::play(canvasManager.getActive());
-	}
 	// end step
 	if (ImGui::GetWindowHeight() > h - 2 * TopSize)
 		BotSize = h - 2 * TopSize;
