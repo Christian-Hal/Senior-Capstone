@@ -98,10 +98,6 @@ void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCa
     frames = readPixelData(meta);
     newCanvas->setPixels(frames[curFrame - 1]);
     newCanvas->setLayerData(readLayerData(meta));
-    cout << "wrote to layerData" << endl;
-
-
-    cout << "Canvas Changed to canvas " << to_string(curCanvas) << endl;
 }
 
 
@@ -136,7 +132,6 @@ void FrameRenderer::createFrame(Canvas& canvas){
 
 // remove current frame and update file names accordingly
 void FrameRenderer::removeFrame(Canvas& canvas){
-    cout << "current frame: " << curFrame << endl;
     if(numFrames > 1){
         // erases the frameData
         frames.erase(frames.begin() + curFrame - 1);
@@ -165,7 +160,6 @@ void FrameRenderer::removeFrame(Canvas& canvas){
 void FrameRenderer::selectFrame(Canvas& canvas, int frameDelta){
     if(0 < curFrame + frameDelta && curFrame + frameDelta <= numFrames){
         // save data to drive
-        cout << "Frame #" << to_string(frameDelta + curFrame) << " Selected" << endl;
         frames[curFrame - 1] =  vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
         writeAllData(&canvas);
         curFrame = curFrame + frameDelta;
@@ -173,15 +167,12 @@ void FrameRenderer::selectFrame(Canvas& canvas, int frameDelta){
         canvas.setPixels(frames[curFrame-1]);
         canvas.setLayerData(readLayerData(meta));
     }
-    else{
-        cout << "Frame outside of bounds" << endl;
-    }
 }
 
 void FrameRenderer::play(Canvas& canvas){
     if(!isPlaying){
         frames[curFrame - 1] =  vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
-        int start = curFrame;
+        int start = 1;
         std::thread t([&canvas, start]{
             isPlaying = true;
             int i = start;
@@ -190,8 +181,7 @@ void FrameRenderer::play(Canvas& canvas){
                 i++;
                 std::this_thread::sleep_for(std::chrono::milliseconds(84)); // 42 milliseconds is ~ 24 fps
             }
-            cout << "exiting the loop" << endl;
-            canvas.setPixels(frames[start-1]);
+            canvas.setPixels(frames[curFrame - 1]);
             isPlaying = false;
 
         });
@@ -244,7 +234,6 @@ void FrameRenderer::writePixelData(Canvas* canvas){
 void FrameRenderer::writeLayerData(Canvas* canvas){
     if(curFrame <= numFrames){
         vector<vector<Color>> frLayerData = canvas->getLayerData();
-        cout << (int)frLayerData[0][0].r << endl;
         ofstream File("./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) + ".dat");
         for (int i = 0; i < frLayerData.size(); i++){
             File.write(reinterpret_cast<const char*>(frLayerData[i].data()), frLayerData[i].size() * sizeof(Color));
@@ -263,7 +252,6 @@ int* FrameRenderer::readMetaData() {
 
     ifstream File("./frameDatas/canvas" + to_string(curCanvas) + "/meta.dat", ios::binary);
     if (!File) {
-        cout << "returning nothing";
         return meta;   // return default {0,0,0,0} if file missing
     }
 
@@ -311,7 +299,6 @@ vector<vector<Color>> FrameRenderer::readLayerData(int* arr){
 void FrameRenderer::rename(bool isAdding){
     if(isAdding){
         for(int i = curFrame + 2; i <= numFrames; i++){
-            cout << "renaming file" << endl;
             fs::rename(
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i+1) + ".dat");
@@ -319,7 +306,6 @@ void FrameRenderer::rename(bool isAdding){
     }
     else{
         for(int i = curFrame; i < numFrames; i++){
-            cout << i << endl;
             fs::rename(
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i + 1) + ".dat",
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat");
