@@ -39,7 +39,7 @@ bool AppController::init()
 	auto& drawEngine = appState.getDrawEngine();
 	auto& inputManager = appState.getInputManager();
 	
-	if (!window.create(SCR_WIDTH, SCR_HEIGHT, "Capstone", global)) {
+	if (!window.create(SCR_WIDTH, SCR_HEIGHT, "MockUp", global)) {
 		return false; 
 	}
 
