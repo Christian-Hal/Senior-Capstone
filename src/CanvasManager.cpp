@@ -100,7 +100,7 @@ void CanvasManager::setActiveCanvas(int index)
     FrameRenderer::updateCanvas(&oldCanvasCopy, activeCanvas, index);
 }
 
-
+// didn't change the main "saving" fucntion of it just implemented it to work with new file system
 void CanvasManager::saveToFile(const std::string& path)
 {
     int saveWidth = activeCanvas->getWidth();
@@ -124,8 +124,6 @@ void CanvasManager::saveToFile(const std::string& path)
     }
 
     std::string ext = path.substr(path.find_last_of('.') + 1);
-
-
 
     if (ext == "png")
         stbi_write_png(path.c_str(), saveWidth, saveHeight, 4, pixels.data(), saveWidth * 4);

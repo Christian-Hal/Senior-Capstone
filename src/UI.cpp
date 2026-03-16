@@ -405,14 +405,15 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 
 	ImGui::SameLine();
 	// Save button
-	//if (canvasManager.hasActive() && ImGui::Button("Save File")) {
-	//	canvasManager.getFrameData(canvasManager);
-	//}
 
+	// only appears if there is a canvas
 	if (canvasManager.hasActive() && ImGui::Button("Save File"))
 	{
 		IGFD::FileDialogConfig config;
+
+		// the  path the file explorer starts in. "." is the current active directory
 		config.path = ".";
+
 		config.fileName = canvasManager.getActive().getName();
 
 		ImGuiFileDialog::Instance()->OpenDialog(
