@@ -101,36 +101,38 @@ void CanvasManager::setActiveCanvas(int index)
 }
 
 
-
-// bandaid placement of saving features 
-// will look pretty later
-void CanvasManager::getFrameData(CanvasManager& canvasManager)
+void CanvasManager::saveToFile(const std::string& path)
 {
-    // get the width and height of the canvas
-    int saveWidth = canvasManager.getActive().getWidth();
-    int saveHeight = canvasManager.getActive().getHeight();
+    int saveWidth = activeCanvas->getWidth();
+    int saveHeight = activeCanvas->getHeight();
 
-    // checks if the buffer size is not 0
-    // when the app first runs these two are initialized to zero as a sort of "file is not open"
-    // so this is an easy fix until we get the state system fully set up and can know when a file is or isnt open
-    if (saveWidth == 0 || saveHeight == 0)
-    {
-        return;
-    }
-    const Color* pixelValues = canvasManager.getActive().getData();
+    const Color* pixelValues = activeCanvas->getData();
 
     std::vector<Color> pixels(saveWidth * saveHeight);
     std::memcpy(pixels.data(), pixelValues, saveWidth * saveHeight * sizeof(Color));
 
-    for (int y = 0; y < saveHeight / 2; y++) {
+    // flip image vertically
+    for (int y = 0; y < saveHeight / 2; y++)
+    {
         int opposite = saveHeight - y - 1;
-        for (int x = 0; x < saveWidth; x++) {
-            std::swap(pixels[y * saveWidth + x], pixels[opposite * saveWidth + x]);
+
+        for (int x = 0; x < saveWidth; x++)
+        {
+            std::swap(pixels[y * saveWidth + x], pixels[opposite * saveWidth + x]
+            );
         }
     }
-    // read the pixels in the canvas and write them to a png
-    std::string imageName = canvasManager.getActive().getName();
-    stbi_write_png((imageName + ".png").c_str(), saveWidth, saveHeight, 4, pixels.data(), saveWidth * 4);
+
+    std::string ext = path.substr(path.find_last_of('.') + 1);
+
+
+
+    if (ext == "png")
+        stbi_write_png(path.c_str(), saveWidth, saveHeight, 4, pixels.data(), saveWidth * 4);
+    
+    else if (ext == "jpg")
+        stbi_write_jpg(path.c_str(), saveWidth, saveHeight, 4, pixels.data(), 100);
+    
 }
 
 

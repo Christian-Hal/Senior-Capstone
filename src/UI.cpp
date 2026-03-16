@@ -405,9 +405,38 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 
 	ImGui::SameLine();
 	// Save button
-	if (canvasManager.hasActive() && ImGui::Button("Save File")) {
-		canvasManager.getFrameData(canvasManager);
+	//if (canvasManager.hasActive() && ImGui::Button("Save File")) {
+	//	canvasManager.getFrameData(canvasManager);
+	//}
+
+	if (canvasManager.hasActive() && ImGui::Button("Save File"))
+	{
+		IGFD::FileDialogConfig config;
+		config.path = ".";
+		config.fileName = canvasManager.getActive().getName();
+
+		ImGuiFileDialog::Instance()->OpenDialog(
+			"SaveImageDlg",
+			"Save Image",
+			".png,.jpg",
+			config
+		);
 	}
+	if (ImGuiFileDialog::Instance()->Display("SaveImageDlg"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string filePath =
+				ImGuiFileDialog::Instance()->GetFilePathName();
+
+			canvasManager.saveToFile(filePath);
+		}
+
+		ImGuiFileDialog::Instance()->Close();
+	}
+
+
+
 
 	// Future spot for the load button
 	ImGui::SameLine();

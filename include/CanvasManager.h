@@ -33,6 +33,10 @@ class CanvasManager {
         // they just tell the active canvas to run an undo or redo
         void undo();
         void redo();
+
+
+
+        void saveToFile(const std::string& path);
         
 
 
