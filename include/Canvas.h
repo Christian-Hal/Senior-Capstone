@@ -33,6 +33,7 @@ class Canvas {
         int getHeight() const;
         int getNumLayers() const;
         int getCurLayer() const;
+        Color getBackgroundColor() const;
         const Color* getData() const;
         const std::vector<std::vector<Color>>& getLayerData() const;
 

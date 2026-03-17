@@ -154,6 +154,7 @@ int Canvas::getHeight() const { return height; }
 int Canvas::getNumLayers() const { return numLayers; }
 int Canvas::getCurLayer() const { return curLayer; }
 
+Color Canvas::getBackgroundColor() const {return backgroundColor; }
 /*
     Getter for pixel data. 
 
