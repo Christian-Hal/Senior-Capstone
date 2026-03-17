@@ -33,14 +33,8 @@ class Canvas {
         int getHeight() const;
         int getNumLayers() const;
         int getCurLayer() const;
-        Color getBackgroundColor() const;
         const Color* getData() const;
         const std::vector<std::vector<Color>>& getLayerData() const;
-
-        friend bool operator==(const Color& c2, const Color& c1);
-        friend bool operator!=(const Color& c2, const Color& c1);
-        friend Color operator*(const Color& c2, const Color& c1);
-
 
         const std::string getName() const;
         void setName(std::string name);
