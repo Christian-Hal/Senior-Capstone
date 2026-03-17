@@ -562,6 +562,9 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::Separator();
 	ImGui::Spacing();
 
+	if(ImGui::Button("Onion Skin Test")){
+		FrameRenderer::updateOnionSkin(canvasManager.getActive());
+	}
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
 	ImVec2 size = ImGui::GetWindowSize();

@@ -190,6 +190,23 @@ void FrameRenderer::play(Canvas& canvas){
 
 }
 
+void FrameRenderer::updateOnionSkin(Canvas& canvas){
+    cout << "Onion skin function called" << endl;
+    Color green = {0,255,0,128};
+    Color blendedColor = canvas.getBackgroundColor() * green;
+    int oldLayer = canvas.getCurLayer();
+    canvas.selectLayer(0);
+    vector<vector<Color>> layDat = canvas.getLayerData();
+    for(int i = 0; i < layDat[0].size(); i++){
+        if(frames[curFrame - 2][i] != canvas.getBackgroundColor()){
+            int x = i % canvas.getWidth();
+            int y = i / canvas.getWidth();
+            canvas.setPixel(x, y, blendedColor);
+        }
+    }
+    canvas.selectLayer(oldLayer);
+}
+
 // removes all of the files after shutdown so you dont eat up storage.
 void FrameRenderer::shutdown(){
     fs::remove_all("./frameDatas");

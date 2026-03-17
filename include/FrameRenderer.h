@@ -17,6 +17,7 @@ class FrameRenderer{
         static void removeFrame(Canvas& canvas);
         static void selectFrame(Canvas& canvas, int frameDelta);
         static void play(Canvas& canvas);
+        static void updateOnionSkin(Canvas& canvas);
         void shutdown();
 
     private:
