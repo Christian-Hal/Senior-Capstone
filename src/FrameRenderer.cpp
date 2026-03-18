@@ -198,11 +198,26 @@ void FrameRenderer::updateOnionSkin(Canvas& canvas, int numBefore, int numAfter)
         canvas.selectLayer(0);
         vector<vector<Color>> layDat = canvas.getLayerData();
         for(int i = 0; i < numBefore; i++){
-            for(int j = 0; j < layDat[0].size(); j++){
-                if(!canvas.colorEquals(frames[curFrame - 2][j], canvas.getBackgroundColor())){
-                    int x = j % canvas.getWidth();
-                    int y = j / canvas.getWidth();
-                    canvas.blendPixel(x, y, blendedColor, blendedColor.a / 255.0f);
+            if(curFrame > numBefore - (i)){ // this line needs fixing
+                for(int j = 0; j < layDat[0].size(); j++){
+                    if(!canvas.colorEquals(frames[curFrame - 2 - i][j], canvas.getBackgroundColor())){
+                        int x = j % canvas.getWidth();
+                        int y = j / canvas.getWidth();
+                        canvas.blendPixel(x, y, blendedColor, blendedColor.a / 255.0f);
+                    }
+                }
+            }
+        }
+        green = {255, 0, 0, 128};
+        blendedColor = canvas.colorTimes(canvas.getBackgroundColor(), green);
+        for(int i = 0; i < numAfter; i++){
+            if(curFrame != numFrames){ // This line needs fixing
+                for(int j = 0; j < layDat[0].size(); j++){
+                    if(!canvas.colorEquals(frames[curFrame + i][j], canvas.getBackgroundColor())){
+                        int x = j % canvas.getWidth();
+                        int y = j / canvas.getWidth();
+                        canvas.blendPixel(x, y, blendedColor, blendedColor.a / 255.0f);
+                    }
                 }
             }
         }
@@ -212,9 +227,10 @@ void FrameRenderer::updateOnionSkin(Canvas& canvas, int numBefore, int numAfter)
 void FrameRenderer::removeOnionSkin(Canvas& canvas){
     int oldLayer = canvas.getCurLayer();
     canvas.selectLayer(0);
-    const Color* data = canvas.getData();
-    for(int i = 0; i < sizeof(data); i++){
-        canvas.setPixel(i % canvas.getWidth(), i / canvas.getWidth(), canvas.getBackgroundColor());
+    int wid = canvas.getWidth();
+    int hei = canvas.getHeight();
+    for(int i = 0; i < hei * wid; i++){
+        canvas.setPixel(i % wid, i / wid, canvas.getBackgroundColor());
     }
     canvas.selectLayer(oldLayer);
 }
