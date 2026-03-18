@@ -9,6 +9,7 @@
 #include "BrushManager.h"
 #include "stb_image.h"
 
+#include "json.hpp"
 #include "miniz.h"
 
 // ----- Billinear Sampling helper function ----- 
