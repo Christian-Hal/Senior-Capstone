@@ -190,18 +190,31 @@ void FrameRenderer::play(Canvas& canvas){
 
 }
 
-void FrameRenderer::updateOnionSkin(Canvas& canvas){
-    Color green = {0,255,0,128};
-    Color blendedColor = canvas.colorTimes(canvas.getBackgroundColor(), green);
+void FrameRenderer::updateOnionSkin(Canvas& canvas, int numBefore, int numAfter){
+    
+        Color green = {0,255,0,128};
+        Color blendedColor = canvas.colorTimes(canvas.getBackgroundColor(), green);
+        int oldLayer = canvas.getCurLayer();
+        canvas.selectLayer(0);
+        vector<vector<Color>> layDat = canvas.getLayerData();
+        for(int i = 0; i < numBefore; i++){
+            for(int j = 0; j < layDat[0].size(); j++){
+                if(!canvas.colorEquals(frames[curFrame - 2][j], canvas.getBackgroundColor())){
+                    int x = j % canvas.getWidth();
+                    int y = j / canvas.getWidth();
+                    canvas.blendPixel(x, y, blendedColor, blendedColor.a / 255.0f);
+                }
+            }
+        }
+        canvas.selectLayer(oldLayer);
+}
+
+void FrameRenderer::removeOnionSkin(Canvas& canvas){
     int oldLayer = canvas.getCurLayer();
     canvas.selectLayer(0);
-    vector<vector<Color>> layDat = canvas.getLayerData();
-    for(int i = 0; i < layDat[0].size(); i++){
-        if(!canvas.colorEquals(frames[curFrame - 2][i], canvas.getBackgroundColor())){
-            int x = i % canvas.getWidth();
-            int y = i / canvas.getWidth();
-            canvas.setPixel(x, y, blendedColor);
-        }
+    const Color* data = canvas.getData();
+    for(int i = 0; i < sizeof(data); i++){
+        canvas.setPixel(i % canvas.getWidth(), i / canvas.getWidth(), canvas.getBackgroundColor());
     }
     canvas.selectLayer(oldLayer);
 }

@@ -223,15 +223,24 @@ Color operator*(const Color& c2, const Color& c1){
     return {static_cast<unsigned char>(r), static_cast<unsigned char>(g), static_cast<unsigned char>(b), static_cast<unsigned char>(outA * 255.0f)};
 }
 
+/*
+    Allows comparison between files
+    
+    compares 1 color with another and returns true if they are equal. 
+*/
 
 bool Canvas::colorEquals(const Color& c2, const Color& c1){
     return c1 == c2;
 }
 
+/* 
+    Allows multiplication between files
+
+    multiplies two colors together
+*/
 const Color Canvas::colorTimes(const Color& c2, const Color& c1){
     return c2 * c1;
 }
-
 
 
 /*

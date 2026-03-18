@@ -563,7 +563,7 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::Spacing();
 
 	if(ImGui::Button("Onion Skin Test")){
-		FrameRenderer::updateOnionSkin(canvasManager.getActive());
+		FrameRenderer::updateOnionSkin(canvasManager.getActive(), 1, 0);
 	}
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
