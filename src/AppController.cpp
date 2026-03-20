@@ -250,6 +250,7 @@ void AppController::onMouseButton(const MouseState& m, int button, int action, i
 			canvasManipulation.zooming(canvas, -1, 0.1f, m.x, m.y, window.handle());
 			break;
 		case CursorMode::Draw:
+		case CursorMode::Fill:
 		case CursorMode::Erase:
 			drawEngine.start();
 			break;
@@ -342,6 +343,9 @@ void AppController::onInputAction(InputAction action)
 		break;
 	case InputAction::setErase:
 		setCursorMode(CursorMode::Erase);
+		break;
+	case InputAction::setFill:
+		setCursorMode(CursorMode::Fill);
 		break;
 	case InputAction::setColor:
 		setCursorMode(CursorMode::ColorPick);

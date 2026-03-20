@@ -136,7 +136,7 @@ Color UI::getColor()
 {
 	const CursorMode mode = getCursorMode();
 
-	if (mode == CursorMode::Draw) 
+	if (mode == CursorMode::Draw || mode == CursorMode::Fill) 
 	{	
 		return Color{
 			static_cast<unsigned char>(color[0] * 255.0f),
@@ -425,6 +425,9 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 		{
 			triggerRebind(InputAction::setDraw);
 		}
+		if (ImGui::MenuItem("Fill", hotkeyLabel(InputAction::setFill).c_str())){
+			triggerRebind(InputAction::setFill);
+		}
 		if (ImGui::MenuItem("Erase", hotkeyLabel(InputAction::setErase).c_str()))
 		{
 			triggerRebind(InputAction::setErase);
@@ -493,6 +496,10 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGui::Text("State: Draw");
 	}
 
+	else if (getCursorMode() == CursorMode::Fill){
+		ImGui::Text("State: Fill");
+	}
+
 	else if (getCursorMode() == CursorMode::Erase) {
 		ImGui::Text("State: Erase");
 	}
@@ -531,6 +538,10 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	// buttons that change the current cursor mode
 	if (ImGui::Button("Draw")) {
 		setCursorMode(CursorMode::Draw);
+	}
+
+	if (ImGui::Button("Fill")) {
+		setCursorMode(CursorMode::Fill);
 	}
 
 	if (ImGui::Button("Erase")) {

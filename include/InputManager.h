@@ -48,6 +48,7 @@ enum class InputAction
     setPan,
     setDraw,
     setErase,
+    setFill,
     undo,
     redo,
     resetView,

@@ -81,6 +81,7 @@ void InputManager::init(GLFWwindow* window)
 	bindAction(InputAction::setRotate, GLFW_KEY_R, 0);
 	bindAction(InputAction::setPan, GLFW_KEY_H, 0);
 	bindAction(InputAction::setDraw, GLFW_KEY_D, 0);
+	bindAction(InputAction::setFill, GLFW_KEY_F, 0);
 	bindAction(InputAction::setErase, GLFW_KEY_E, 0);
 	bindAction(InputAction::undo, GLFW_KEY_Z, GLFW_MOD_CONTROL);
 	bindAction(InputAction::redo, GLFW_KEY_X, GLFW_MOD_CONTROL);
