@@ -612,6 +612,14 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 
 	// brush size slider 
 	ImGui::SliderInt("Size", &brushSize, 1, 500, "%d", ImGuiSliderFlags_Logarithmic);
+	// preset brush size buttons 
+	// ----- NOTE: a limited amount is added right now, will add full when UI rework is settled -----
+	if (ImGui::Button("5"))  brushSize = 5.0f;
+	ImGui::SameLine();
+	if (ImGui::Button("10")) brushSize = 10.0f; 
+	ImGui::SameLine();
+	if (ImGui::Button("100")) brushSize = 100.0f;
+
 
 	// adds a little visual split between sections
 	ImGui::Spacing();
