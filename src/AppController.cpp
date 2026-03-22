@@ -71,6 +71,9 @@ bool AppController::init()
 	// Bind reset canvas position callback
 	ui.bindCanvasCallbacks([this]() {canvasManipulation.centerCamera(appState.getCanvasManager().getActive()); });
 
+	// Bind grabbing brush tip scale 
+	ui.bindBrushSizeCallbacks([this]() {brushManager.generateBrushDab(appState.getBrushManager().generateBrushDab()); };
+
 	// Route hotkey label/rebind UI actions through controller-owned input flow.
 	ui.bindHotkeyCallbacks(
 		[this](InputAction action) { return getHotkeyString(action); },

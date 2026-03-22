@@ -31,12 +31,16 @@ public:
 	using BoolCallback = std::function<bool()>;
 	using ResetCanvasPositionCallback = std::function<void()>;
 
+	using GetBrushSizeCallback = std::function<float()>; 
+
 	// Lets the controller provide cursor state read/write hooks.
 	// UI emits intent through these callbacks instead of owning app state.
     void bindCursorCallbacks(SetCursorModeCallback setCb, GetCursorModeCallback getCb);
 	void bindBrushCallbacks(GetBrushListCallback getListCb, SetActiveBrushCallback setActiveCb, GetActiveBrushCallback getActiveCb, LoadBrushCallback loadBrushCb);
 	void bindHotkeyCallbacks(GetHotkeyLabelCallback getLabelCb, StartRebindCallback startCb, BoolCallback isWaitingCb, BoolCallback didFailCb);
 	void bindCanvasCallbacks(ResetCanvasPositionCallback resetPositionCb);
+
+	void bindBrushSizeCallbacks(GetBrushSizeCallback getBrushSizeCb); 
 
 	void init(GLFWwindow* window, Renderer& renderer, Globals& g_inst);
 	void draw(CanvasManager& canvasManager, FrameRenderer frameRenderer);
@@ -61,6 +65,8 @@ private:
 	BoolCallback isWaitingForRebindCb;
 	BoolCallback didRebindFailCb;
 	ResetCanvasPositionCallback resetCanvasPositionCb;
+
+	GetBrushSizeCallback getBrushSizeCb; 
 	
 	void drawCustomCursor(CanvasManager& canvasManager); 
 	void drawLeftPanel(CanvasManager& canvasManager);

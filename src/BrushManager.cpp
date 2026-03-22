@@ -12,6 +12,7 @@
 #include "json.hpp"
 #include "miniz.h"
 
+
 // ----- Billinear Sampling helper function ----- 
 static float bilinearSample(const std::vector<float>& src, int srcW, int srcH, float x, float y) {
     int x0 = static_cast<int>(std::floor(x));

@@ -88,6 +88,12 @@ void UI::bindHotkeyCallbacks(GetHotkeyLabelCallback getLabelCb, StartRebindCallb
 }
 
 
+void UI::bindBrushSizeCallbacks(GetBrushSizeCallback brushSizeCb)
+{
+	getBrushSizeCb = std::move(brushSizeCb); 
+}
+
+
 // ----- ImGui code to load and access images in directory -----
 
 // Simple helper function to load an image into a OpenGL texture with common settings
@@ -354,6 +360,9 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 
 			// This brush size value is now the diameter of the brush tip 
 			//float scale = (float)UI::brushSize; 
+
+			getBrushSizeCb(); 
+
 			int cursorSize = std::max(1, brushSize);
 
 			// grab mouse position and initialize draw list 
@@ -364,8 +373,6 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 				ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
 				// center brush tip
-				// NOTE: once we are able to draw from a single click, the float values in these 
-				// calculations might need to be slightly changed 
 				ImVec2 offset = ImVec2(mousePos.x - (tw * cursorSize * 0.3f), mousePos.y - (th * cursorSize * 0.3f));
 
 				for (int y = 0; y < th; y++) {
