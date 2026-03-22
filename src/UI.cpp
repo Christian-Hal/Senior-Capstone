@@ -346,7 +346,8 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 			int th = activeBrush.tipHeight;
 
 			// This brush size value is now the diameter of the brush tip 
-			float scale = (float)UI::brushSize;
+			float scale = (float)UI::brushSize; 
+			//int scale = UI::brushSize; <- probably better 
 
 			// grab mouse position and initialize draw list 
 			ImVec2 mousePos = ImGui::GetMousePos();

@@ -216,13 +216,6 @@ void AppController::setActiveBrush(int index)
 
 	auto& ui = appState.getUI();
 	const BrushTool& activeBrush = brushManager.getActiveBrush();
-
-	// Imported bitmap brushes can look like a single pixel when size is 1.
-	// Nudge the size to a visible value when selecting larger brush tips.
-	if (ui.brushSize <= 1 && (activeBrush.tipWidth > 1 || activeBrush.tipHeight > 1)) {
-		const int maxTipDimension = std::max(activeBrush.tipWidth, activeBrush.tipHeight);
-		ui.brushSize = std::clamp(maxTipDimension, 3, 20);
-	}
 }
 
 std::string AppController::getHotkeyString(InputAction action)
