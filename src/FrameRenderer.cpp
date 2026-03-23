@@ -27,8 +27,8 @@ int FrameRenderer::numFrames = -1;
 int FrameRenderer::curCanvas = -1;
 int FrameRenderer::curFrame = -1;
 bool FrameRenderer::isPlaying = false;
-int FrameRenderer::numBefore = 3;
-int FrameRenderer::numAfter = 3;
+int FrameRenderer::numBefore = 1;
+int FrameRenderer::numAfter = 1;
 bool FrameRenderer::onionSkinEnabled = true;
 // this will be stored in memory so we can access it quickly everything else gets written to a file
 // we need the frame data so we can play high fps animations
@@ -122,13 +122,10 @@ void FrameRenderer::createFrame(Canvas& canvas){
     curFrame++;
     // insert new frame
     int* meta = readMetaData(); // meta[0] is width, meta[1] is height
-    if(numFrames == curFrame){
-        frames.insert(frames.end(), vector<Color>(meta[0] * meta[1], {255,255,255,255}));
-    }
-    else{
-        // this ought to insert inbetween the oldCurrent frame
-        frames.insert(frames.begin() + curFrame - 1, vector<Color>(meta[0] * meta[1], {255,255,255,255}));
-    }
+
+    // this ought to insert inbetween the oldCurrent frame
+    frames.insert(frames.begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], {255,255,255,255}));
+
     canvas.setPixels(frames[curFrame - 1]);
     //band-aid solution. this does not fix removing layers fully
     vector<vector<Color>> layDat(meta[2], vector<Color>(meta[0] * meta[1], {0,0,0,0})); //meta[2] is the number of layers
@@ -151,11 +148,12 @@ void FrameRenderer::removeFrame(Canvas& canvas){
             cerr << "File was not removed" << endl;
         }
         // fixes the names of layerdata
-        rename(false);
         if(curFrame == numFrames){
             curFrame--;
         }
         numFrames--;
+        rename(false);
+
         // saves the information (changed frameData, changed metadata)
         writeAllData(&canvas);
         int* meta = readMetaData();
@@ -371,14 +369,14 @@ vector<vector<Color>> FrameRenderer::readLayerData(int* arr){
 
 void FrameRenderer::rename(bool isAdding){
     if(isAdding){
-        for(int i = curFrame + 2; i <= numFrames; i++){
+        for(int i = numFrames - 1; i >= curFrame; i--){
             fs::rename(
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i+1) + ".dat");
         }
     }
     else{
-        for(int i = curFrame; i < numFrames; i++){
+        for(int i = numFrames; i > curFrame; i--){
             fs::rename(
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i + 1) + ".dat",
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat");
