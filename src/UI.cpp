@@ -333,7 +333,7 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
 
 
-	
+
 
 
 	ImGui::Render();
@@ -357,27 +357,27 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 		int H = static_cast<int>(dab[1]);
 
 		// grabbing the zoom to maintain cursor size consistency 
-		float zoom = canvasManager.getActive().zoom; 
+		float zoom = canvasManager.getActive().zoom;
 
 		ImVec2 mousePos = ImGui::GetMousePos();
 		ImDrawList* drawList = ImGui::GetBackgroundDrawList();
 
 		// accounting for zoom 
-		float displayW = W * zoom; 
-		float displayH = H * zoom; 
+		float displayW = W * zoom;
+		float displayH = H * zoom;
 
 		// calculating and centering offset by subtracting half the width/height of the GENERATED dab
-		ImVec2 origin = ImVec2(mousePos.x - (displayW * 0.5f), mousePos.y - (displayH * 0.5f)); 
+		ImVec2 origin = ImVec2(mousePos.x - (displayW * 0.5f), mousePos.y - (displayH * 0.5f));
 
 		if (brushSize >= 3) {
 			for (int y = 0; y < H; y++) {
 				for (int x = 0; x < W; x++) {
 					// bro idk what this evil magic line of code is 
-					float alpha = dab[2 + (y * W + x)]; 
+					float alpha = dab[2 + (y * W + x)];
 
 					// only drawing pixels that are part of the brush tip shape
 					if (alpha > 0.1f) {
-						ImVec2 p_min = ImVec2(origin.x + (x * zoom), origin.y + (y* zoom));
+						ImVec2 p_min = ImVec2(origin.x + (x * zoom), origin.y + (y * zoom));
 						ImVec2 p_max = ImVec2(p_min.x + zoom, p_min.y + zoom);
 
 						// setting the cursor color 
@@ -387,9 +387,29 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 			}
 		}
 		else {
-			// default for smaller sizes
-			// want to possibly add cross around smaller brush sizes 
-			drawList->AddCircle(mousePos, 1.5f, IM_COL32(128, 128, 128, 255));
+			ImVec2 center = ImVec2(origin.x + (displayW * 0.5f), origin.y + (displayH * 0.5f));
+
+			float brushRadius = (displayW * 0.5f); 
+
+			// drawing the circle 
+			drawList->AddCircle(center, brushRadius, IM_COL32(255, 255, 255, 100), 32); 
+
+			// drawing the crosshair 
+			float crossSize = 12.0f; 
+			float gap = 4.0f; 
+
+			ImU32 colorWhite = IM_COL32(255, 255, 255, 255); 
+			ImU32 colorBlack = IM_COL32(0, 0, 0, 255); 
+
+			auto drawOutlinedLine = [&](ImVec2 p1, ImVec2 p2) {
+				drawList->AddLine(p1, p2, colorBlack, 3.0f);
+				drawList->AddLine(p1, p2, colorWhite, 1.0f);
+				};
+
+			drawOutlinedLine(ImVec2(mousePos.x, mousePos.y - gap), ImVec2(mousePos.x, mousePos.y - crossSize));
+			drawOutlinedLine(ImVec2(mousePos.x, mousePos.y + gap), ImVec2(mousePos.x, mousePos.y + crossSize));
+			drawOutlinedLine(ImVec2(mousePos.x - gap, mousePos.y), ImVec2(mousePos.x - crossSize, mousePos.y));
+			drawOutlinedLine(ImVec2(mousePos.x + gap, mousePos.y), ImVec2(mousePos.x + crossSize, mousePos.y));
 		}
 	}
 }
