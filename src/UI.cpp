@@ -354,23 +354,30 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 		// grabbing the dimensions at the start of dab vector 
 		int W = static_cast<int>(dab[0]);
 		int H = static_cast<int>(dab[1]);
-		const float* pixels = &dab[2];
+
+		// grabbing the zoom to maintain cursor size consistency 
+		float zoom = canvasManager.getActive().zoom; 
 
 		ImVec2 mousePos = ImGui::GetMousePos();
 		ImDrawList* drawList = ImGui::GetForegroundDrawList();
 
-		if (brushSize >= 3) {
-			// calculating and centering offset by subtracting half the width/height of the GENERATED dab
-			ImVec2 origin = ImVec2(mousePos.x - (W * 0.5f), mousePos.y - (H * 0.5f));
+		// accounting for zoom 
+		float displayW = W * zoom; 
+		float displayH = H * zoom; 
 
+		// calculating and centering offset by subtracting half the width/height of the GENERATED dab
+		ImVec2 origin = ImVec2(mousePos.x - (displayW * 0.5f), mousePos.y - (displayH * 0.5f)); 
+
+		if (brushSize >= 3) {
 			for (int y = 0; y < H; y++) {
 				for (int x = 0; x < W; x++) {
-					float alpha = pixels[y * W + x];
+					// bro idk what this evil magic line of code is 
+					float alpha = dab[2 + (y * W + x)]; 
 
 					// only drawing pixels that are part of the brush tip shape
 					if (alpha > 0.1f) {
-						ImVec2 p_min = ImVec2(origin.x + x, origin.y + y);
-						ImVec2 p_max = ImVec2(p_min.x + 1.0f, p_min.y + 1.0f);
+						ImVec2 p_min = ImVec2(origin.x + (x * zoom), origin.y + (y* zoom));
+						ImVec2 p_max = ImVec2(p_min.x + zoom, p_min.y + zoom);
 
 						// setting the cursor color 
 						drawList->AddRectFilled(p_min, p_max, IM_COL32(128, 128, 128, 150));
