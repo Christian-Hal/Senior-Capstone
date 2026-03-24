@@ -140,28 +140,28 @@ void FrameRenderer::createFrame(Canvas& canvas){
 // remove current frame and update file names accordingly
 void FrameRenderer::removeFrame(Canvas& canvas){
     if(numFrames > 1){
-        removeOnionSkin(canvas);
         // erases the frameData
         frames.erase(frames.begin() + curFrame - 1);
         // erases the layerData
         if(!fs::remove("./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) + ".dat")){
             cerr << "File was not removed" << endl;
         }
+        rename(false);
+
         // fixes the names of layerdata
         if(curFrame == numFrames){
             curFrame--;
         }
         numFrames--;
-        rename(false);
 
         // saves the information (changed frameData, changed metadata)
-        writeAllData(&canvas);
         int* meta = readMetaData();
         canvas.setPixels(frames[curFrame-1]);
         canvas.setLayerData(readLayerData(meta));
         updateOnionSkin(canvas);
     }
 }
+
 
 // save the current data to the drive
 // load the pixelDatas from the corrrect file to here
@@ -376,10 +376,11 @@ void FrameRenderer::rename(bool isAdding){
         }
     }
     else{
-        for(int i = numFrames; i > curFrame; i--){
+        for(int i = curFrame + 1; i <= numFrames; i++){
+            cout << "renaming " << i << " to " << i-1 << endl;
             fs::rename(
-                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i + 1) + ".dat",
-                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat");
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i-1) + ".dat");
             }
         
     }
