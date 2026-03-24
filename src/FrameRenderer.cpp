@@ -377,7 +377,6 @@ void FrameRenderer::rename(bool isAdding){
     }
     else{
         for(int i = curFrame + 1; i <= numFrames; i++){
-            cout << "renaming " << i << " to " << i-1 << endl;
             fs::rename(
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
                 "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i-1) + ".dat");
