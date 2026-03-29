@@ -57,7 +57,8 @@ enum class InputAction
     setClickZoomOut,
     onionSkinToggle,
     nextFrame,
-    prevFrame
+    prevFrame,
+    newFile
 };
 
 class InputManager

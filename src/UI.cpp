@@ -30,7 +30,7 @@ int LeftSize = 0;
 int RightSize = 0;
 
 // state initial pop up 
-static bool showPopup = false;
+bool UI::showPopup = false;
 
 // show panels 
 static bool showPanels = true;
@@ -434,7 +434,7 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 	// add widgets
 	// new canvas pop up
 	if (ImGui::Button("New File")) {
-		showPopup = true;
+		UI::showPopup = true;
 	}
 
 	// menu to rebind the various actions that can be done with hotkeys
@@ -518,6 +518,10 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 		if (ImGui::MenuItem("Previous Frame", hotkeyLabel(InputAction::prevFrame).c_str()))
 		{
 			triggerRebind(InputAction::prevFrame);
+		}
+		if (ImGui::MenuItem("New File", hotkeyLabel(InputAction::newFile).c_str()))
+		{
+			triggerRebind(InputAction::newFile);
 		}
 
 		ImGui::EndPopup();
@@ -914,7 +918,7 @@ void UI::drawPopup(CanvasManager& canvasManager)
 	static int temp_h = 1080;
 	static std::string temp_n = "Untitled";
 
-	if (showPopup) {
+	if (UI::showPopup) {
 		ImGui::OpenPopup("New Canvas");
 	}
 
@@ -934,7 +938,7 @@ void UI::drawPopup(CanvasManager& canvasManager)
 			// centering the newly created canvas 
 			resetCanvasPositionCb();
 
-			showPopup = false;
+			UI::showPopup = false;
 			temp_n = "Untitled";
 
 			ImGui::CloseCurrentPopup();
@@ -943,7 +947,7 @@ void UI::drawPopup(CanvasManager& canvasManager)
 		ImGui::SameLine();
 
 		if (ImGui::Button("Cancel")) {
-			showPopup = false;
+			UI::showPopup = false;
 			temp_n = "Untitled";
 			ImGui::CloseCurrentPopup();
 		}

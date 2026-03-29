@@ -56,6 +56,8 @@ public:
 	CursorMode getCursorMode() const;
 	void setCursorMode(CursorMode);
 
+	static bool showPopup;
+
 private:
 	SetCursorModeCallback setCursorModeCb;
 	GetCursorModeCallback getCursorModeCb;

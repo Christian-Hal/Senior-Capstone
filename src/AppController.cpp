@@ -408,6 +408,9 @@ void AppController::onInputAction(InputAction action)
 			FrameRenderer::selectFrame(canvasManager.getActive(), -1);
 		}
 		break;
+	case InputAction::newFile:
+		UI::showPopup = true;
+		break;
 	default:
 		break;
 	}
