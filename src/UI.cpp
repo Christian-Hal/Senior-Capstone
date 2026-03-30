@@ -600,24 +600,27 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 	// Save button
 
 	// only appears if there is a canvas
-	if (canvasManager.hasActive() && ImGui::Button("Save File"))
+	if (ImGui::Button("Save File"))
 	{
-		IGFD::FileDialogConfig config;
+		if (canvasManager.hasActive())
+		{	
+			IGFD::FileDialogConfig config;
 
-		// the  path the file explorer starts in. "." is the current active directory
-		config.path = ".";
+			// the  path the file explorer starts in. "." is the current active directory
+			config.path = ".";
 
-		config.fileName = canvasManager.getActive().getName();
+			config.fileName = canvasManager.getActive().getName();
 
-		// ImGuiFileDialog has a built in detection for overwriting a file and makes a popup as well.
-		config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+			// ImGuiFileDialog has a built in detection for overwriting a file and makes a popup as well.
+			config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
 
-		ImGuiFileDialog::Instance()->OpenDialog(
-			"SaveImageDlg",
-			"Save Image",
-			".png,.jpg,.ora",
-			config
-		);
+			ImGuiFileDialog::Instance()->OpenDialog(
+				"SaveImageDlg",
+				"Save Image",
+				".png,.jpg,.ora",
+				config
+			);
+		}
 	}
 	if (ImGuiFileDialog::Instance()->Display("SaveImageDlg"))
 	{
