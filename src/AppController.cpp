@@ -152,7 +152,7 @@ void AppController::run()
 		// Render the canvas, the UI, and then clear stuff and swap buffers.
 		// The order of these next four methods must not change
 		renderer.beginFrame(canvasManager);
-		ui.draw(canvasManager, frameRenderer);
+		ui.drawUI(canvasManager, frameRenderer);
 		renderer.endFrame();
 		inputManager.update();
 

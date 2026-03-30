@@ -21,8 +21,6 @@
 std::string overwritePath;
 
 // variables to store info for UI declared up here 
-/// display size
-float w, h;
 /// panel sizes
 int TopSize = 0;
 int BotSize = 0;
@@ -75,8 +73,7 @@ void UI::bindCanvasCallbacks(ResetCanvasPositionCallback resetPositionCb)
 }
 
 
-void UI::bindBrushCallbacks(GetBrushListCallback getListCb, SetActiveBrushCallback setActiveCb, GetActiveBrushCallback getActiveCb, LoadBrushCallback loadBrushCb,
-	GenerateBrushDabCallback genDabCb)
+void UI::bindBrushCallbacks(GetBrushListCallback getListCb, SetActiveBrushCallback setActiveCb, GetActiveBrushCallback getActiveCb, LoadBrushCallback loadBrushCb, GenerateBrushDabCallback genDabCb)
 {
 	getBrushListCb = std::move(getListCb);
 	setActiveBrushCb = std::move(setActiveCb);
@@ -218,7 +215,8 @@ void UI::setCursorMode(CursorMode temp) {
 // UI initialization 
 void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 
-	//global = g_inst;
+	// set the initial ui state
+	curState = UIState::start_menu;
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -288,7 +286,7 @@ void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 
 
 // NOTE: called in render loop 
-void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
+void UI::drawUI(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 {
 	// start ImGui frame before adding widgets 
 	ImGui_ImplOpenGL3_NewFrame();
@@ -297,17 +295,33 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 
 	// grab the window display size
 	ImGuiIO& io = ImGui::GetIO();
-	w = io.DisplaySize.x;
-	h = io.DisplaySize.y;
+	displayWidth = io.DisplaySize.x;
+	displayHeight = io.DisplaySize.y;
 
+	// draw the new canvas pop up
+	drawNewCanvasPopup(canvasManager);
+
+	// ----- Cursor Customization -----
+	drawCustomCursor(canvasManager);
+
+	// draw ui based on the UI's current state
+	// if (curState == UIState::start_menu)		{drawStartScreen(canvasManager);}
+	if (curState == UIState::main_screen) 	{drawMainScreen(canvasManager, frameRenderer);}
+
+	// top panel is drawn regardless of the state 
+	drawTopPanel(canvasManager);
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void UI::drawMainScreen(CanvasManager& canvasManager, FrameRenderer frameRenderer) 
+{
 	// compute the panel sizes
-	if (TopSize == 0) { TopSize = static_cast<int>(0.05 * h); }
-	if (BotSize == 0) { BotSize = static_cast<int>(0.05 * h); }
-	if (LeftSize == 0) { LeftSize = static_cast<int>(0.1 * w); }
-	if (RightSize == 0) { RightSize = static_cast<int>(0.1 * w); }
-
-	// initial popup
-	drawPopup(canvasManager);
+	if (TopSize == 0) { TopSize = static_cast<int>(0.05 * displayHeight); }
+	if (BotSize == 0) { BotSize = static_cast<int>(0.05 * displayHeight); }
+	if (LeftSize == 0) { LeftSize = static_cast<int>(0.1 * displayWidth); }
+	if (RightSize == 0) { RightSize = static_cast<int>(0.1 * displayWidth); }
 
 	// -- user input to hide UI panels --
 	// only allow this if the canvas creation popup is not active 
@@ -319,30 +333,16 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 		}
 	}
 
-	// ----- Cursor Customization -----
-	drawCustomCursor(canvasManager);
-
-	// draw the four main menu panels
+	// draw the three main screen panels
 	if (showPanels) {
 		drawLeftPanel(canvasManager);
 		drawRightPanel(canvasManager);
 		drawBottomPanel(canvasManager, frameRenderer);
 	}
 
-	// top panel drawn regardless of input 
-	drawTopPanel(canvasManager);
-
 	// canvas tab panel shown only if more than 1 canvas is open
 	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
-
-
-
-
-
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-
 
 void UI::drawCustomCursor(CanvasManager& canvasManager) {
 	// only use custom cursor if a canvas is open, we are hovering over it, and we are drawing/erasing
@@ -428,7 +428,7 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 void UI::drawTopPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(w, TopSize), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(displayWidth, TopSize), ImGuiCond_Always);
 	ImGui::Begin("Top Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
 
 	// add widgets
@@ -609,7 +609,7 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(0, TopSize), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(LeftSize, h), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(LeftSize, displayHeight), ImGuiCond_Always);
 	ImGui::Begin("Left Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
 	/////// add widgets here ///////
@@ -705,15 +705,15 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
 	ImVec2 size = ImGui::GetWindowSize();
-	ImGui::SetWindowSize(ImVec2(size.x, h)); // keeps its Y-value the same
+	ImGui::SetWindowSize(ImVec2(size.x, displayHeight)); // keeps its Y-value the same
 	ImGui::End();
 }
 
 
 void UI::drawRightPanel(CanvasManager& canvasManager) {
 	// initialize the panel
-	ImGui::SetNextWindowPos(ImVec2(w - RightSize, TopSize), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(RightSize, h - TopSize), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(displayWidth - RightSize, TopSize), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(RightSize, displayHeight - TopSize), ImGuiCond_Always);
 	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
@@ -820,15 +820,15 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	// end step
 	RightSize = ImGui::GetWindowWidth();
 	ImVec2 size = ImGui::GetWindowSize();
-	ImGui::SetWindowSize(ImVec2(size.x, h)); // keeps its Y-value the same
+	ImGui::SetWindowSize(ImVec2(size.x, displayHeight)); // keeps its Y-value the same
 	ImGui::End();
 }
 
 
 void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer) {
 	// initialize the panel
-	ImGui::SetNextWindowPos(ImVec2(LeftSize, h - BotSize), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, BotSize), ImGuiCond_Always);
+	ImGui::SetNextWindowPos(ImVec2(LeftSize, displayHeight - BotSize), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, BotSize), ImGuiCond_Always);
 	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
@@ -857,8 +857,8 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 	}
 
 	// end step
-	if (ImGui::GetWindowHeight() > h - 2 * TopSize)
-		BotSize = h - 2 * TopSize;
+	if (ImGui::GetWindowHeight() > displayHeight - 2 * TopSize)
+		BotSize = displayHeight - 2 * TopSize;
 	else
 		BotSize = ImGui::GetWindowHeight();
 	ImGui::End();
@@ -869,7 +869,7 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize), ImGuiCond_Always);
-	ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, TopSize), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, TopSize), ImGuiCond_Always);
 	ImGui::Begin("Canvas Tabs Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
 	// add widgets
@@ -896,7 +896,7 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 
 
 // canvas size popup 
-void UI::drawPopup(CanvasManager& canvasManager)
+void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 {
 	static int temp_w = 1920;
 	static int temp_h = 1080;
@@ -924,6 +924,9 @@ void UI::drawPopup(CanvasManager& canvasManager)
 
 			showPopup = false;
 			temp_n = "Untitled";
+
+			// if the current UI state is the start menu then change it to the main screen
+			if (curState == UIState::start_menu) {curState = UIState::main_screen;}
 
 			ImGui::CloseCurrentPopup();
 		}
