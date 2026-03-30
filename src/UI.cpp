@@ -531,6 +531,10 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 		{
 			triggerRebind(InputAction::removeFrame);
 		}
+		if (ImGui::MenuItem("Quick Play", hotkeyLabel(InputAction::quickPlay).c_str()))
+		{
+			triggerRebind(InputAction::quickPlay);
+		}
 
 		ImGui::EndPopup();
 	}

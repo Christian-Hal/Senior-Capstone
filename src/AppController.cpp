@@ -423,6 +423,12 @@ void AppController::onInputAction(InputAction action)
 			FrameRenderer::removeFrame(canvasManager.getActive());
 		}
 		break;
+	case InputAction::quickPlay:
+		if (canvasManager.hasActive())
+		{
+			FrameRenderer::play(canvasManager.getActive());
+		}
+		break;
 	default:
 		break;
 	}

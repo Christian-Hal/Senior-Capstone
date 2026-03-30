@@ -60,7 +60,8 @@ enum class InputAction
     prevFrame,
     newFile,
     newFrame,
-    removeFrame
+    removeFrame,
+    quickPlay
 };
 
 class InputManager
