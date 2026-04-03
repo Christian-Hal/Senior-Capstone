@@ -95,9 +95,6 @@ void UI::bindHotkeyCallbacks(GetHotkeyLabelCallback getLabelCb, StartRebindCallb
 }
 
 
-
-
-
 // ----- ImGui code to load and access images in directory -----
 
 // Simple helper function to load an image into a OpenGL texture with common settings
@@ -190,8 +187,6 @@ void UI::setColor(Color currentPixelColor) {
 	color[1] = currentPixelColor.g / 255.0f;
 	color[2] = currentPixelColor.b / 255.0f;
 	color[3] = currentPixelColor.a / 255.0f;
-
-
 }
 
 
@@ -393,17 +388,17 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 		else {
 			ImVec2 center = ImVec2(origin.x + (displayW * 0.5f), origin.y + (displayH * 0.5f));
 
-			float brushRadius = (displayW * 0.5f); 
+			float brushRadius = (displayW * 0.5f);
 
 			// drawing the circle 
-			drawList->AddCircle(center, brushRadius, IM_COL32(255, 255, 255, 100), 32); 
+			drawList->AddCircle(center, brushRadius, IM_COL32(255, 255, 255, 100), 32);
 
 			// drawing the crosshair 
-			float crossSize = 12.0f; 
-			float gap = 4.0f; 
+			float crossSize = 12.0f;
+			float gap = 4.0f;
 
-			ImU32 colorWhite = IM_COL32(255, 255, 255, 255); 
-			ImU32 colorBlack = IM_COL32(0, 0, 0, 255); 
+			ImU32 colorWhite = IM_COL32(255, 255, 255, 255);
+			ImU32 colorBlack = IM_COL32(0, 0, 0, 255);
 
 			auto drawOutlinedLine = [&](ImVec2 p1, ImVec2 p2) {
 				drawList->AddLine(p1, p2, colorBlack, 3.0f);
@@ -476,7 +471,7 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 		{
 			triggerRebind(InputAction::setDraw);
 		}
-		if (ImGui::MenuItem("Fill", hotkeyLabel(InputAction::setFill).c_str())){
+		if (ImGui::MenuItem("Fill", hotkeyLabel(InputAction::setFill).c_str())) {
 			triggerRebind(InputAction::setFill);
 		}
 		if (ImGui::MenuItem("Erase", hotkeyLabel(InputAction::setErase).c_str()))
@@ -595,7 +590,7 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 				// centering the loaded image 
 				resetCanvasPositionCb();
 			}
-			
+
 		}
 
 		ImGuiFileDialog::Instance()->Close();
@@ -618,7 +613,7 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGui::Text("State: Draw");
 	}
 
-	else if (getCursorMode() == CursorMode::Fill){
+	else if (getCursorMode() == CursorMode::Fill) {
 		ImGui::Text("State: Fill");
 	}
 
@@ -695,8 +690,8 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	if(canvasManager.hasActive()){
-		if(ImGui::Button("Toggle Onion Skins")){
+	if (canvasManager.hasActive()) {
+		if (ImGui::Button("Toggle Onion Skins")) {
 			FrameRenderer::removeOnionSkin(canvasManager.getActive());
 			FrameRenderer::toggleOnionSkin();
 			FrameRenderer::updateOnionSkin(canvasManager.getActive());
@@ -824,7 +819,8 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	ImGui::End();
 }
 
-
+// want bottom panel with timeline to only be visible if the canvas created 
+// is tagged with being an animation canvas 
 void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, h - BotSize), ImGuiCond_Always);
@@ -835,20 +831,20 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 	// only display animation settings if there is an active canvas
 	if (canvasManager.hasActive())
 	{
-		if(ImGui::Button("Previous Frame")){
+		if (ImGui::Button("Previous Frame")) {
 			FrameRenderer::selectFrame(canvasManager.getActive(), -1);
 		}
 		ImGui::SameLine();
-		if(ImGui::Button("Next Frame")){
+		if (ImGui::Button("Next Frame")) {
 			FrameRenderer::selectFrame(canvasManager.getActive(), 1);
 		}
-		
+
 		//ImGui::SliderInt()
-		if(ImGui::Button("Create Frame")){
+		if (ImGui::Button("Create Frame")) {
 			FrameRenderer::createFrame(canvasManager.getActive());
 		}
 		ImGui::SameLine();
-		if(ImGui::Button("Remove Frame")){
+		if (ImGui::Button("Remove Frame")) {
 			FrameRenderer::removeFrame(canvasManager.getActive());
 		}
 		if (ImGui::Button("Play")) {
@@ -938,6 +934,12 @@ void UI::drawPopup(CanvasManager& canvasManager)
 
 		ImGui::EndPopup();
 	}
+
+}
+
+
+// dropdown button for file, animation, settings, and more 
+void UI::drawDropdownButton(CanvasManager& canvasManager) {
 
 }
 
