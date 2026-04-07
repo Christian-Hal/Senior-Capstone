@@ -8,7 +8,7 @@
 
 class CanvasManager {
     public:
-        Canvas& createCanvas(int width, int height, std::string name);
+        Canvas& createCanvas(int width, int height, std::string name, bool isAnimation);
         Canvas& getActive();
         bool hasActive();
 

@@ -14,14 +14,14 @@
 
 
 
-Canvas& CanvasManager::createCanvas(int width, int height, std::string name)
+Canvas& CanvasManager::createCanvas(int width, int height, std::string name, bool isAnimation)
 {
     Canvas oldCanvasCopy;
     if(this->hasActive()){
         oldCanvasCopy = *activeCanvas;
     }
     std::string fixed_name = checkName(name);
-    canvases.emplace_back(Canvas(width, height, fixed_name));
+    canvases.emplace_back(Canvas(width, height, fixed_name, isAnimation));
     FrameRenderer::newCanvas(&oldCanvasCopy, &canvases.back());
     activeCanvas = &canvases.back();
 
@@ -156,7 +156,7 @@ void CanvasManager::loadFromFile(const std::string& filePath)
     std::string fileName = pathObj.stem().string();
 
     // creating new canvas
-    Canvas& canvas = createCanvas(width, height, fileName);
+    Canvas& canvas = createCanvas(width, height, fileName, false);
 
     // converts data into pixels onto the canvas
     canvas.loadImage(data,1);
@@ -320,7 +320,7 @@ void CanvasManager::loadORA(const std::string& path)
     }
 
     std::string name = std::filesystem::path(path).stem().string();
-    Canvas& canvas = createCanvas(width, height, name);
+    Canvas& canvas = createCanvas(width, height, name, false);
 
     // creating correct number of layers
     while (canvas.getNumLayers() < layerPaths.size())

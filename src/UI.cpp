@@ -1037,6 +1037,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 	static int temp_w = 1920;
 	static int temp_h = 1080;
 	static std::string temp_n = "Untitled";
+	static bool isAnimation = false;
 
 	if (showPopup) {
 		ImGui::OpenPopup("New Canvas");
@@ -1048,12 +1049,23 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 		ImGui::InputInt("Width:", &temp_w);
 		ImGui::InputInt("Height:", &temp_h);
 		ImGui::InputText("File Name:", &temp_n);
+		ImGui::Checkbox("Use Animation Template", &isAnimation);
+
+		if (isAnimation) {
+			ImGui::TextWrapped("The animation template currently uses a set size of 2338 x 1653.");
+			temp_w = 2338;
+			temp_h = 1653;
+		}
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
 
 		// if user creates a canvas, remove the popup 
 		if (ImGui::Button("Create")) {
 
 			// create the new canvas
-			canvasManager.createCanvas(temp_w, temp_h, temp_n);
+			canvasManager.createCanvas(temp_w, temp_h, temp_n, isAnimation);
 
 			// centering the newly created canvas 
 			resetCanvasPositionCb();

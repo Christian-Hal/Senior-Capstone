@@ -68,8 +68,8 @@ void AppState::setCursorMode(CursorMode mode)
 
 void AppState::addFileToRecentActivity(const std::string& filePath)
 {
-    // Add file path to the recent activity list if its not already there
-    if (std::find(recentActivity.begin(), recentActivity.end(), filePath) == recentActivity.end()) {
+    // Add file path to the recent activity list if its not already there and if the file exists
+    if ((std::find(recentActivity.begin(), recentActivity.end(), filePath) == recentActivity.end()) && std::filesystem::exists(filePath)){
         recentActivity.push_back(filePath);
     }
 
@@ -87,7 +87,7 @@ const std::vector<std::string>& AppState::getRecentActivity()
 void AppState::loadRecentActivity()
 {
     // path to the file containing the recent activity list in MockUp folder
-    std::filesystem::path filePath = mockUpFolderPath / "recent_activity.txt";
+    std::filesystem::path filePath = "assets/recent_activity.txt";
 
     // if the file exists
     if (std::filesystem::exists(filePath)) 
@@ -98,12 +98,10 @@ void AppState::loadRecentActivity()
             while (std::getline(file, line)) {
                 // Skip empty lines
                 if (!line.empty()) {
-                    std::cout << "Loaded recent activity line: '" << line << "'\n";
                     addFileToRecentActivity(line);
                 }
             }
             file.close();
-            std::cout << "Total recent activity loaded: " << recentActivity.size() << std::endl;
         }
         else {
             std::cout << "Unable to open recent activity file" << std::endl;
@@ -121,7 +119,7 @@ void AppState::loadRecentActivity()
 void AppState::saveRecentActivity()
 {
     // path to the file containing the recent activity list in MockUp folder
-    std::filesystem::path filePath = mockUpFolderPath / "recent_activity.txt";
+    std::filesystem::path filePath = "assets/recent_activity.txt";
 
     // open the file and write the recent activity list to it
     std::ofstream file(filePath);

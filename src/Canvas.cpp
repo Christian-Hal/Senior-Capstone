@@ -2,17 +2,38 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <filesystem>
+
+#include <stb_image.h>
 
 #include "Canvas.h"
 
 // constructor
 Canvas::Canvas() : width(0), height(0), numLayers(0), curLayer(0), pixels(), layerData(), canvasName("") {}
-Canvas::Canvas(int w, int h, std::string name) : width(w), height(h), 
+Canvas::Canvas(int w, int h, std::string name, bool isAnimation) : width(w), height(h), 
                     numLayers(2), curLayer(1), pixels(w * h, backgroundColor), 
-                    canvasName(name), currentStrokeIndex(-1), seenPixels(w * h, -1)
+                    canvasName(name), currentStrokeIndex(-1), seenPixels(w * h, -1), animationTemplate(isAnimation)
 {
-    layerData.push_back(pixels);
+    // Initialize layerData before loading animation
+    layerData.push_back(std::vector<Color>(w * h, backgroundColor));
     layerData.push_back(std::vector<Color>(w * h, emptyColor));
+    
+    // if its an animation then load in the animation template image
+    if (animationTemplate) {
+        stbi_set_flip_vertically_on_load(true);
+        const std::string templatePath = "assets/Animation_Template_PNG.png";
+        
+        int imgWidth = 0, imgHeight = 0;
+        unsigned char* data = stbi_load(templatePath.c_str(), &imgWidth, &imgHeight, nullptr, 4);
+        if (data) {
+            loadImage(data, 0);
+            stbi_image_free(data);
+
+        } else {
+            std::cout << "ERROR: Failed to load animation template from: " << templatePath << std::endl;
+            std::cout << "stbi error: " << stbi_failure_reason() << std::endl;
+        }
+    }
 }
 
 // Undo and Redo stuff

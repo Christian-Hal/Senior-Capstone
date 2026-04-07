@@ -98,3 +98,6 @@ else()
         dl
     )
 endif()
+
+# Copy assets folder to build directory
+file(COPY assets DESTINATION ${CMAKE_BINARY_DIR})

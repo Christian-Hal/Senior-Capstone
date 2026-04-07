@@ -124,12 +124,13 @@ void FrameRenderer::createFrame(Canvas& canvas){
     int* meta = readMetaData(); // meta[0] is width, meta[1] is height
 
     // this ought to insert inbetween the oldCurrent frame
-    frames.insert(frames.begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], {255,255,255,255}));
+    vector<Color> backgroundLayer = canvas.getLayerData()[0];
+    frames.insert(frames.begin() + (curFrame - 1), backgroundLayer);
 
     canvas.setPixels(frames[curFrame - 1]);
     //band-aid solution. this does not fix removing layers fully
     vector<vector<Color>> layDat(meta[2], vector<Color>(meta[0] * meta[1], {0,0,0,0})); //meta[2] is the number of layers
-    layDat[0] = vector<Color>(meta[0] * meta[1], {255,255,255,255});
+    layDat[0] = backgroundLayer; // Use the same background layer
     canvas.setLayerData(layDat);
     // create function that renames any other frames that come after
     rename(true);

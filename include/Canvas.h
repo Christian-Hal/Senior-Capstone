@@ -26,7 +26,7 @@ class Canvas {
     public:
         // constructor
         Canvas();
-        Canvas(int w, int h, std::string name);
+        Canvas(int w, int h, std::string name, bool isAnimation);
 
         // getter methods
         int getWidth() const;
@@ -104,4 +104,6 @@ class Canvas {
         std::vector<int> seenPixels;
         int currentStrokeIndex;
 
+        // variable to state if the canvas should be using the animation template or not
+        bool animationTemplate = false;
 };

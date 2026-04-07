@@ -173,7 +173,6 @@ void AppController::addFileToRecentActivity(const std::string& filePath)
 
 const std::vector<std::string>& AppController::getRecentActivity()
 {
-	std::cout << "AppController::getRecentActivity() - returning vector with size: " << appState.getRecentActivity().size() << std::endl;
 	return appState.getRecentActivity();
 }
 
