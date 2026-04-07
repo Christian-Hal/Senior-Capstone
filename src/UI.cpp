@@ -97,6 +97,11 @@ void UI::bindRecentActivityCallbacks(saveToRecentActivityCallback saveCb, getRec
 	getRecentActivityCb = std::move(getCb);
 }
 
+void UI::bindDefaultFolderPathCallback(getDefaultFolderPathCallback getPathCb)
+{
+	getDefaultFolderPathCb = std::move(getPathCb);
+}
+
 
 // ----- ImGui code to load and access images in directory -----
 
@@ -353,10 +358,18 @@ void UI::drawStartScreen(CanvasManager& canvasManager)
 
 	if (ImGui::Button("Open File", buttonSize))
 	{
+		IGFD::FileDialogConfig config;
+		config.path = ".";
+
+		if (getDefaultFolderPathCb) {
+			config.path = getDefaultFolderPathCb();
+		}
+
 		ImGuiFileDialog::Instance()->OpenDialog(
 			"LoadFileDlg",
 			"Choose File",
-			".png,.jpg,.ora"
+			".png,.jpg,.ora",
+			config
 		);
 	}
 
@@ -645,9 +658,11 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 		if (canvasManager.hasActive())
 		{	
 			IGFD::FileDialogConfig config;
-
-			// the  path the file explorer starts in. "." is the current active directory
 			config.path = ".";
+
+			if (getDefaultFolderPathCb) {
+				config.path = getDefaultFolderPathCb();
+			}
 
 			config.fileName = canvasManager.getActive().getName();
 
@@ -692,6 +707,13 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 	ImGui::SameLine();
 	if (ImGui::Button("Load File"))
 	{
+		IGFD::FileDialogConfig config;
+		config.path = ".";
+
+		if (getDefaultFolderPathCb) {
+			config.path = getDefaultFolderPathCb();
+		}
+
 		ImGuiFileDialog::Instance()->OpenDialog(
 			"LoadFileDlg",
 			"Choose File",

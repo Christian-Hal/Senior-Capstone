@@ -77,6 +77,10 @@ bool AppController::init()
 		[this]() -> const std::vector<std::string>& { return getRecentActivity(); }
 	);
 
+	ui.bindDefaultFolderPathCallback(
+		[this]() { return appState.getMockUpFolderPath().string(); }
+	);
+
 	// Bind raw mouse input streams from InputManager into controller handlers.
 	// From here on, controller chooses behavior based on AppState cursor mode.
     inputManager.bindMouseCallbacks(
