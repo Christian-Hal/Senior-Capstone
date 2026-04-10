@@ -304,7 +304,7 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 
 	// compute the panel sizes
 	if (TopSize == 0) { TopSize = static_cast<int>(0.05 * h); }
-	if (BotSize == 0) { BotSize = static_cast<int>(0.05 * h); }
+	if (BotSize == 0) { BotSize = static_cast<int>(0.12 * h); }
 	if (LeftSize == 0) { LeftSize = static_cast<int>(0.1 * w); }
 	if (RightSize == 0) { RightSize = static_cast<int>(0.1 * w); }
 
@@ -877,21 +877,25 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 		ImVec4 old_bg = style.Colors[ImGuiCol_FrameBg];
 		ImVec4 old_bg_hovered = style.Colors[ImGuiCol_FrameBgHovered];
 		ImVec4 old_bg_active = style.Colors[ImGuiCol_FrameBgActive];
-
+		float old_border = style.FrameBorderSize;
+		ImVec4 old_border_color = style.Colors[ImGuiCol_Border];
 
 		style.Colors[ImGuiCol_FrameBg]        = ImVec4(0, 0, 0, 0);
 		style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0, 0, 0, 0);
 		style.Colors[ImGuiCol_FrameBgActive]  = ImVec4(0, 0, 0, 0);
+		style.FrameBorderSize = 0.0f;
+		style.Colors[ImGuiCol_Border] = ImVec4(0,0,0,0);
+
 		style.FramePadding = ImVec2(6, 12);     // taller
 		style.FrameRounding = 2.0f;
-		ImGui::SetNextItemWidth(400.0f);        // wider
+		ImGui::SetNextItemWidth(w - (LeftSize + RightSize * 1.1));        // wider
 		// Save old color
 		ImVec4 old_color = style.Colors[ImGuiCol_SliderGrab];
 
 		// Set grab to red
 		style.Colors[ImGuiCol_SliderGrab]      = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 		style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-
+		style.GrabMinSize = 4.0f;
 		// Draw the slider
 		ImGui::SliderInt("##wide_slider", &currentFrame, 1, FrameRenderer::getNumFrames(), "");
 		if(currentFrame != FrameRenderer::getCurFrame()){
@@ -904,6 +908,8 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 		style.Colors[ImGuiCol_FrameBg]        = old_bg;
 		style.Colors[ImGuiCol_FrameBgHovered] = old_bg_hovered;
 		style.Colors[ImGuiCol_FrameBgActive]  = old_bg_active;
+		style.FrameBorderSize = old_border;
+		style.Colors[ImGuiCol_Border] = old_border_color;
 
 		// Restore frame settings
 		style.FramePadding = old_padding;
