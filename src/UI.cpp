@@ -43,7 +43,7 @@ static int canvasWidth = 1920;
 static int canvasHeight = 1080;
 
 // the default starting frame
-static int currentFrame = 1;
+static float curFrame = 1.0f;
 // RBGA values for the color wheel 
 static float color[4] = { .0f, .0f, .0f, 1.0f };
 
@@ -897,11 +897,40 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 		style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 		style.GrabMinSize = 4.0f;
 		// Draw the slider
-		ImGui::SliderInt("##wide_slider", &currentFrame, 1, FrameRenderer::getNumFrames(), "");
-		if(currentFrame != FrameRenderer::getCurFrame()){
-			FrameRenderer::selectFrame(canvasManager.getActive(), currentFrame - FrameRenderer::getCurFrame());
+		ImGui::SliderFloat("##wide_slider", &curFrame, 1.0f, static_cast<float>(FrameRenderer::getNumFrames()), "");
+		curFrame = (int)roundf(curFrame);
+		if(curFrame != FrameRenderer::getCurFrame()){
+			FrameRenderer::selectFrame(canvasManager.getActive(), curFrame - FrameRenderer::getCurFrame());
 		}
 
+		ImDrawList* draw = ImGui::GetWindowDrawList();
+
+		// Get slider bounds
+		ImVec2 min = ImGui::GetItemRectMin();
+		ImVec2 max = ImGui::GetItemRectMax();
+
+		float width = max.x - min.x;
+
+		draw->AddLine(
+			ImVec2(min.x, (min.y + max.y) / 2), 
+			ImVec2(max.x ,(min.y + max.y) / 2),
+			IM_COL32(255, 255, 255, 100),
+			1.0f   
+		);
+		// number of segments = steps - 1
+		for (int i = 0; i < FrameRenderer::getNumFrames(); i++)
+		{
+			float t = (float)i / (float)(FrameRenderer::getNumFrames() - 1);
+			float x = min.x + t * width;
+
+			// draw a vertical line (divider)
+			draw->AddLine(
+				ImVec2(x, min.y),
+				ImVec2(x, max.y),
+				IM_COL32(255, 255, 255, 100),
+				1.0f                          
+			);
+		}
 		// Restore style
 		style.Colors[ImGuiCol_SliderGrab] = old_color;
 		style.Colors[ImGuiCol_SliderGrabActive] = old_color;
