@@ -4,7 +4,6 @@
 #include "imgui.h"
 
 #include <iostream>
-#include <fstream>
 #include <filesystem>
 #include <vector>
 #include <string>
@@ -12,15 +11,6 @@
 #include <thread>
 #include <chrono>
 
-
-// NOTES - there are 3 types of files in a canvas folder: the metaData file containing the width, hieght, number of layers and number of frames this is stored in meta.dat
-//          each value is on a new line and stored in the order previously given
-//          The second type of file is the frames[num][data] data, this contains the pixels[] information for each frame in a canvas tihs is stored in framedata.dat
-//          The thrid is layerDatas.dat and contains the layerdata for each frame in a canvas. this is stored in layerDatas[i].dat
-
-
-// use fs for filesystem and auto-add std
-namespace fs = std::filesystem;
 using namespace std;
 
 // initalize the FrameRenderer variables
@@ -33,9 +23,17 @@ int FrameRenderer::numBefore = 1;
 int FrameRenderer::numAfter = 1;
 bool FrameRenderer::onionSkinEnabled = false;
 bool FrameRenderer::inputBlocked = false;
+
 // this will be stored in memory so we can access it quickly everything else gets written to a file
 // we need the frame data so we can play high fps animations
 vector<vector<Color>> FrameRenderer::frames;
+
+// this is the Layer data for each frame the first vector is the canvas, the second is the frame and the 3rd is the layer 4th is pixel location/color
+vector<vector<vector<vector<Color>>>> FrameRenderer::frLayerData;
+// this is the frames data first vector is canvas, second is the frame, third is the pixel location/color
+vector<vector<vector<Color>>> FrameRenderer::frameData;
+//this is how we store metadata each vector is a new canvas
+vector<array<int, 4>> FrameRenderer::metaData;
 
 // ONLY CALL THIS FUNCTION ONCE!!!
 // THIS IS MEANT TO BE MOSTLY STATIC SO YOU CAN REFERENCE THE CLASS ANYWHERE
@@ -43,7 +41,6 @@ vector<vector<Color>> FrameRenderer::frames;
 // if this is "bad practice" fuck you i dont care
 FrameRenderer::FrameRenderer()
 {
-    fs::create_directories("./frameDatas");
     numCanvas = 0;
     numFrames = 0;
     curCanvas = -1;
@@ -53,10 +50,6 @@ FrameRenderer::FrameRenderer()
 // called whenever a new canvas is made
 // this saves whatever was on the current canvas (if there was a current canvas)
 // this changes the "frames" variable to the proper [empty] pixels values since we changed canvases 
-// this also creates a new folder that holds all of the information that is being stored in the new canvas
-// creates meta.dat
-// creates frameData.dat
-// creates the layerData[1].dat and for every frame that is added the number goes up by 1
 void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
     // Save the data if there already was a canvas
     if(numCanvas != 0){
@@ -69,11 +62,31 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
     numFrames = 1;
     curFrame = 1;
 
-    fs::create_directories("./frameDatas/canvas" + to_string(curCanvas));
     // save the first "frame" to frames
     // if its a new canvas we only have 1 frame, the starting frame
     frames.clear();
     frames.push_back(vector<Color>(newCanvas->getData(), newCanvas->getData() + (newCanvas->getWidth() * newCanvas->getHeight())));
+    
+    // save a blank "new canvas" in frLayerData
+    frLayerData.push_back(
+        vector<vector<vector<Color>>>(
+            numFrames,
+            vector<vector<Color>>(
+                1,
+                vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), newCanvas->getBackgroundColor())
+            )
+        )
+    );
+    // save a blank "new canvas" in frameData
+    frameData.push_back(
+        vector<vector<Color>>(
+            numFrames,
+            vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), newCanvas->getBackgroundColor())
+        )
+    );
+    // save a blank "new canvas" in metaData
+    metaData.push_back({0,0,0,0});
+
     writeAllData(newCanvas);
     updateOnionSkin(*newCanvas);
 }
@@ -127,15 +140,21 @@ void FrameRenderer::createFrame(Canvas& canvas){
     int* meta = readMetaData(); // meta[0] is width, meta[1] is height
 
     // this ought to insert inbetween the oldCurrent frame
-    frames.insert(frames.begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], {255,255,255,255}));
+    frames.insert(frames.begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], canvas.getBackgroundColor()));
+    
+    frLayerData[curCanvas-1].insert(frLayerData[curCanvas-1].begin() + (curFrame-1), vector<vector<Color>>(
+            canvas.getNumLayers(), vector<Color>(
+                meta[0] * meta[1], canvas.getBackgroundColor()
+            )
+        )
+    );
+    frameData[curCanvas-1].insert(frameData[curCanvas-1].begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], canvas.getBackgroundColor()));
 
     canvas.setPixels(frames[curFrame - 1]);
     //band-aid solution. this does not fix removing layers fully
     vector<vector<Color>> layDat(meta[2], vector<Color>(meta[0] * meta[1], {0,0,0,0})); //meta[2] is the number of layers
     layDat[0] = vector<Color>(meta[0] * meta[1], {255,255,255,255});
     canvas.setLayerData(layDat);
-    // create function that renames any other frames that come after
-    rename(true);
     writeAllData(&canvas);
     updateOnionSkin(canvas);
 }
@@ -146,11 +165,11 @@ void FrameRenderer::removeFrame(Canvas& canvas){
         // erases the frameData
         frames.erase(frames.begin() + curFrame - 1);
         // erases the layerData
-        if(!fs::remove("./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) + ".dat")){
-            cerr << "File was not removed" << endl;
-        }
-        rename(false);
-
+        //[][][][]
+        
+        frLayerData[curCanvas - 1].erase(frLayerData[curCanvas-1].begin() + curFrame - 1);
+        frameData[curCanvas - 1].erase(frameData[curCanvas-1].begin() + curFrame - 1);
+        
         // fixes the names of layerdata
         if(curFrame == numFrames){
             curFrame--;
@@ -267,7 +286,7 @@ void FrameRenderer::toggleOnionSkin(){
 
 // removes all of the files after shutdown so you dont eat up storage.
 void FrameRenderer::shutdown(){
-    fs::remove_all("./frameDatas");
+
 }
 
 // gets the current frame (which is a number from 1-NumFrames)
@@ -308,110 +327,37 @@ void FrameRenderer::writeAllData(Canvas* canvas){
 //saves the width, hight, number of layers, and number of frames
 // one file for each canvas
 void FrameRenderer::writeMetaData(Canvas* canvas){
-    ofstream File("./frameDatas/canvas" + to_string(curCanvas) + "/meta.dat");
-    int width = canvas->getWidth();
-    int height = canvas->getHeight();
+    // 0 is width 1 is height 2 is numLayers 3 is numFrames
+    int canvasWidth = canvas->getWidth();
+    int canvasHeight = canvas->getHeight();
     int numLayers = canvas->getNumLayers();
-
-    File.write(reinterpret_cast<const char*>(&width), sizeof(int));
-    File.write(reinterpret_cast<const char*>(&height), sizeof(int));
-    File.write(reinterpret_cast<const char*>(&numLayers), sizeof(int));  
-    File.write(reinterpret_cast<char*>(&numFrames), sizeof(numFrames));
-    File.close();
+    metaData[curCanvas-1] = {canvasWidth, canvasHeight, numLayers, numFrames};
 }
 
 // saves the vector frames so we can access it later in the event we use a different canvas.
 // one file for each canvas.
 void FrameRenderer::writePixelData(Canvas* canvas){
-    ofstream File("./frameDatas/canvas" + to_string(curCanvas) + "/frameData.dat");
-    for (auto& frame : frames) {
-        size_t frameSize = frame.size();
-        File.write(reinterpret_cast<const char*>(frame.data()), frameSize * 4);
-    }
-    File.close();
+    const Color* pixelData = canvas->getData();
+    vector<Color> curPixels(pixelData, pixelData + (canvas->getWidth() * canvas->getHeight()));
+    frameData[curCanvas-1][curFrame-1] = curPixels;
 }
 
 // saves the layerData for each frame in a canvas. will be written to layerData in canvas every time the frame is updated.
 // one file for each frame in a canvas
 void FrameRenderer::writeLayerData(Canvas* canvas){
-    if(curFrame <= numFrames){
-        vector<vector<Color>> frLayerData = canvas->getLayerData();
-        ofstream File("./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) + ".dat");
-        for (int i = 0; i < frLayerData.size(); i++){
-            File.write(reinterpret_cast<const char*>(frLayerData[i].data()), frLayerData[i].size() * sizeof(Color));
-        }
-        File.close();
-    }
+    vector<vector<Color>> curLayerDat = canvas->getLayerData();
+    frLayerData[curCanvas-1][curFrame - 1] = curLayerDat;
 }
 
 // returns a pointer where you can access [width, height, NumLayers, NumFrames]
 int* FrameRenderer::readMetaData() {
-    static int meta[4];
-    // init all values
-    for(int i = 0; i < 4; i++){
-        meta[i] = 0;
-    }
-
-    ifstream File("./frameDatas/canvas" + to_string(curCanvas) + "/meta.dat", ios::binary);
-    if (!File) {
-        return meta;   // return default {0,0,0,0} if file missing
-    }
-
-    File.read(reinterpret_cast<char*>(meta), 4 * sizeof(int));
-    return meta;
+    return metaData[numCanvas-1].data();
 }
 
 vector<vector<Color>> FrameRenderer::readPixelData(int* arr) {
-    int width = arr[0];
-    int height = arr[1];
-    int numFra = arr[3];
-
-    vector<vector<Color>> readFrames(numFra, vector<Color>(width * height));
-
-    ifstream File("./frameDatas/canvas" + to_string(curCanvas) + "/frameData.dat", ios::binary);
-    if (!File){
-        return readFrames;
-    }
-
-    for (int i = 0; i < numFra; i++) {
-        File.read(reinterpret_cast<char*>(readFrames[i].data()), width * height * sizeof(Color));
-    }
-    return readFrames;
+    return frameData[curCanvas - 1];
 }
     
 vector<vector<Color>> FrameRenderer::readLayerData(int* arr){
-    int width = arr[0];
-    int height = arr[1];
-    int numLay = arr[2];
-
-    vector<vector<Color>> returnData(numLay, vector<Color>(width*height));
-
-    string path = "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) +  ".dat";
-    ifstream File(path, ios::binary);
-    if (!File){
-        return returnData;
-    }
-    bool firstCalled = false;
-    for(int i = 0; i < numLay; i++){
-        File.read(reinterpret_cast<char*>(returnData[i].data()), width * height * sizeof(Color));
-    }
-    return returnData;
-}
-
-void FrameRenderer::rename(bool isAdding){
-    if(isAdding){
-        for(int i = numFrames - 1; i >= curFrame; i--){
-            fs::rename(
-                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
-                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i+1) + ".dat");
-        }
-    }
-    else{
-        for(int i = curFrame + 1; i <= numFrames; i++){
-            fs::rename(
-                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
-                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i-1) + ".dat");
-            }
-        
-    }
+    return frLayerData[curCanvas-1][curFrame-1];
 }

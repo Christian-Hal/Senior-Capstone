@@ -880,15 +880,15 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 		float old_border = style.FrameBorderSize;
 		ImVec4 old_border_color = style.Colors[ImGuiCol_Border];
 
-		style.Colors[ImGuiCol_FrameBg]        = ImVec4(0, 0, 0, 0);
+		style.Colors[ImGuiCol_FrameBg] = ImVec4(0, 0, 0, 0);
 		style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0, 0, 0, 0);
-		style.Colors[ImGuiCol_FrameBgActive]  = ImVec4(0, 0, 0, 0);
+		style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0, 0, 0, 0);
 		style.FrameBorderSize = 0.0f;
 		style.Colors[ImGuiCol_Border] = ImVec4(0,0,0,0);
 
-		style.FramePadding = ImVec2(6, 12);     // taller
+		style.FramePadding = ImVec2(6, 12); 
 		style.FrameRounding = 2.0f;
-		ImGui::SetNextItemWidth(w - (LeftSize + RightSize * 1.1));        // wider
+		ImGui::SetNextItemWidth(w - (LeftSize + RightSize * 1.1));
 		// Save old color
 		ImVec4 old_color = style.Colors[ImGuiCol_SliderGrab];
 
@@ -897,9 +897,9 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 		style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 		style.GrabMinSize = 4.0f;
 		// Draw the slider
-		ImGui::SliderFloat("##wide_slider", &curFrame, 1.0f, static_cast<float>(FrameRenderer::getNumFrames()), "");
+		bool isPressed = ImGui::SliderFloat("##wide_slider", &curFrame, 1.0f, static_cast<float>(FrameRenderer::getNumFrames()), "");
 		curFrame = (int)roundf(curFrame);
-		if(curFrame != FrameRenderer::getCurFrame()){
+		if(curFrame != FrameRenderer::getCurFrame() && isPressed){
 			FrameRenderer::selectFrame(canvasManager.getActive(), curFrame - FrameRenderer::getCurFrame());
 		}
 
