@@ -936,7 +936,9 @@ void UI::drawPopup(CanvasManager& canvasManager)
 				// setting up combo box for illustration presets 
 				// presets as str and tuple of two ints 
 				const std::map<std::string, std::tuple<int, int>> canvasSizes = {
-				{"A4", {2894, 4093}}
+				{"A4", {2894, 4093}}, {"A5", {2039, 2894}}, {"A6", {1447, 2039}},
+					{"B4", {3541, 5016}}, {"B5", {3541, 5016}}, {"B6", {1764, 2508}},
+					{"Postcard", {1378, 2039}}
 				};
 				// initally selected combo box value
 				static std::string selectedPreset = canvasSizes.begin()->first; 
@@ -944,13 +946,24 @@ void UI::drawPopup(CanvasManager& canvasManager)
 				if (ImGui::BeginCombo("Presets", selectedPreset.c_str())) {
 					for (auto const& [preset, sizes] : canvasSizes) {
 						bool isSelected = (selectedPreset == preset);
-						if (ImGui::Selectable(preset.c_str(), isSelected)){
+						if (ImGui::Selectable(preset.c_str(), isSelected)) {
 							// updating combo box selection 
-							selectedPreset = preset; 
+							selectedPreset = preset;
+							auto& myTuple = canvasSizes.at(preset.c_str());
+							temp_w = std::get<0>(myTuple);
+							temp_h = std::get<1>(myTuple);
 						}
 						if (isSelected) ImGui::SetItemDefaultFocus();
 					}
 					ImGui::EndCombo();
+				}
+
+				// button to swap dimensions 
+				if (ImGui::Button("Swap")) {
+					static int swapTemp; 
+					swapTemp = temp_w; 
+					temp_w = temp_h; 
+					temp_h = swapTemp;
 				}
 
 				// if user creates a canvas, remove the popup 
