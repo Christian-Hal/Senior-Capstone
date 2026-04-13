@@ -44,12 +44,15 @@ class CanvasManager {
         void saveORA(const std::string& path);
         void loadORA(const std::string& filepath);
 
+        void CanvasManager::reindexFrameFolders(int deletedIndex);
+
+        // index of the active canvas
+        int activeCanvasIndex = -1;
     private:
         // list of active canvases for when we implement the tab system
         std::vector<Canvas> canvases;
 
-        // index of the active canvas
-        int activeCanvasIndex = -1;
+        
 
         // just a helper function to avoid having the same name in multiple files
         std::string checkName(std::string name);

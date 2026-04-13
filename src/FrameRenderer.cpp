@@ -83,7 +83,7 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
 void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCanvasIndex){
     
     // Save data
-    if(numCanvas != 0){
+    if(numCanvas != 0) {
         removeOnionSkin(*oldCanvas);
         frames[curFrame - 1] =  vector<Color>(oldCanvas->getData(), oldCanvas->getData() + (oldCanvas->getWidth() * oldCanvas->getHeight()));
         writeAllData(oldCanvas);
@@ -383,4 +383,13 @@ void FrameRenderer::rename(bool isAdding){
             }
         
     }
+}
+
+void FrameRenderer::reset()
+{
+    frames.clear();
+    curFrame = 1;
+    numFrames = 0;
+    curCanvas = -1;
+    numCanvas = 0;
 }

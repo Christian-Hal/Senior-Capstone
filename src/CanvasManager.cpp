@@ -33,38 +33,103 @@ Canvas& CanvasManager::createCanvas(int width, int height, std::string name)
     return canvases[activeCanvasIndex];
 }
 
+
 void CanvasManager::closeCanvas(int index)
 {
-    if (index < 0 || index >= canvases.size())
+    if (index < 0 || index >= (int)canvases.size())
         return;
 
-    // erasing the selected canvas from canvases
+    // some of the broken parts of update canvas, explaination further down
+    if (index == activeCanvasIndex && hasActive())
+    {
+        Canvas& active = getActive();
+        FrameRenderer::removeOnionSkin(active);
+        FrameRenderer::frames[FrameRenderer::curFrame - 1] =
+            std::vector<Color>(active.getData(), active.getData() + active.getWidth() * active.getHeight());
+    }
+
     canvases.erase(canvases.begin() + index);
 
-    // if the canvas erased is the only one open
+    // Reindex folders   
+    reindexFrameFolders(index);
+
     if (canvases.empty())
     {
         activeCanvasIndex = -1;
+        FrameRenderer::reset(); // nuke it bc no active canvas
         canvasChange = true;
         return;
     }
 
-    // if there are multiple canvases open
+    // fix activeCanvasIndex becuase there are still canvases left
+    // if the canvas being closed is the active one chose the next one available
     if (activeCanvasIndex == index)
-    {
-        // closed active → pick neighbor
         activeCanvasIndex = std::min(index, (int)canvases.size() - 1);
-    }
 
-    // if canvas being deleted is not currently active
+    // 
     else if (index < activeCanvasIndex)
-    {
-        // shift left
         activeCanvasIndex--;
-    }
+
+    // 5. Sync FrameRenderer to the new active canvas
+    //    Manually set curCanvas to match the (now reindexed) folder
+    FrameRenderer::curCanvas = activeCanvasIndex + 1;
+    FrameRenderer::curFrame = 1;
+
+    // clear any frames from the previous canvas
+    FrameRenderer::frames.clear();
+
+    // populate the now active canvas with any frames it might have had
+    // don't full understand everything going on here from frameRenderer but the canvas needed to update but
+    // would crash if the update function was used, so i broke it apart until it worked
+    Canvas& newActive = getActive();
+    int* meta = FrameRenderer::readMetaData(); 
+    FrameRenderer::numFrames = meta[3];
+    FrameRenderer::frames = FrameRenderer::readPixelData(meta);
+    newActive.setPixels(FrameRenderer::frames[0]);
+    newActive.setLayerData(FrameRenderer::readLayerData(meta));
+    FrameRenderer::updateOnionSkin(newActive);
+
+    // -1 of numCanvas because there is one less now
+    FrameRenderer::numCanvas--;
 
     canvasChange = true;
 }
+
+
+
+void CanvasManager::reindexFrameFolders(int deletedIndex)
+{
+    namespace fs = std::filesystem;
+
+    int oldSize = (int)canvases.size() + 1; // erase already happened, so +1
+    int folderIndex = 0;
+
+    for (int i = 1; i <= oldSize; i++) // folders are labeled 1 for canvas 1, canvas 2...
+    {
+        std::string path = "./frameDatas/canvas" + std::to_string(i);
+
+        if (!fs::exists(path))
+            continue;
+
+        if (i == deletedIndex + 1) // +1 because folders are 1-indexed
+        {
+            fs::remove_all(path);
+            continue;
+        }
+
+        std::string tempPath = "./frameDatas/temp" + std::to_string(folderIndex++);
+        fs::rename(path, tempPath);
+    }
+
+    for (int i = 0; i < folderIndex; i++)
+    {
+        fs::rename(
+            "./frameDatas/temp" + std::to_string(i),
+            "./frameDatas/canvas" + std::to_string(i + 1) // back to 1-indexed
+        );
+    }
+}
+
 
 
 
@@ -72,8 +137,6 @@ int CanvasManager::getActiveCanvasIndex() const
 {
     return activeCanvasIndex;
 }
-
-
 
 void CanvasManager::undo()
 {
@@ -91,21 +154,15 @@ void CanvasManager::redo()
     getActive().redo();
 }
 
-
-
 Canvas& CanvasManager::getActive()
 {
     return canvases[activeCanvasIndex];
 }
 
-
-
 bool CanvasManager::hasActive()
 {
     return activeCanvasIndex >= 0 && activeCanvasIndex < canvases.size();
 }
-
-
 
 int CanvasManager::getNumCanvases()
 {
@@ -152,6 +209,7 @@ void CanvasManager::setActiveCanvas(int index)
 
     FrameRenderer::updateCanvas(&oldCanvasCopy, &getActive(), index);
 }
+
 
 
 
@@ -288,7 +346,6 @@ void CanvasManager::saveORA(const std::string& path)
 
     std::filesystem::remove_all("ora_temp");
 }
-
 
 void CanvasManager::loadORA(const std::string& path)
 {
