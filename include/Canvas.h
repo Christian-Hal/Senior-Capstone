@@ -93,6 +93,8 @@ public:
     bool isAnimation() const { return animationTemplate; }
     void loadAnimTemplate();
 
+    bool isDirty = false; // bool to determine if the canvas has been modifiyed without saving
+
 private:
     // canvas settings
     std::string canvasName;
@@ -101,7 +103,7 @@ private:
     int curLayer;
     Color backgroundColor = {255, 255, 255, 255};
     Color emptyColor = {0, 0, 0, 0};
-    bool isDirty = false; // bool to determine if the canvas has been modifiyed without saving
+    
 
 
     std::vector<bool> editedPixels;

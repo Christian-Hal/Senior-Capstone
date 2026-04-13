@@ -643,108 +643,6 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 	// menu to rebind the various actions that can be done with hotkeys
 	// the getHotkeyString(InputAction::setRotate).c_str() is the funciton 
 	// call to get the string version of the key combos
-	ImGui::SameLine();
-	if (ImGui::Button("Shortcuts")) {
-		ImGui::OpenPopup("Shortcuts Popup");
-	}
-
-	if (ImGui::BeginPopup("Shortcuts Popup"))
-	{
-		// create a lamda to grab the hotkey label for each action
-		auto hotkeyLabel = [this](InputAction action) {
-			if (getHotkeyLabelCb) {
-				return getHotkeyLabelCb(action);
-			}
-			return std::string{};
-			};
-
-		// create a lamda to trigger the rebind callback function for each action
-		auto triggerRebind = [this](InputAction action) {
-			if (startRebindCb) {
-				startRebindCb(action);
-			}
-			// Close to avoid consuming the next key press while rebinding.
-			ImGui::CloseCurrentPopup();
-			};
-
-		if (ImGui::MenuItem("Rotate", hotkeyLabel(InputAction::setRotate).c_str()))
-		{
-			triggerRebind(InputAction::setRotate);
-		}
-		if (ImGui::MenuItem("Pan", hotkeyLabel(InputAction::setPan).c_str()))
-		{
-			triggerRebind(InputAction::setPan);
-		}
-		if (ImGui::MenuItem("Draw", hotkeyLabel(InputAction::setDraw).c_str()))
-		{
-			triggerRebind(InputAction::setDraw);
-		}
-		if (ImGui::MenuItem("Fill", hotkeyLabel(InputAction::setFill).c_str())){
-			triggerRebind(InputAction::setFill);
-		}
-		if (ImGui::MenuItem("Erase", hotkeyLabel(InputAction::setErase).c_str()))
-		{
-			triggerRebind(InputAction::setErase);
-		}
-		if (ImGui::MenuItem("Undo", hotkeyLabel(InputAction::undo).c_str()))
-		{
-			triggerRebind(InputAction::undo);
-		}
-		if (ImGui::MenuItem("Redo", hotkeyLabel(InputAction::redo).c_str()))
-		{
-			triggerRebind(InputAction::redo);
-		}
-		if (ImGui::MenuItem("Zoom In", hotkeyLabel(InputAction::setClickZoomIn).c_str()))
-		{
-			triggerRebind(InputAction::setClickZoomIn);
-		}
-		if (ImGui::MenuItem("Zoom Out", hotkeyLabel(InputAction::setClickZoomOut).c_str()))
-		{
-			triggerRebind(InputAction::setClickZoomOut);
-		}
-		if (ImGui::MenuItem("Center Canvas", hotkeyLabel(InputAction::resetView).c_str()))
-		{
-			triggerRebind(InputAction::resetView);
-		}
-		if (ImGui::MenuItem("Color Picker", hotkeyLabel(InputAction::setColor).c_str()))
-		{
-			triggerRebind(InputAction::setColor);
-		}
-		if (ImGui::MenuItem("Onion Skin Toggle", hotkeyLabel(InputAction::onionSkinToggle).c_str()))
-		{
-			triggerRebind(InputAction::onionSkinToggle);
-		}
-		if (ImGui::MenuItem("Next Frame", hotkeyLabel(InputAction::nextFrame).c_str()))
-		{
-			triggerRebind(InputAction::nextFrame);
-		}
-		if (ImGui::MenuItem("Previous Frame", hotkeyLabel(InputAction::prevFrame).c_str()))
-		{
-			triggerRebind(InputAction::prevFrame);
-		}
-		if (ImGui::MenuItem("New File", hotkeyLabel(InputAction::newFile).c_str()))
-		{
-			triggerRebind(InputAction::newFile);
-		}
-		if (ImGui::MenuItem("New Frame", hotkeyLabel(InputAction::newFrame).c_str()))
-		{
-			triggerRebind(InputAction::newFrame);
-		}
-		if (ImGui::MenuItem("Remove Frame", hotkeyLabel(InputAction::removeFrame).c_str()))
-		{
-			triggerRebind(InputAction::removeFrame);
-		}
-		if (ImGui::MenuItem("Quick Play", hotkeyLabel(InputAction::quickPlay).c_str()))
-		{
-			triggerRebind(InputAction::quickPlay);
-		}
-		if (ImGui::MenuItem("Close Canvas", hotkeyLabel(InputAction::closeCanvas).c_str()))
-		{
-			triggerRebind(InputAction::closeCanvas);
-		}
-
-		ImGui::EndPopup();
-	}
 
 	ImGui::SameLine();
 	// Save button
@@ -774,6 +672,7 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 			);
 		}
 	}
+
 	if (ImGuiFileDialog::Instance()->Display("SaveImageDlg"))
 	{
 		if (ImGuiFileDialog::Instance()->IsOk())
@@ -788,7 +687,6 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 				canvasManager.saveORA(filePath);
 			else
 				canvasManager.saveToFile(filePath);
-			}
 
 			saveToRecentActivityCb(filePath);
 		}
