@@ -75,7 +75,6 @@ private:
 	void drawCustomCursor(CanvasManager& canvasManager);
 	void drawLeftPanel(CanvasManager& canvasManager);
 	void drawRightPanel(CanvasManager& canvasManager);
-	void drawTopPanel(CanvasManager& canvasManager);
 	void drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer);
 	void drawCanvasTabs(CanvasManager& canvasManager);
 	void drawMainMenu();
