@@ -527,5 +527,6 @@ void Canvas::loadImage(unsigned char* data, int layerIndex)
 		}
 
 		pixels[i] = col;
+        editedPixels[i] = true;
 	}
 }

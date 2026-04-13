@@ -366,7 +366,7 @@ void UI::drawUI(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 	else if (curState == UIState::main_screen) 	{drawMainScreen(canvasManager, frameRenderer);}
 
 	// top panel is drawn regardless of the state 
-	drawTopPanel(canvasManager);
+	//drawTopPanel(canvasManager);
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -693,7 +693,7 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 	ImGui::SameLine();
 
 	//saving animation
-	if (canvasManager.hasActive() && ImGui::Button("Save Animation"))
+	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation() && ImGui::Button("Save Animation"))
 	{
 		IGFD::FileDialogConfig config;
 
@@ -1300,6 +1300,9 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 					showNewCanvasPopup = false;
 					temp_n = "Illustration";
 
+					// if the current UI state is the start menu then change it to the main screen
+					if (curState == UIState::start_menu) {curState = UIState::main_screen;}
+
 					ImGui::CloseCurrentPopup();
 				}
 
@@ -1313,6 +1316,9 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 			}
 
 			if (ImGui::BeginTabItem("New Animation")) {
+				ImGui::TextWrapped("The animation template currently uses a set size of 2338 x 1653.");
+				temp_w = 2338;
+				temp_h = 1653;
 
 				// input params animation creation
 				ImGui::InputInt("Width:", &temp_w);
@@ -1331,6 +1337,9 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 
 					showNewCanvasPopup = false;
 					temp_n = "Animation";
+
+					// if the current UI state is the start menu then change it to the main screen
+					if (curState == UIState::start_menu) {curState = UIState::main_screen;}
 
 					ImGui::CloseCurrentPopup();
 				}
@@ -1515,6 +1524,26 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 					config
 				);
 			}
+			//saving animation
+			if (ImGui::MenuItem("Save Animation", "", false, canvasManager.hasActive() && canvasManager.getActive().isAnimation()))
+			{
+				IGFD::FileDialogConfig config;
+
+				// the  path the file explorer starts in. "." is the current active directory
+				config.path = ".";
+
+				config.fileName = canvasManager.getActive().getName();
+
+				// ImGuiFileDialog has a built in detection for overwriting a file and makes a popup as well.
+				config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+
+				ImGuiFileDialog::Instance()->OpenDialog(
+					"SaveImageAnm",
+					"Save Animation",
+					".png,.jpg",
+					config
+				);
+			}
 			if (ImGui::MenuItem("Open...", "Ctrl+O")) {
 				ImGuiFileDialog::Instance()->OpenDialog(
 					"LoadFileDlg",
@@ -1558,70 +1587,14 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 			ImGui::PopItemFlag();
 			ImGui::EndMenu();
 		}
-		if (ImGui::BeginMenu("Shortcuts")) {
-			// create a lamda to grab the hotkey label for each action
-			auto hotkeyLabel = [this](InputAction action) {
-				if (getHotkeyLabelCb) {
-					return getHotkeyLabelCb(action);
-				}
-				return std::string{};
-				};
+		float width = ImGui::CalcTextSize("Settings").x;
+		float avail = ImGui::GetContentRegionAvail().x;
 
-			// create a lamda to trigger the rebind callback function for each action
-			auto triggerRebind = [this](InputAction action) {
-				if (startRebindCb) {
-					startRebindCb(action);
-				}
-				// Close to avoid consuming the next key press while rebinding.
-				ImGui::CloseCurrentPopup();
-				};
-
-			if (ImGui::MenuItem("Rotate", hotkeyLabel(InputAction::setRotate).c_str()))
-			{
-				triggerRebind(InputAction::setRotate);
-			}
-			if (ImGui::MenuItem("Pan", hotkeyLabel(InputAction::setPan).c_str()))
-			{
-				triggerRebind(InputAction::setPan);
-			}
-			if (ImGui::MenuItem("Draw", hotkeyLabel(InputAction::setDraw).c_str()))
-			{
-				triggerRebind(InputAction::setDraw);
-			}
-			if (ImGui::MenuItem("Fill", hotkeyLabel(InputAction::setFill).c_str())) {
-				triggerRebind(InputAction::setFill);
-			}
-			if (ImGui::MenuItem("Erase", hotkeyLabel(InputAction::setErase).c_str()))
-			{
-				triggerRebind(InputAction::setErase);
-			}
-			if (ImGui::MenuItem("Undo", hotkeyLabel(InputAction::undo).c_str()))
-			{
-				triggerRebind(InputAction::undo);
-			}
-			if (ImGui::MenuItem("Redo", hotkeyLabel(InputAction::redo).c_str()))
-			{
-				triggerRebind(InputAction::redo);
-			}
-			if (ImGui::MenuItem("Zoom In", hotkeyLabel(InputAction::setClickZoomIn).c_str()))
-			{
-				triggerRebind(InputAction::setClickZoomIn);
-			}
-			if (ImGui::MenuItem("Zoom Out", hotkeyLabel(InputAction::setClickZoomOut).c_str()))
-			{
-				triggerRebind(InputAction::setClickZoomOut);
-			}
-			if (ImGui::MenuItem("Center Canvas", hotkeyLabel(InputAction::resetView).c_str()))
-			{
-				triggerRebind(InputAction::resetView);
-			}
-			if (ImGui::MenuItem("Color Picker", hotkeyLabel(InputAction::setColor).c_str()))
-			{
-				triggerRebind(InputAction::setColor);
-			}
-			ImGui::EndMenu();
+		ImGui::SameLine(ImGui::GetCursorPosX() + avail - width - 15);
+		if (ImGui::MenuItem("Settings"))
+		{
+			showSettingsPopup = true;
 		}
-
 
 		ImGui::EndMainMenuBar();
 	}
@@ -1646,6 +1619,8 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 			{
 				canvasManager.saveToFile(filePath);
 			}
+
+			saveToRecentActivityCb(filePath);
 		}
 
 		ImGuiFileDialog::Instance()->Close();
@@ -1677,10 +1652,30 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 				resetCanvasPositionCb();
 			}
 
+			// if the current UI state is the start menu then change it to the main screen
+			if (curState == UIState::start_menu) {curState = UIState::main_screen;}
+
 		}
 
 		ImGuiFileDialog::Instance()->Close();
 	}
+	if (ImGuiFileDialog::Instance()->Display("SaveImageAnm"))
+			{
+				if (ImGuiFileDialog::Instance()->IsOk())
+				{
+					std::string filePath =
+						ImGuiFileDialog::Instance()->GetFilePathName();
+
+					std::string extension =
+						ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+			
+					FrameRenderer::saveAnimation(filePath, canvasManager.getActive());
+					
+				}
+
+				ImGuiFileDialog::Instance()->Close();
+			}
 
 	// attempting to place a second main menu bar 
 	
