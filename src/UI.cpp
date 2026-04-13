@@ -293,161 +293,7 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	// testing the main menu implementation
-	if (ImGui::BeginMainMenuBar()) {
-		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("New...", "Ctrl+N")) {
-				showCanvasCreationPopup = true;
-			}
-			if (ImGui::MenuItem("Save...", "Ctrl+S", false, canvasManager.hasActive())) {
-				IGFD::FileDialogConfig config;
-
-				// the  path the file explorer starts in. "." is the current active directory
-				config.path = ".";
-
-				config.fileName = canvasManager.getActive().getName();
-
-				// ImGuiFileDialog has a built in detection for overwriting a file and makes a popup as well.
-				config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
-
-				ImGuiFileDialog::Instance()->OpenDialog(
-					"SaveImageDlg",
-					"Save Image",
-					".png,.jpg,.ora",
-					config
-				);
-			}
-			if (ImGui::MenuItem("Open...", "Ctrl+O")) {
-				ImGuiFileDialog::Instance()->OpenDialog(
-					"LoadFileDlg",
-					"Choose File",
-					".png, .jpg, .ora"
-				);
-			}
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Shortcuts")) {
-			// create a lamda to grab the hotkey label for each action
-			auto hotkeyLabel = [this](InputAction action) {
-				if (getHotkeyLabelCb) {
-					return getHotkeyLabelCb(action);
-				}
-				return std::string{};
-				};
-
-			// create a lamda to trigger the rebind callback function for each action
-			auto triggerRebind = [this](InputAction action) {
-				if (startRebindCb) {
-					startRebindCb(action);
-				}
-				// Close to avoid consuming the next key press while rebinding.
-				ImGui::CloseCurrentPopup();
-				};
-
-			if (ImGui::MenuItem("Rotate", hotkeyLabel(InputAction::setRotate).c_str()))
-			{
-				triggerRebind(InputAction::setRotate);
-			}
-			if (ImGui::MenuItem("Pan", hotkeyLabel(InputAction::setPan).c_str()))
-			{
-				triggerRebind(InputAction::setPan);
-			}
-			if (ImGui::MenuItem("Draw", hotkeyLabel(InputAction::setDraw).c_str()))
-			{
-				triggerRebind(InputAction::setDraw);
-			}
-			if (ImGui::MenuItem("Fill", hotkeyLabel(InputAction::setFill).c_str())) {
-				triggerRebind(InputAction::setFill);
-			}
-			if (ImGui::MenuItem("Erase", hotkeyLabel(InputAction::setErase).c_str()))
-			{
-				triggerRebind(InputAction::setErase);
-			}
-			if (ImGui::MenuItem("Undo", hotkeyLabel(InputAction::undo).c_str()))
-			{
-				triggerRebind(InputAction::undo);
-			}
-			if (ImGui::MenuItem("Redo", hotkeyLabel(InputAction::redo).c_str()))
-			{
-				triggerRebind(InputAction::redo);
-			}
-			if (ImGui::MenuItem("Zoom In", hotkeyLabel(InputAction::setClickZoomIn).c_str()))
-			{
-				triggerRebind(InputAction::setClickZoomIn);
-			}
-			if (ImGui::MenuItem("Zoom Out", hotkeyLabel(InputAction::setClickZoomOut).c_str()))
-			{
-				triggerRebind(InputAction::setClickZoomOut);
-			}
-			if (ImGui::MenuItem("Center Canvas", hotkeyLabel(InputAction::resetView).c_str()))
-			{
-				triggerRebind(InputAction::resetView);
-			}
-			if (ImGui::MenuItem("Color Picker", hotkeyLabel(InputAction::setColor).c_str()))
-			{
-				triggerRebind(InputAction::setColor);
-			}
-			ImGui::EndMenu();
-		}
-
-
-		ImGui::EndMainMenuBar();
-	}
-	if (ImGuiFileDialog::Instance()->Display("SaveImageDlg"))
-	{
-		if (ImGuiFileDialog::Instance()->IsOk())
-		{
-			std::string filePath =
-				ImGuiFileDialog::Instance()->GetFilePathName();
-
-			std::string extension =
-				ImGuiFileDialog::Instance()->GetCurrentFilter();
-
-			if (extension == ".ora")
-			{
-				canvasManager.saveORA(filePath);
-			}
-
-			else
-			{
-				canvasManager.saveToFile(filePath);
-			}
-		}
-
-		ImGuiFileDialog::Instance()->Close();
-	}
-	if (ImGuiFileDialog::Instance()->Display("LoadFileDlg"))
-	{
-		if (ImGuiFileDialog::Instance()->IsOk())
-		{
-			std::string filePath =
-				ImGuiFileDialog::Instance()->GetFilePathName();
-
-			std::cout << "filepath" << std::endl;
-
-			std::string extension =
-				ImGuiFileDialog::Instance()->GetCurrentFilter();
-
-			std::cout << "extension" << std::endl;
-
-			if (extension == ".ora")
-			{
-				canvasManager.loadORA(filePath);
-				// centering the loaded image 
-				resetCanvasPositionCb();
-			}
-			else
-			{
-				canvasManager.loadFromFile(filePath);
-				// centering the loaded image 
-				resetCanvasPositionCb();
-			}
-
-		}
-
-		ImGuiFileDialog::Instance()->Close();
-	}
-
+	drawMainMenu(canvasManager); 
 
 	// changing hard set display size to allow for docking tabs 
 	// grab the window display size
@@ -574,7 +420,6 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
 	}
 }
-
 
 
 void UI::drawLeftPanel(CanvasManager& canvasManager) {
@@ -836,7 +681,6 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 	ImGui::End();
 }
 
-
 void UI::drawCanvasTabs(CanvasManager& canvasManager)
 {
 	// initialize the panel
@@ -997,8 +841,162 @@ void UI::drawPopup(CanvasManager& canvasManager)
 
 // main menu bar for file, animation, settings, etc...
 // nested menus 
-void UI::drawMainMenu() {
+void UI::drawMainMenu(CanvasManager& canvasManager) {
 	// starting the overall main menu bar
+	// testing the main menu implementation
+	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("File")) {
+			if (ImGui::MenuItem("New...", "Ctrl+N")) {
+				showCanvasCreationPopup = true;
+			}
+			if (ImGui::MenuItem("Save...", "Ctrl+S", false, canvasManager.hasActive())) {
+				IGFD::FileDialogConfig config;
+
+				// the  path the file explorer starts in. "." is the current active directory
+				config.path = ".";
+
+				config.fileName = canvasManager.getActive().getName();
+
+				// ImGuiFileDialog has a built in detection for overwriting a file and makes a popup as well.
+				config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+
+				ImGuiFileDialog::Instance()->OpenDialog(
+					"SaveImageDlg",
+					"Save Image",
+					".png,.jpg,.ora",
+					config
+				);
+			}
+			if (ImGui::MenuItem("Open...", "Ctrl+O")) {
+				ImGuiFileDialog::Instance()->OpenDialog(
+					"LoadFileDlg",
+					"Choose File",
+					".png, .jpg, .ora"
+				);
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Shortcuts")) {
+			// create a lamda to grab the hotkey label for each action
+			auto hotkeyLabel = [this](InputAction action) {
+				if (getHotkeyLabelCb) {
+					return getHotkeyLabelCb(action);
+				}
+				return std::string{};
+				};
+
+			// create a lamda to trigger the rebind callback function for each action
+			auto triggerRebind = [this](InputAction action) {
+				if (startRebindCb) {
+					startRebindCb(action);
+				}
+				// Close to avoid consuming the next key press while rebinding.
+				ImGui::CloseCurrentPopup();
+				};
+
+			if (ImGui::MenuItem("Rotate", hotkeyLabel(InputAction::setRotate).c_str()))
+			{
+				triggerRebind(InputAction::setRotate);
+			}
+			if (ImGui::MenuItem("Pan", hotkeyLabel(InputAction::setPan).c_str()))
+			{
+				triggerRebind(InputAction::setPan);
+			}
+			if (ImGui::MenuItem("Draw", hotkeyLabel(InputAction::setDraw).c_str()))
+			{
+				triggerRebind(InputAction::setDraw);
+			}
+			if (ImGui::MenuItem("Fill", hotkeyLabel(InputAction::setFill).c_str())) {
+				triggerRebind(InputAction::setFill);
+			}
+			if (ImGui::MenuItem("Erase", hotkeyLabel(InputAction::setErase).c_str()))
+			{
+				triggerRebind(InputAction::setErase);
+			}
+			if (ImGui::MenuItem("Undo", hotkeyLabel(InputAction::undo).c_str()))
+			{
+				triggerRebind(InputAction::undo);
+			}
+			if (ImGui::MenuItem("Redo", hotkeyLabel(InputAction::redo).c_str()))
+			{
+				triggerRebind(InputAction::redo);
+			}
+			if (ImGui::MenuItem("Zoom In", hotkeyLabel(InputAction::setClickZoomIn).c_str()))
+			{
+				triggerRebind(InputAction::setClickZoomIn);
+			}
+			if (ImGui::MenuItem("Zoom Out", hotkeyLabel(InputAction::setClickZoomOut).c_str()))
+			{
+				triggerRebind(InputAction::setClickZoomOut);
+			}
+			if (ImGui::MenuItem("Center Canvas", hotkeyLabel(InputAction::resetView).c_str()))
+			{
+				triggerRebind(InputAction::resetView);
+			}
+			if (ImGui::MenuItem("Color Picker", hotkeyLabel(InputAction::setColor).c_str()))
+			{
+				triggerRebind(InputAction::setColor);
+			}
+			ImGui::EndMenu();
+		}
+
+
+		ImGui::EndMainMenuBar();
+	}
+	if (ImGuiFileDialog::Instance()->Display("SaveImageDlg"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string filePath =
+				ImGuiFileDialog::Instance()->GetFilePathName();
+
+			std::string extension =
+				ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+			if (extension == ".ora")
+			{
+				canvasManager.saveORA(filePath);
+			}
+
+			else
+			{
+				canvasManager.saveToFile(filePath);
+			}
+		}
+
+		ImGuiFileDialog::Instance()->Close();
+	}
+	if (ImGuiFileDialog::Instance()->Display("LoadFileDlg"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string filePath =
+				ImGuiFileDialog::Instance()->GetFilePathName();
+
+			std::cout << "filepath" << std::endl;
+
+			std::string extension =
+				ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+			std::cout << "extension" << std::endl;
+
+			if (extension == ".ora")
+			{
+				canvasManager.loadORA(filePath);
+				// centering the loaded image 
+				resetCanvasPositionCb();
+			}
+			else
+			{
+				canvasManager.loadFromFile(filePath);
+				// centering the loaded image 
+				resetCanvasPositionCb();
+			}
+
+		}
+
+		ImGuiFileDialog::Instance()->Close();
+	}
 }
 
 
