@@ -549,14 +549,39 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	ImGui::SetNextWindowSize(ImVec2(RightSize, h - TopSize), ImGuiCond_Always);
 	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
-	// add widgets
-	// the color wheel
-	ImGuiColorEditFlags flags = ImGuiColorEditFlags_PickerHueWheel |
+	// color wheel 
+	// storing our two colors 
+	static ImVec4 primary_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+	static ImVec4 secondary_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+	// active color 
+	static bool editing_primary = true;
+
+	// Determine which pointer to pass to the picker
+	ImVec4* active_color = editing_primary ? &primary_color : &secondary_color;
+
+	// drawing the swatches
+	if (ImGui::ColorButton("Primary", primary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
+		editing_primary = true;
+	}
+	// active swatch indicator, orange rectangle
+	if (editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+
+	ImGui::SameLine();
+
+	if (ImGui::ColorButton("Secondary", secondary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
+		editing_primary = false;
+	}
+	if (!editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+
+	// the actual color picker 
+	// using active color so wheel only edits last clicked swatch
+	ImGui::ColorPicker4("##wheel", (float*)active_color,
+		ImGuiColorEditFlags_PickerHueWheel |
+		ImGuiColorEditFlags_NoSidePreview |
 		ImGuiColorEditFlags_NoInputs |
 		ImGuiColorEditFlags_AlphaPreview |
-		ImGuiColorEditFlags_AlphaBar;
-
-	ImGui::ColorPicker4("", color, flags);
+		ImGuiColorEditFlags_AlphaBar |
+		ImGuiWindowFlags_AlwaysAutoResize);
 
 	// brush size slider 
 	ImGui::SliderInt("Size", &brushSize, 1, 500, "%d", ImGuiSliderFlags_Logarithmic);
@@ -1052,26 +1077,47 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 	}
 
 	// attempting to place a second main menu bar 
+	
 }
 
 // drawing individual windows 
 
 void UI::drawColorWindow(CanvasManager& canvasManager) {
 	// name our window 
-	ImGui::Begin("Color"); 
-	// picker flags 
-	ImGuiColorEditFlags flags =
+	ImGui::Begin("Color");
+	ImGui::Text("Color"); 
+	// storing our two colors 
+	static ImVec4 primary_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   
+	static ImVec4 secondary_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f); 
+	// active color 
+	static bool editing_primary = true; 
+
+	// Determine which pointer to pass to the picker
+	ImVec4* active_color = editing_primary ? &primary_color : &secondary_color;
+
+	// drawing the swatches
+	if (ImGui::ColorButton("Primary", primary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
+		editing_primary = true;
+	}
+	// active swatch indicator, orange rectangle
+	if (editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+
+	ImGui::SameLine();
+
+	if (ImGui::ColorButton("Secondary", secondary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
+		editing_primary = false;
+	}
+	if (!editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+
+	// the actual color picker 
+	// using active color so wheel only edits last clicked swatch
+	ImGui::ColorPicker4("##wheel", (float*)active_color,
 		ImGuiColorEditFlags_PickerHueWheel |
+		ImGuiColorEditFlags_NoSidePreview |
 		ImGuiColorEditFlags_NoInputs |
 		ImGuiColorEditFlags_AlphaPreview |
 		ImGuiColorEditFlags_AlphaBar |
-		ImGuiWindowFlags_AlwaysAutoResize;
-
-	ImGui::Text("Color"); 
-	//ImGui::Separator(); 
-
-	ImGui::ColorPicker4("##ColorPicker", color, flags); 
-
+		ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::End();
 }
 
