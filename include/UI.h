@@ -34,7 +34,7 @@ public:
 	using saveToRecentActivityCallback = std::function<void(const std::string&)>;
 	using getRecentActivityCallback = std::function<const std::vector<std::string>&()>;
 	using getDefaultFolderPathCallback = std::function<std::string()>;
-
+	using setDefaultFolderPathCallback = std::function<void(const std::string&)>;
 
 	// Lets the controller provide cursor state read/write hooks.
 	// UI emits intent through these callbacks instead of owning app state.
@@ -44,7 +44,7 @@ public:
 	void bindHotkeyCallbacks(GetHotkeyLabelCallback getLabelCb, StartRebindCallback startCb, BoolCallback isWaitingCb, BoolCallback didFailCb);
 	void bindCanvasCallbacks(ResetCanvasPositionCallback resetPositionCb);
 	void bindRecentActivityCallbacks(saveToRecentActivityCallback saveCb, getRecentActivityCallback getCb);
-	void bindDefaultFolderPathCallback(getDefaultFolderPathCallback getDefaultFolderPathCb);
+	void bindDefaultFolderPathCallback(getDefaultFolderPathCallback getDefaultFolderPathCb, setDefaultFolderPathCallback setDefaultFolderPathCb);
 
 	// ui drawing functions
 	void drawUI(CanvasManager& canvasManager, FrameRenderer frameRenderer);
@@ -83,7 +83,9 @@ private:
 	ResetCanvasPositionCallback resetCanvasPositionCb;
 	saveToRecentActivityCallback saveToRecentActivityCb;
 	getRecentActivityCallback getRecentActivityCb;
+
 	getDefaultFolderPathCallback getDefaultFolderPathCb;
+	setDefaultFolderPathCallback setDefaultFolderPathCb;
 
 	// main UI drawing functions for each state
 	void drawStartScreen(CanvasManager& canvasManager);

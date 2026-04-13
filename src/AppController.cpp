@@ -78,7 +78,8 @@ bool AppController::init()
 	);
 
 	ui.bindDefaultFolderPathCallback(
-		[this]() { return appState.getMockUpFolderPath().string(); }
+		[this]() { return appState.getDefaultFolderPath().string(); },
+		[this](const std::string& filePath) { appState.setDefaultFolderPath(std::filesystem::path(filePath)); }
 	);
 
 	// Bind raw mouse input streams from InputManager into controller handlers.

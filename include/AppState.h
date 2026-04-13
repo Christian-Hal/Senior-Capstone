@@ -39,9 +39,12 @@ public:
     void loadRecentActivity();
     void saveRecentActivity();
 
-    // Get the folder path for MockUp in Documents
+    // Folder path functions
     const std::filesystem::path& getMockUpFolderPath() const { return mockUpFolderPath; }
-    
+
+    const std::filesystem::path& getDefaultFolderPath() const { return defaultFolderPath; }
+    void setDefaultFolderPath(const std::filesystem::path& path) { defaultFolderPath = path; }
+
     void addFileToRecentActivity(const std::string& filePath);
     const std::vector<std::string>& getRecentActivity();
 
@@ -62,7 +65,8 @@ private:
     // Recent activity list
     std::vector<std::string> recentActivity;
 
-    // Path to the MockUp folder in Documents
+    // default folder path variables
     std::filesystem::path mockUpFolderPath;
+    std::filesystem::path defaultFolderPath;
 
 };

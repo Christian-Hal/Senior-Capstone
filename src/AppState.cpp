@@ -24,6 +24,8 @@ void AppState::init()
     } else {
         mockUpFolderPath = "MockUp";
     }
+    defaultFolderPath = mockUpFolderPath;
+    
     // create it if needed
     if (!std::filesystem::exists(mockUpFolderPath)) {
         std::filesystem::create_directories(mockUpFolderPath);

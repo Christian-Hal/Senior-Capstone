@@ -94,9 +94,10 @@ void UI::bindRecentActivityCallbacks(saveToRecentActivityCallback saveCb, getRec
 	getRecentActivityCb = std::move(getCb);
 }
 
-void UI::bindDefaultFolderPathCallback(getDefaultFolderPathCallback getPathCb)
+void UI::bindDefaultFolderPathCallback(getDefaultFolderPathCallback getPathCb, setDefaultFolderPathCallback setPathCb)
 {
 	getDefaultFolderPathCb = std::move(getPathCb);
+	setDefaultFolderPathCb = std::move(setPathCb);
 }
 
 
@@ -375,15 +376,9 @@ void UI::drawStartScreen(CanvasManager& canvasManager)
 	{
 		if (ImGuiFileDialog::Instance()->IsOk())
 		{
-			std::string filePath =
-				ImGuiFileDialog::Instance()->GetFilePathName();
+			std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
 
-			std::cout << "filepath" << std::endl;
-
-			std::string extension =
-				ImGuiFileDialog::Instance()->GetCurrentFilter();
-
-			std::cout << "extension" << std::endl;
+			std::string extension = ImGuiFileDialog::Instance()->GetCurrentFilter();
 
 			if (extension == ".ora")
 			{
@@ -641,7 +636,8 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 		ImGuiFileDialog::Instance()->OpenDialog(
 			"LoadFileDlg",
 			"Choose File",
-			".png,.jpg,.ora"
+			".png,.jpg,.ora",
+			config
 		);
 	}
 
@@ -652,12 +648,8 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 			std::string filePath =
 				ImGuiFileDialog::Instance()->GetFilePathName();
 
-			std::cout << "filepath" << std::endl;
-
 			std::string extension =
 				ImGuiFileDialog::Instance()->GetCurrentFilter();
-
-			std::cout << "extension" << std::endl;
 
 			if (extension == ".ora")
 			{
@@ -858,10 +850,18 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	// brush import system, will probably get moved when I eventually do a UI overhaul
 	if (ImGui::Button("Import Brush"))
 	{
+		IGFD::FileDialogConfig config;
+		config.path = ".";
+
+		if (getDefaultFolderPathCb) {
+			config.path = getDefaultFolderPathCb();
+		}
+
 		ImGuiFileDialog::Instance()->OpenDialog(
 			"ChooseFileDlgKey",
 			"Choose File",
-			".gbr,.png,.kpp,.jbr"
+			".gbr,.png,.kpp,.jbr",
+			config
 		);
 	}
 
@@ -1038,27 +1038,57 @@ void UI::drawSettingsPopup() {
     static int settingsSection = 0;
 
     if (showSettingsPopup) {
-        ImGui::OpenPopup("Settings");
+        ImGui::OpenPopup("UserSettings");
         ImGui::SetNextWindowSize(ImVec2(600, 400), ImGuiCond_Always);
     }
 
-    if (ImGui::BeginPopupModal("Settings", nullptr, ImGuiWindowFlags_NoResize)) {
+    if (ImGui::BeginPopupModal("UserSettings", nullptr, ImGuiWindowFlags_NoResize)) {
         // Create a child region that will take all remaining vertical space
         float windowHeight = ImGui::GetContentRegionAvail().y - 50; // leave ~50px for Close button
-        ImGui::BeginChild("SettingsContent", ImVec2(0, windowHeight), false);
+        ImGui::BeginChild("Settings", ImVec2(0, windowHeight), false);
 
         ImGui::Columns(2, nullptr, true);
         ImGui::SetColumnWidth(0, 180);
 
         // Left column: categories
-        if (ImGui::Button("User Settings##settings_user")) settingsSection = 0;
-        if (ImGui::Button("Shortcuts##settings_shortcuts")) settingsSection = 1;
+        if (ImGui::Button("Folder Settings##settings_folders")) settingsSection = 0;
+        if (ImGui::Button("Shortcut Settings##settings_shortcuts")) settingsSection = 1;
 
         ImGui::NextColumn();
 
         // Right column: content
         if (settingsSection == 0) {
-            ImGui::Text("User settings will go here");
+            ImGui::Text("Folder adjacent settings: Saving / Loading / Imports");
+			// default folder path stuff	
+			ImGui::SeparatorText("Default Folder Path");
+			ImGui::TextWrapped("The default path used for loading and saving files.");
+
+			std::string currentPath = getDefaultFolderPathCb ? getDefaultFolderPathCb() : std::string("Not Set");
+			ImGui::TextWrapped("Current Default Path: %s", currentPath.c_str());
+
+			if (ImGui::Button("Set Default Folder Path")) {
+				IGFD::FileDialogConfig config;
+				config.path = ".";
+
+				if (getDefaultFolderPathCb) {
+					config.path = getDefaultFolderPathCb();
+				}
+
+				ImGuiFileDialog::Instance()->OpenDialog("ChooseDirDlgKey", "Choose a Directory", nullptr, config);
+	
+			}
+
+			if (ImGuiFileDialog::Instance()->Display("ChooseDirDlgKey")) {
+				if (ImGuiFileDialog::Instance()->IsOk()) {
+					// Get the relative path or folder name
+					std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+
+					// Action to perform after selection
+					std::cout << filePath << std::endl;
+					setDefaultFolderPathCb(filePath);
+				}
+				ImGuiFileDialog::Instance()->Close();
+			}
 			
         } else if (settingsSection == 1) {
 			// text label that displays rebind status
