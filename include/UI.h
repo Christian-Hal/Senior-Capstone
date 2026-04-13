@@ -78,4 +78,6 @@ private:
 	void drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer);
 	void drawCanvasTabs(CanvasManager& canvasManager);
 	void drawMainMenu(CanvasManager& canvasManager);
+	void drawColorWindow(CanvasManager& canvasManager);
+	void drawBrushSizeWindow(CanvasManager& canvasManager); 
 };

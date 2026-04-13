@@ -316,7 +316,6 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 		if (glfwGetKey(windowStorage, GLFW_KEY_TAB) == GLFW_PRESS && glfwGetTime() - lastFrame >= 0.2) {
 			showPanels = !showPanels;
 			lastFrame = glfwGetTime();
-
 		}
 	}
 
@@ -329,6 +328,8 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 		drawRightPanel(canvasManager);
 		drawBottomPanel(canvasManager, frameRenderer);
 	}
+
+	drawColorWindow(canvasManager); 
 
 	// top panel drawn regardless of input 
 	//drawTopPanel(canvasManager);
@@ -999,6 +1000,30 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 	}
 }
 
+// drawing individual windows 
+
+void UI::drawColorWindow(CanvasManager& canvasManager) {
+	// name our window 
+	ImGui::Begin("Color"); 
+	// picker flags 
+	ImGuiColorEditFlags flags =
+		ImGuiColorEditFlags_PickerHueWheel |
+		ImGuiColorEditFlags_NoInputs |
+		ImGuiColorEditFlags_AlphaPreview |
+		ImGuiColorEditFlags_AlphaBar |
+		ImGuiWindowFlags_AlwaysAutoResize;
+
+	ImGui::Text("Color"); 
+	ImGui::Separator(); 
+
+	ImGui::ColorPicker4("##ColorPicker", color, flags); 
+
+	ImGui::End();
+}
+
+void UI::drawBrushSizeWindow(CanvasManager& canvasManager) {
+	// pushing before I get stupid. 
+}
 
 // ending and cleanup 
 void UI::shutdown() {
