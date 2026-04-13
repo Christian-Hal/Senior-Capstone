@@ -339,11 +339,12 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 		else if (uiMode == UIMode::Modular) {
 			if (elementVisibility[UIElement::colorWheel]) { drawColorWindow(canvasManager); }
 			if (elementVisibility[UIElement::brushSizeSlider]) { drawBrushSizeWindow(canvasManager); }
-			if (elementVisibility[UIElement::brushSelection]) { }
+			if (elementVisibility[UIElement::brushSelection]) { drawBrushesWindow(canvasManager); }
 			if (elementVisibility[UIElement::cursorModeButtons]) { }
 			if (elementVisibility[UIElement::animationTimeline]) { }
 		}
 	}
+
 
 	// top panel drawn regardless of input 
 	//drawTopPanel(canvasManager);
@@ -1067,7 +1068,133 @@ void UI::drawColorWindow(CanvasManager& canvasManager) {
 }
 
 void UI::drawBrushSizeWindow(CanvasManager& canvasManager) {
-	// pushing before I get stupid. 
+	ImGui::Begin("Brush Size");
+	ImGui::SliderInt("Size", &brushSize, 1, 500, "%d", ImGuiSliderFlags_Logarithmic);
+	// presets 
+	if (ImGui::Button("5"))  brushSize = 5;
+	ImGui::SameLine();
+	if (ImGui::Button("10")) brushSize = 10;
+	ImGui::SameLine();
+	if (ImGui::Button("20")) brushSize = 20;
+
+	if (ImGui::Button("30"))  brushSize = 30;
+	ImGui::SameLine();
+	if (ImGui::Button("40")) brushSize = 40;
+	ImGui::SameLine();
+	if (ImGui::Button("50")) brushSize = 50;
+
+	if (ImGui::Button("60"))  brushSize = 60;
+	ImGui::SameLine();
+	if (ImGui::Button("70")) brushSize = 70;
+	ImGui::SameLine();
+	if (ImGui::Button("80")) brushSize = 80;
+
+	if (ImGui::Button("90"))  brushSize = 90;
+	ImGui::SameLine();
+	if (ImGui::Button("100")) brushSize = 100;
+	ImGui::SameLine();
+	if (ImGui::Button("120")) brushSize = 120;
+
+	if (ImGui::Button("150"))  brushSize = 150;
+	ImGui::SameLine();
+	if (ImGui::Button("200")) brushSize = 200;
+	ImGui::SameLine();
+	if (ImGui::Button("250")) brushSize = 250;
+
+	if (ImGui::Button("300")) brushSize = 300;
+	ImGui::SameLine();
+	if (ImGui::Button("350")) brushSize = 350;
+	ImGui::SameLine();
+	if (ImGui::Button("400")) brushSize = 400;
+
+	if (ImGui::Button("450")) brushSize = 450;
+	ImGui::SameLine();
+	if (ImGui::Button("500")) brushSize = 500;
+	
+	ImGui::End();
+}
+
+void UI::drawLayersWindow(CanvasManager& canvasManager) {
+	
+
+	// if there is a canvas then display the layer options
+	if (canvasManager.hasActive())
+	{
+		ImGui::Begin("Layers");
+		ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
+
+		// save the active canvas for later use
+		ImGui::Text("file is open");
+		ImGui::Text("file size is: ");
+		ImGui::Text("%dx%d", canvasManager.getActive().getWidth(), canvasManager.getActive().getHeight());
+
+		// Create the layer buttons
+		if (ImGui::Button("New Layer")) {
+			// increase the number of layers by 1
+			canvasManager.getActive().createLayer();
+		}
+		// remove a layer button 
+
+		if (ImGui::Button("Remove Layer")) {
+			if (canvasManager.getActive().getNumLayers() > 2) {
+				// decrease the number of layers by 1
+				canvasManager.getActive().removeLayer();
+			}
+		}
+
+		for (int i = 1; i < canvasManager.getActive().getNumLayers(); i++) {
+			std::string buttonName = "Canvas Layer " + std::to_string(i);
+			if (ImGui::Button(buttonName.c_str())) {
+				canvasManager.getActive().selectLayer(i);
+			}
+		}
+		ImGui::Text("Current Layer: %d", canvasManager.getActive().getCurLayer());
+		ImGui::End();
+	}
+}
+
+void UI::drawBrushesWindow(CanvasManager& canvasManager) {
+	ImGui::Begin("Brushes");
+	// brush import system, will probably get moved when I eventually do a UI overhaul
+	if (ImGui::Button("Import Brush"))
+	{
+		ImGuiFileDialog::Instance()->OpenDialog(
+			"ChooseFileDlgKey",
+			"Choose File",
+			".gbr,.png,.kpp,.jbr"
+		);
+	}
+
+	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+			if (loadBrushFromFileCb) {
+				loadBrushFromFileCb(filePath);
+			}
+		}
+		ImGuiFileDialog::Instance()->Close();
+	}
+
+	// --- Displaying loaded brush options ---
+	// grabs the list of loaded brushes
+	static const std::vector<BrushTool> emptyBrushes;
+	const std::vector<BrushTool>& brushes = getBrushListCb ? getBrushListCb() : emptyBrushes;
+
+	// adds a button for each brush that sets it to the active one
+	ImGui::Text("Loaded Brushes: ");
+	for (int i = 0; i < brushes.size(); i++)
+	{
+		std::string buttonName = brushes[i].brushName;
+
+		if (ImGui::Button(buttonName.c_str())) {
+			if (setActiveBrushCb) {
+				setActiveBrushCb(i);
+			}
+		}
+	}
+	ImGui::End();
 }
 
 // ending and cleanup 

@@ -107,4 +107,6 @@ private:
 	void drawMainMenu(CanvasManager& canvasManager);
 	void drawColorWindow(CanvasManager& canvasManager);
 	void drawBrushSizeWindow(CanvasManager& canvasManager); 
+	void drawLayersWindow(CanvasManager& canvasManager);
+	void drawBrushesWindow(CanvasManager& canvasManager);
 };
