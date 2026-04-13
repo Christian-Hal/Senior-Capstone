@@ -81,7 +81,7 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
 // pulls the correct layerData for the first frame.
 // [NOTE] : no matter what frame you were on last visit, you will always go back to frame 1 after changing canvases
 void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCanvasIndex){
-    
+
     // Save data
     if(numCanvas != 0) {
         removeOnionSkin(*oldCanvas);

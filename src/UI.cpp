@@ -912,20 +912,32 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 			bool open = true;
 
 			ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
-			if (i == canvasManager.getActiveCanvasIndex() && canvasManager.canvasChange)
+			if (i == canvasManager.getActiveCanvasIndex())
+			{
 				flags |= ImGuiTabItemFlags_SetSelected;
+			}
 
 			const Canvas& c = canvasManager.getOpenCanvases()[i];
-			std::string label = c.getName()
-				+ (c.isDirty ? " *" : "")
-				+ "##canvas" + std::to_string(i);
+			std::string label = c.getName()	+ "##canvas" + std::to_string(i);
 
 			if (ImGui::BeginTabItem(label.c_str(), &open, flags))
 			{
-				if (canvasManager.getActiveCanvasIndex() != i && !ImGui::IsItemActivated() == false)
+				if (canvasManager.getActiveCanvasIndex() != i && ImGui::IsItemClicked())
 					canvasManager.setActiveCanvas(i);
 
 				ImGui::EndTabItem();
+			}
+
+			if (c.isDirty)
+			{
+				ImVec2 tabMin = ImGui::GetItemRectMin();
+				ImVec2 tabMax = ImGui::GetItemRectMax();
+
+				float textWidth = ImGui::CalcTextSize(c.getName().c_str()).x;
+
+				ImVec2 pos = ImVec2(tabMin.x + 6.0f + textWidth, tabMin.y + 2.0f);
+
+				ImGui::GetWindowDrawList()->AddText(pos, IM_COL32(255, 255, 255, 200), "*");
 			}
 
 			if (!open)
