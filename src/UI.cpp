@@ -994,6 +994,8 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 
 		ImGui::EndMainMenuBar();
 	}
+	
+	// file dialogs need to be placed outside of the main menu bar 
 	if (ImGuiFileDialog::Instance()->Display("SaveImageDlg"))
 	{
 		if (ImGuiFileDialog::Instance()->IsOk())
@@ -1048,6 +1050,8 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 
 		ImGuiFileDialog::Instance()->Close();
 	}
+
+	// attempting to place a second main menu bar 
 }
 
 // drawing individual windows 
@@ -1297,10 +1301,10 @@ void UI::drawCursorModesWindow(CanvasManager& canvasManager) {
 }
 
 void UI::drawTimelineWindow(CanvasManager& canvasManager) {
-	ImGui::Begin("Timeline"); 
 	// only display animation settings if there is an active canvas
 	if (canvasManager.hasActive() && canvasManager.getActive().getIsAnimation())
 	{
+		ImGui::Begin("Timeline");
 		if (ImGui::Button("Previous Frame")) {
 			FrameRenderer::selectFrame(canvasManager.getActive(), -1);
 		}
@@ -1320,8 +1324,9 @@ void UI::drawTimelineWindow(CanvasManager& canvasManager) {
 		if (ImGui::Button("Play")) {
 			FrameRenderer::play(canvasManager.getActive());
 		}
+		ImGui::End();
+
 	}
-	ImGui::End();
 }
 
 // ending and cleanup 
