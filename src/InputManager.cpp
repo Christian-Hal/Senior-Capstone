@@ -2,6 +2,10 @@
 
 #include "imgui.h"
 
+#include <json.hpp>
+#include <fstream>
+using json = nlohmann::json;
+
 #include <cctype>
 #include <string>
 #include <unordered_map>
@@ -78,18 +82,9 @@ void InputManager::init(GLFWwindow* window)
 	glfwSetKeyCallback(window, keyboardCallBack);
 
 
-	bindAction(InputAction::setRotate, GLFW_KEY_R, 0);
-	bindAction(InputAction::setPan, GLFW_KEY_H, 0);
-	bindAction(InputAction::setDraw, GLFW_KEY_D, 0);
-	bindAction(InputAction::setFill, GLFW_KEY_F, 0);
-	bindAction(InputAction::setErase, GLFW_KEY_E, 0);
-	bindAction(InputAction::undo, GLFW_KEY_Z, GLFW_MOD_CONTROL);
-	bindAction(InputAction::redo, GLFW_KEY_X, GLFW_MOD_CONTROL);
-	bindAction(InputAction::resetView, GLFW_KEY_R, GLFW_MOD_CONTROL);
-	bindAction(InputAction::setColor, GLFW_KEY_C, 0);
-	bindAction(InputAction::setClickZoomIn, GLFW_KEY_Z, 0);
-	bindAction(InputAction::setClickZoomOut, GLFW_KEY_X, 0);
-	//bindAction(InputAction::setZoomDragging, GLFW_KEY_SPACE, GLFW_MOD_CONTROL);
+	if (!loadKeybinds()) {
+		bindDefaultKeybinds();
+	}
 }
 
 //constant update function
@@ -318,4 +313,94 @@ std::string InputManager::getKeybind(const KeyCombo& combo)
 	result += keyName;
 
 	return result;
+}
+
+void InputManager::shutdown()
+{
+	saveKeybinds();
+}
+
+void InputManager::saveKeybinds()
+{
+    json j;
+
+    for (const auto& [action, combo] : ActionToKey)
+    {
+		std::string str;
+		if (action == InputAction::setRotate) str = "setRotate";
+		if (action == InputAction::setPan) str = "setPan";
+		if (action == InputAction::setDraw) str = "setDraw";
+		if (action == InputAction::setErase) str = "setErase";
+		if (action == InputAction::setFill) str = "setFill";
+		if (action == InputAction::undo) str = "undo";
+		if (action == InputAction::redo) str = "redo";
+		if (action == InputAction::resetView) str = "resetView";
+		if (action == InputAction::setColor) str = "setColor";
+		if (action == InputAction::setClickZoomIn) str = "zoomIn";
+		if (action == InputAction::setClickZoomOut) str = "zoomOut";
+
+        j[str] = {
+            {"key", combo.key},
+            {"mods", combo.mods}
+        };
+    }
+
+    std::ofstream file("assets/keybinds.json");
+    if (file.is_open())
+    {
+        file << j.dump(4);
+    }
+}
+
+bool InputManager::loadKeybinds()
+{
+    std::ifstream file("assets/keybinds.json");
+
+    if (!file.is_open())
+    {
+        return false;
+    }
+
+    json j;
+    file >> j;
+
+    for (auto& [actionStr, value] : j.items())
+    {
+        InputAction action;
+		if (actionStr == "setRotate") action = InputAction::setRotate;
+		if (actionStr == "setPan") action = InputAction::setPan;
+		if (actionStr == "setDraw") action = InputAction::setDraw;
+		if (actionStr == "setErase") action = InputAction::setErase;
+		if (actionStr == "setFill") action = InputAction::setFill;
+		if (actionStr == "undo") action = InputAction::undo;
+		if (actionStr == "redo") action = InputAction::redo;
+		if (actionStr == "resetView") action = InputAction::resetView;
+		if (actionStr == "setColor") action = InputAction::setColor;
+		if (actionStr == "zoomIn") action = InputAction::setClickZoomIn;
+		if (actionStr == "zoomOut") action = InputAction::setClickZoomOut;
+
+        int key = value["key"];
+        int mods = value["mods"];
+
+        // bind the action
+        bindAction(action, key, mods);
+    }
+
+    return true;
+}
+
+void InputManager::bindDefaultKeybinds()
+{
+	bindAction(InputAction::setRotate, GLFW_KEY_R, 0);
+	bindAction(InputAction::setPan, GLFW_KEY_H, 0);
+	bindAction(InputAction::setDraw, GLFW_KEY_D, 0);
+	bindAction(InputAction::setFill, GLFW_KEY_F, 0);
+	bindAction(InputAction::setErase, GLFW_KEY_E, 0);
+	bindAction(InputAction::undo, GLFW_KEY_Z, GLFW_MOD_CONTROL);
+	bindAction(InputAction::redo, GLFW_KEY_X, GLFW_MOD_CONTROL);
+	bindAction(InputAction::resetView, GLFW_KEY_R, GLFW_MOD_CONTROL);
+	bindAction(InputAction::setColor, GLFW_KEY_C, 0);
+	bindAction(InputAction::setClickZoomIn, GLFW_KEY_Z, 0);
+	bindAction(InputAction::setClickZoomOut, GLFW_KEY_X, 0);
+	//bindAction(InputAction::setZoomDragging, GLFW_KEY_SPACE, GLFW_MOD_CONTROL);
 }

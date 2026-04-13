@@ -61,6 +61,7 @@ class InputManager
 {
 public:
     static void init(GLFWwindow* window);
+    void shutdown();
     static void update();
     static bool IsMousePressed(int button);
     static double getMouseX();
@@ -97,4 +98,10 @@ private:
     static void cursorPosCallBack(GLFWwindow* window, double xpos, double ypos);
     static void scrollCallBack(GLFWwindow* window, double xoffset, double yoffset);
     static void keyboardCallBack(GLFWwindow* window, int key, int scancode, int action, int mods);
+
+    // functions to enable the saving and loading of the keybinds
+    static void saveKeybinds();
+    static bool loadKeybinds(); // returns true if keybinds were successfully loaded
+    static void bindDefaultKeybinds();
+
 };

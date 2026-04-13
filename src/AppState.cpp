@@ -25,7 +25,7 @@ void AppState::init()
         mockUpFolderPath = "MockUp";
     }
     defaultFolderPath = mockUpFolderPath;
-    
+
     // create it if needed
     if (!std::filesystem::exists(mockUpFolderPath)) {
         std::filesystem::create_directories(mockUpFolderPath);
@@ -42,6 +42,7 @@ void AppState::shutdown()
     frameRenderer.shutdown();
 	ui.shutdown();
 	renderer.shutdown();
+	inputManager.shutdown();
 	window.destroy();
 
     // save recent activity to file
@@ -120,7 +121,7 @@ void AppState::loadRecentActivity()
 
 void AppState::saveRecentActivity()
 {
-    // path to the file containing the recent activity list in MockUp folder
+    // path to the file containing the recent activity list in assets folder
     std::filesystem::path filePath = "assets/recent_activity.txt";
 
     // open the file and write the recent activity list to it

@@ -1063,9 +1063,11 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 			// default folder path stuff	
 			ImGui::SeparatorText("Default Folder Path");
 			ImGui::TextWrapped("The default path used for loading and saving files.");
+			ImGui::Spacing();
 
 			std::string currentPath = getDefaultFolderPathCb ? getDefaultFolderPathCb() : std::string("Not Set");
 			ImGui::TextWrapped("Current Default Path: %s", currentPath.c_str());
+			ImGui::Spacing();
 
 			if (ImGui::Button("Set Default Folder Path")) {
 				IGFD::FileDialogConfig config;
