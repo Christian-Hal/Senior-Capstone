@@ -1746,28 +1746,118 @@ void UI::drawTimelineWindow(CanvasManager& canvasManager) {
 	// only display animation settings if there is an active canvas
 	if (canvasManager.hasActive() && canvasManager.getActive().getIsAnimation())
 	{
-		ImGui::Begin("Timeline");
-		if (ImGui::Button("Previous Frame")) {
-			FrameRenderer::selectFrame(canvasManager.getActive(), -1);
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Next Frame")) {
-			FrameRenderer::selectFrame(canvasManager.getActive(), 1);
-		}
-
-		//ImGui::SliderInt()
-		if (ImGui::Button("Create Frame")) {
+		int currentFrame = FrameRenderer::getCurFrame();
+		int totalFrames = FrameRenderer::getNumFrames();
+		if (ImGui::Button("+")) {
 			FrameRenderer::createFrame(canvasManager.getActive());
 		}
 		ImGui::SameLine();
-		if (ImGui::Button("Remove Frame")) {
+		if (ImGui::Button("-")) {	
 			FrameRenderer::removeFrame(canvasManager.getActive());
 		}
-		if (ImGui::Button("Play")) {
+		ImGui::SameLine();
+		if (ImGui::Button("Play animation")){
 			FrameRenderer::play(canvasManager.getActive());
 		}
-		ImGui::End();
+		ImGui::SameLine();
+		ImGui::Spacing();
+		if (ImGui::Button("Toggle Onion Skins")){
+			FrameRenderer::removeOnionSkin(canvasManager.getActive());
+			FrameRenderer::toggleOnionSkin();
+			FrameRenderer::updateOnionSkin(canvasManager.getActive());
+		}
+/*
+		ImGui::SameLine();
+		if (ImGui::Button("<-")){
+			FrameRenderer::setNumBefore(FrameRenderer::getNumBefore() + 1);
+			FrameRenderer::updateOnionSkin(canvasManager.getActive());
 
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("->")){
+			FrameRenderer::setNumAfter(FrameRenderer::getNumAfter() + 1);
+			FrameRenderer::updateOnionSkin(canvasManager.getActive());
+		}
+*/
+		
+		// --- Timeline ---
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		float old_rounding = style.FrameRounding;
+		ImVec2 old_padding = style.FramePadding;
+		ImVec4 old_bg = style.Colors[ImGuiCol_FrameBg];
+		ImVec4 old_bg_hovered = style.Colors[ImGuiCol_FrameBgHovered];
+		ImVec4 old_bg_active = style.Colors[ImGuiCol_FrameBgActive];
+		float old_border = style.FrameBorderSize;
+		ImVec4 old_border_color = style.Colors[ImGuiCol_Border];
+
+		style.Colors[ImGuiCol_FrameBg] = ImVec4(0, 0, 0, 0);
+		style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0, 0, 0, 0);
+		style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0, 0, 0, 0);
+		style.FrameBorderSize = 0.0f;
+		style.Colors[ImGuiCol_Border] = ImVec4(0,0,0,0);
+
+		style.FramePadding = ImVec2(6, 12); 
+		style.FrameRounding = 2.0f;
+		ImGui::SetNextItemWidth(w - (LeftSize + RightSize * 1.1));
+		// Save old color
+		ImVec4 old_color = style.Colors[ImGuiCol_SliderGrab];
+
+		// Set grab to red
+		style.Colors[ImGuiCol_SliderGrab]      = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+		style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+		style.GrabMinSize = 4.0f;
+		// Draw the slider
+		bool isPressed = ImGui::SliderFloat("##wide_slider", &curFrame, 1.0f, static_cast<float>(FrameRenderer::getNumFrames()), "");
+		curFrame = (int)roundf(curFrame);
+		if(curFrame != FrameRenderer::getCurFrame() && isPressed){
+			FrameRenderer::selectFrame(canvasManager.getActive(), curFrame - FrameRenderer::getCurFrame());
+		}
+		else{
+			curFrame = FrameRenderer::getCurFrame();
+		}
+
+		ImDrawList* draw = ImGui::GetWindowDrawList();
+
+		// Get slider bounds
+		ImVec2 min = ImGui::GetItemRectMin();
+		ImVec2 max = ImGui::GetItemRectMax();
+
+		float width = max.x - min.x;
+
+		draw->AddLine(
+			ImVec2(min.x, (min.y + max.y) / 2), 
+			ImVec2(max.x ,(min.y + max.y) / 2),
+			IM_COL32(255, 255, 255, 100),
+			1.0f   
+		);
+		// number of segments = steps - 1
+		for (int i = 0; i < FrameRenderer::getNumFrames(); i++)
+		{
+			float t = (float)i / (float)(FrameRenderer::getNumFrames() - 1);
+			float x = min.x + t * width;
+
+			// draw a vertical line (divider)
+			draw->AddLine(
+				ImVec2(x, min.y),
+				ImVec2(x, max.y),
+				IM_COL32(255, 255, 255, 100),
+				1.0f                          
+			);
+		}
+		// Restore style
+		style.Colors[ImGuiCol_SliderGrab] = old_color;
+		style.Colors[ImGuiCol_SliderGrabActive] = old_color;
+		style.Colors[ImGuiCol_FrameBg]        = old_bg;
+		style.Colors[ImGuiCol_FrameBgHovered] = old_bg_hovered;
+		style.Colors[ImGuiCol_FrameBgActive]  = old_bg_active;
+		style.FrameBorderSize = old_border;
+		style.Colors[ImGuiCol_Border] = old_border_color;
+
+		// Restore frame settings
+		style.FramePadding = old_padding;
+		style.FrameRounding = old_rounding;
+		ImGui::SameLine();
 	}
 }
 
