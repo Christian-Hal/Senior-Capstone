@@ -20,7 +20,15 @@ class FrameRenderer{
         static void updateOnionSkin(Canvas& canvas);
         static void removeOnionSkin(Canvas& canvas);
         static void toggleOnionSkin();
+        static void saveAnimation(const string& path, Canvas& canvas);
         void shutdown();
+        static bool inputBlocked;
+        static int getCurFrame();
+        static int getNumFrames();
+        static int getNumAfter();
+        static void setNumAfter(int newNumAfter);
+        static int getNumBefore();
+        static void setNumBefore(int newNumBefore);
 
     private:
         static int numFrames;
@@ -35,8 +43,10 @@ class FrameRenderer{
         // frame number, pixel data for that frame
         static vector<vector<Color>> frames;
 
-        // one layer of layerData to be assigned to the current canvas
-        static vector<vector<Color>> frLayerData;
+        // create the data structures we will use to store all this information.
+        static vector<vector<vector<vector<Color>>>> frLayerData;
+        static vector<vector<vector<Color>>> frameData;
+        static vector<array<int, 4>> metaData;
 
         // functions that write to files
         static void writeAllData(Canvas* canvas);

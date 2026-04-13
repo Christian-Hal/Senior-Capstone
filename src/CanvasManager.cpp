@@ -72,15 +72,29 @@ int CanvasManager::getNumCanvases()
 std::string CanvasManager::checkName(std::string name)
 {
     int i = 0;
-
+    bool isDuplicate = false;
     for (Canvas canvas : canvases) 
     {
-        std::string temp = canvas.getName();
-        if (temp == name) { i++; }
+            std::string temp = canvas.getName();
+            if (temp == name) { isDuplicate = true; }
     }
-
-    if (i > 0) {return (name + "-" + std::to_string(i)); }
-    return name;
+    if(!isDuplicate){
+        return name;
+    }
+    while(true){
+        isDuplicate = true;
+        i++;
+        for(Canvas canvas : canvases){
+            isDuplicate = false;
+            if(canvas.getName() == (name + "-" + std::to_string(i))){
+                isDuplicate = true;
+                break;
+            }
+        }
+        if(!isDuplicate){
+            return (name + "-" + std::to_string(i));
+        }
+    }
 }
 
 

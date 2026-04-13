@@ -46,6 +46,8 @@ static GLFWwindow* windowStorage;
 static int canvasWidth = 1920;
 static int canvasHeight = 1080;
 
+// the default starting frame
+static float curFrame = 1.0f;
 // RBGA values for the color wheel 
 static float color[4] = { .0f, .0f, .0f, 1.0f };
 
@@ -385,6 +387,13 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 
 	// canvas tab panel shown only if more than 1 canvas is open
 	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
+	
+	if(FrameRenderer::inputBlocked){
+			drawBlockPanel(canvasManager);
+		}
+
+
+
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -469,6 +478,228 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 	else if (UI::getCursorMode() == CursorMode::Pan || UI::getCursorMode() == CursorMode::Rotate) {
 		ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);
 	}
+}
+
+
+// methods for drawing the individual menu panels
+void UI::drawTopPanel(CanvasManager& canvasManager) {
+	// initialize the panel
+	ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(w, TopSize), ImGuiCond_Always);
+	ImGui::Begin("Top Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
+
+	// add widgets
+	// new canvas pop up
+	if (ImGui::Button("New File")) {
+		//showPopup = true;
+	}
+
+	// menu to rebind the various actions that can be done with hotkeys
+	// the getHotkeyString(InputAction::setRotate).c_str() is the funciton 
+	// call to get the string version of the key combos
+	ImGui::SameLine();
+	if (ImGui::Button("Shortcuts")) {
+		ImGui::OpenPopup("Shortcuts Popup");
+	}
+
+	if (ImGui::BeginPopup("Shortcuts Popup"))
+	{
+		// create a lamda to grab the hotkey label for each action
+		auto hotkeyLabel = [this](InputAction action) {
+			if (getHotkeyLabelCb) {
+				return getHotkeyLabelCb(action);
+			}
+			return std::string{};
+			};
+
+		// create a lamda to trigger the rebind callback function for each action
+		auto triggerRebind = [this](InputAction action) {
+			if (startRebindCb) {
+				startRebindCb(action);
+			}
+			// Close to avoid consuming the next key press while rebinding.
+			ImGui::CloseCurrentPopup();
+			};
+
+		if (ImGui::MenuItem("Rotate", hotkeyLabel(InputAction::setRotate).c_str()))
+		{
+			triggerRebind(InputAction::setRotate);
+		}
+		if (ImGui::MenuItem("Pan", hotkeyLabel(InputAction::setPan).c_str()))
+		{
+			triggerRebind(InputAction::setPan);
+		}
+		if (ImGui::MenuItem("Draw", hotkeyLabel(InputAction::setDraw).c_str()))
+		{
+			triggerRebind(InputAction::setDraw);
+		}
+		if (ImGui::MenuItem("Fill", hotkeyLabel(InputAction::setFill).c_str())){
+			triggerRebind(InputAction::setFill);
+		}
+		if (ImGui::MenuItem("Erase", hotkeyLabel(InputAction::setErase).c_str()))
+		{
+			triggerRebind(InputAction::setErase);
+		}
+		if (ImGui::MenuItem("Undo", hotkeyLabel(InputAction::undo).c_str()))
+		{
+			triggerRebind(InputAction::undo);
+		}
+		if (ImGui::MenuItem("Redo", hotkeyLabel(InputAction::redo).c_str()))
+		{
+			triggerRebind(InputAction::redo);
+		}
+		if (ImGui::MenuItem("Zoom In", hotkeyLabel(InputAction::setClickZoomIn).c_str()))
+		{
+			triggerRebind(InputAction::setClickZoomIn);
+		}
+		if (ImGui::MenuItem("Zoom Out", hotkeyLabel(InputAction::setClickZoomOut).c_str()))
+		{
+			triggerRebind(InputAction::setClickZoomOut);
+		}
+		if (ImGui::MenuItem("Center Canvas", hotkeyLabel(InputAction::resetView).c_str()))
+		{
+			triggerRebind(InputAction::resetView);
+		}
+		if (ImGui::MenuItem("Color Picker", hotkeyLabel(InputAction::setColor).c_str()))
+		{
+			triggerRebind(InputAction::setColor);
+		}
+
+		ImGui::EndPopup();
+	}
+
+	ImGui::SameLine();
+	// Save button
+
+	// only appears if there is a canvas
+	if (canvasManager.hasActive() && ImGui::Button("Save File"))
+	{
+		IGFD::FileDialogConfig config;
+
+		// the  path the file explorer starts in. "." is the current active directory
+		config.path = ".";
+
+		config.fileName = canvasManager.getActive().getName();
+
+		// ImGuiFileDialog has a built in detection for overwriting a file and makes a popup as well.
+		config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+
+		ImGuiFileDialog::Instance()->OpenDialog(
+			"SaveImageDlg",
+			"Save Image",
+			".png,.jpg,.ora",
+			config
+		);
+	}
+	if (ImGuiFileDialog::Instance()->Display("SaveImageDlg"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string filePath =
+				ImGuiFileDialog::Instance()->GetFilePathName();
+
+			std::string extension =
+				ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+			if (extension == ".ora")
+			{
+				canvasManager.saveORA(filePath);
+			}
+
+			else
+			{
+				canvasManager.saveToFile(filePath);
+			}
+		}
+
+		ImGuiFileDialog::Instance()->Close();
+	}
+
+	ImGui::SameLine();
+
+	//saving animation
+	if (canvasManager.hasActive() && ImGui::Button("Save Animation"))
+	{
+		IGFD::FileDialogConfig config;
+
+		// the  path the file explorer starts in. "." is the current active directory
+		config.path = ".";
+
+		config.fileName = canvasManager.getActive().getName();
+
+		// ImGuiFileDialog has a built in detection for overwriting a file and makes a popup as well.
+		config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+
+		ImGuiFileDialog::Instance()->OpenDialog(
+			"SaveImageAnm",
+			"Save Animation",
+			".png,.jpg",
+			config
+		);
+	}
+	if (ImGuiFileDialog::Instance()->Display("SaveImageAnm"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string filePath =
+				ImGuiFileDialog::Instance()->GetFilePathName();
+
+			std::string extension =
+				ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+	
+			FrameRenderer::saveAnimation(filePath, canvasManager.getActive());
+			
+		}
+
+		ImGuiFileDialog::Instance()->Close();
+	}
+
+	//loading file
+	ImGui::SameLine();
+	if (ImGui::Button("Load File"))
+	{
+		ImGuiFileDialog::Instance()->OpenDialog(
+			"LoadFileDlg",
+			"Choose File",
+			".png,.jpg,.ora"
+		);
+	}
+
+	if (ImGuiFileDialog::Instance()->Display("LoadFileDlg"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string filePath =
+				ImGuiFileDialog::Instance()->GetFilePathName();
+
+			std::cout << "filepath" << std::endl;
+
+			std::string extension =
+				ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+			std::cout << "extension" << std::endl;
+
+			if (extension == ".ora")
+			{
+				canvasManager.loadORA(filePath);
+				// centering the loaded image 
+				resetCanvasPositionCb();
+			}
+			else
+			{
+				canvasManager.loadFromFile(filePath);
+				// centering the loaded image 
+				resetCanvasPositionCb();
+			}
+			
+		}
+
+		ImGuiFileDialog::Instance()->Close();
+	}
+
+	// end step
+	ImGui::End();
 }
 
 
@@ -757,19 +988,136 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Remove Frame")) {
+		int currentFrame = FrameRenderer::getCurFrame();
+		int totalFrames = FrameRenderer::getNumFrames();
+		if (ImGui::Button("+")) {
+			FrameRenderer::createFrame(canvasManager.getActive());
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("-")) {	
 			FrameRenderer::removeFrame(canvasManager.getActive());
 		}
-		if (ImGui::Button("Play")) {
+		ImGui::SameLine();
+		if (ImGui::Button("Play animation")){
 			FrameRenderer::play(canvasManager.getActive());
 		}
+		ImGui::SameLine();
+		ImGui::Spacing();
+		if (ImGui::Button("Toggle Onion Skins")){
+			FrameRenderer::removeOnionSkin(canvasManager.getActive());
+			FrameRenderer::toggleOnionSkin();
+			FrameRenderer::updateOnionSkin(canvasManager.getActive());
+		}
+/*
+		ImGui::SameLine();
+		if (ImGui::Button("<-")){
+			FrameRenderer::setNumBefore(FrameRenderer::getNumBefore() + 1);
+			FrameRenderer::updateOnionSkin(canvasManager.getActive());
+
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("->")){
+			FrameRenderer::setNumAfter(FrameRenderer::getNumAfter() + 1);
+			FrameRenderer::updateOnionSkin(canvasManager.getActive());
+		}
+*/
+		
+		// --- Timeline ---
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		float old_rounding = style.FrameRounding;
+		ImVec2 old_padding = style.FramePadding;
+		ImVec4 old_bg = style.Colors[ImGuiCol_FrameBg];
+		ImVec4 old_bg_hovered = style.Colors[ImGuiCol_FrameBgHovered];
+		ImVec4 old_bg_active = style.Colors[ImGuiCol_FrameBgActive];
+		float old_border = style.FrameBorderSize;
+		ImVec4 old_border_color = style.Colors[ImGuiCol_Border];
+
+		style.Colors[ImGuiCol_FrameBg] = ImVec4(0, 0, 0, 0);
+		style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0, 0, 0, 0);
+		style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0, 0, 0, 0);
+		style.FrameBorderSize = 0.0f;
+		style.Colors[ImGuiCol_Border] = ImVec4(0,0,0,0);
+
+		style.FramePadding = ImVec2(6, 12); 
+		style.FrameRounding = 2.0f;
+		ImGui::SetNextItemWidth(w - (LeftSize + RightSize * 1.1));
+		// Save old color
+		ImVec4 old_color = style.Colors[ImGuiCol_SliderGrab];
+
+		// Set grab to red
+		style.Colors[ImGuiCol_SliderGrab]      = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+		style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+		style.GrabMinSize = 4.0f;
+		// Draw the slider
+		bool isPressed = ImGui::SliderFloat("##wide_slider", &curFrame, 1.0f, static_cast<float>(FrameRenderer::getNumFrames()), "");
+		curFrame = (int)roundf(curFrame);
+		if(curFrame != FrameRenderer::getCurFrame() && isPressed){
+			FrameRenderer::selectFrame(canvasManager.getActive(), curFrame - FrameRenderer::getCurFrame());
+		}
+		else{
+			curFrame = FrameRenderer::getCurFrame();
+		}
+
+		ImDrawList* draw = ImGui::GetWindowDrawList();
+
+		// Get slider bounds
+		ImVec2 min = ImGui::GetItemRectMin();
+		ImVec2 max = ImGui::GetItemRectMax();
+
+		float width = max.x - min.x;
+
+		draw->AddLine(
+			ImVec2(min.x, (min.y + max.y) / 2), 
+			ImVec2(max.x ,(min.y + max.y) / 2),
+			IM_COL32(255, 255, 255, 100),
+			1.0f   
+		);
+		// number of segments = steps - 1
+		for (int i = 0; i < FrameRenderer::getNumFrames(); i++)
+		{
+			float t = (float)i / (float)(FrameRenderer::getNumFrames() - 1);
+			float x = min.x + t * width;
+
+			// draw a vertical line (divider)
+			draw->AddLine(
+				ImVec2(x, min.y),
+				ImVec2(x, max.y),
+				IM_COL32(255, 255, 255, 100),
+				1.0f                          
+			);
+		}
+		// Restore style
+		style.Colors[ImGuiCol_SliderGrab] = old_color;
+		style.Colors[ImGuiCol_SliderGrabActive] = old_color;
+		style.Colors[ImGuiCol_FrameBg]        = old_bg;
+		style.Colors[ImGuiCol_FrameBgHovered] = old_bg_hovered;
+		style.Colors[ImGuiCol_FrameBgActive]  = old_bg_active;
+		style.FrameBorderSize = old_border;
+		style.Colors[ImGuiCol_Border] = old_border_color;
+
+		// Restore frame settings
+		style.FramePadding = old_padding;
+		style.FrameRounding = old_rounding;
+		ImGui::SameLine();
 	}
 
-	// end step
-	if (ImGui::GetWindowHeight() > h - 2 * TopSize)
-		BotSize = h - 2 * TopSize;
-	else
-		BotSize = ImGui::GetWindowHeight();
-	ImGui::End();
+		// end step
+		if (ImGui::GetWindowHeight() > h - 2 * TopSize)
+			BotSize = h - 2 * TopSize;
+		else
+			BotSize = ImGui::GetWindowHeight();
+		ImGui::End();
+}
+
+
+void UI::drawBlockPanel(CanvasManager& canvasManager){
+	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize));
+    ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, h - TopSize - BotSize));
+    ImGui::Begin("Blocker", nullptr,
+		ImGuiWindowFlags_NoDecoration | 
+		ImGuiWindowFlags_NoBackground);
+    ImGui::End();
 }
 
 void UI::drawCanvasTabs(CanvasManager& canvasManager)

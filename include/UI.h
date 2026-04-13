@@ -105,6 +105,7 @@ private:
 	void drawLeftPanel(CanvasManager& canvasManager);
 	void drawRightPanel(CanvasManager& canvasManager);
 	void drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer);
+	void drawBlockPanel(CanvasManager& canvasManager);
 	void drawCanvasTabs(CanvasManager& canvasManager);
 	void drawMainMenu(CanvasManager& canvasManager);
 	void drawColorWindow(CanvasManager& canvasManager);
