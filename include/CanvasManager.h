@@ -47,7 +47,7 @@ class CanvasManager {
         void saveORA(const std::string& path);
         void loadORA(const std::string& filepath);
 
-        void CanvasManager::reindexFrameFolders(int deletedIndex);
+        void reindexFrameFolders(int deletedIndex);
 
         // index of the active canvas
         int activeCanvasIndex = -1;
