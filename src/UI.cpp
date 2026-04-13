@@ -1514,7 +1514,8 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 				IGFD::FileDialogConfig config;
 
 				// the  path the file explorer starts in. "." is the current active directory
-				config.path = ".";
+				if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
+				else config.path = ".";
 
 				config.fileName = canvasManager.getActive().getName();
 
@@ -1534,7 +1535,8 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 				IGFD::FileDialogConfig config;
 
 				// the  path the file explorer starts in. "." is the current active directory
-				config.path = ".";
+				if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
+				else config.path = ".";
 
 				config.fileName = canvasManager.getActive().getName();
 
@@ -1548,7 +1550,14 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 					config
 				);
 			}
+
 			if (ImGui::MenuItem("Open...", "Ctrl+O")) {
+				IGFD::FileDialogConfig config;
+
+				// the  path the file explorer starts in. "." is the current active directory
+				if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
+				else config.path = ".";
+				
 				ImGuiFileDialog::Instance()->OpenDialog(
 					"LoadFileDlg",
 					"Choose File",
