@@ -735,17 +735,6 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		ImGui::Text("State: Color Pick");
 	}
 
-	// text label that displays rebind status
-	if (isWaitingForRebindCb && isWaitingForRebindCb())
-	{
-		ImGui::Text("Press any key...");
-	}
-
-	if (didRebindFailCb && didRebindFailCb())
-	{
-		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Key already bound!");
-	}
-
 	// buttons that change the current cursor mode
 	if (ImGui::Button("Draw")) {
 		setCursorMode(CursorMode::Draw);
@@ -1072,6 +1061,15 @@ void UI::drawSettingsPopup() {
             ImGui::Text("User settings will go here");
 			
         } else if (settingsSection == 1) {
+			// text label that displays rebind status
+			ImGui::Text("Click a button, then press a key to rebind.");
+			if (isWaitingForRebindCb && isWaitingForRebindCb()) {
+				ImGui::SeparatorText("Press any key...");
+			}
+			else {
+				ImGui::SeparatorText("");
+			}
+
             auto hotkeyLabel = [this](InputAction action) { 
                 return getHotkeyLabelCb ? getHotkeyLabelCb(action) : std::string{};
             };

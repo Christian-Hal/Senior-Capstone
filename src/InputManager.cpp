@@ -172,9 +172,6 @@ void InputManager::scrollCallBack(GLFWwindow* window, double xoffset, double yof
 // keyboard call back to work with virtual key system
 void InputManager::keyboardCallBack(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (ImGui::GetIO().WantCaptureKeyboard)
-		return;
-
 	// if statement that for rebind the hotkeys 
 	if (WaitingForRebind && action == GLFW_PRESS)
 	{
