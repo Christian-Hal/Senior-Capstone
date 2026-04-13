@@ -466,8 +466,6 @@ void CanvasManager::loadORA(const std::string& path)
             targetLayer = (int)layers.size() - 1 - i;
     }
 
-    
-
     for (int i = 0; i < (int)layers.size(); i++)
     {
         int targetLayer = (int)layers.size() - 1 - i;
