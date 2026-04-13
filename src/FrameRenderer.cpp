@@ -136,7 +136,7 @@ void FrameRenderer::createFrame(Canvas& canvas){
         layDat.resize(3, vector<Color>(meta[0] * meta[1], {0,0,0,0}));
 
         layDat[0] = backgroundLayer;
-        canvas.loadAnimTemplate(); // sets the template layer to the animation template
+        //canvas.loadAnimTemplate(); // sets the template layer to the animation template
         layDat[1] = canvas.getLayerData()[1]; // sets the template layer
 
     } else {
