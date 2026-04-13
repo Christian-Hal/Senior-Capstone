@@ -388,12 +388,9 @@ void UI::draw(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 	// canvas tab panel shown only if more than 1 canvas is open
 	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
 	
-	if(FrameRenderer::inputBlocked){
-			drawBlockPanel(canvasManager);
-		}
-
-
-
+	if(FrameRenderer::inputBlocked) {
+		drawBlockPanel(canvasManager);
+	}
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -1107,11 +1104,12 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 			BotSize = h - 2 * TopSize;
 		else
 			BotSize = ImGui::GetWindowHeight();
-		ImGui::End();
+	}
+	ImGui::End();
 }
 
 
-void UI::drawBlockPanel(CanvasManager& canvasManager){
+void UI::drawBlockPanel(CanvasManager& canvasManager) {
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize));
     ImGui::SetNextWindowSize(ImVec2(w - LeftSize - RightSize, h - TopSize - BotSize));
     ImGui::Begin("Blocker", nullptr,

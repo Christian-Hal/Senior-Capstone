@@ -65,8 +65,7 @@ public:
 	// Lets the controller provide cursor state read/write hooks.
 	// UI emits intent through these callbacks instead of owning app state.
 	void bindCursorCallbacks(SetCursorModeCallback setCb, GetCursorModeCallback getCb);
-	void bindBrushCallbacks(GetBrushListCallback getListCb, SetActiveBrushCallback setActiveCb, GetActiveBrushCallback getActiveCb, LoadBrushCallback loadBrushCb,
-		GenerateBrushDabCallback genDabCb);
+	void bindBrushCallbacks(GetBrushListCallback getListCb, SetActiveBrushCallback setActiveCb, GetActiveBrushCallback getActiveCb, LoadBrushCallback loadBrushCb, GenerateBrushDabCallback genDabCb);
 	void bindHotkeyCallbacks(GetHotkeyLabelCallback getLabelCb, StartRebindCallback startCb, BoolCallback isWaitingCb, BoolCallback didFailCb);
 	void bindCanvasCallbacks(ResetCanvasPositionCallback resetPositionCb);
 
@@ -114,4 +113,7 @@ private:
 	void drawBrushesWindow(CanvasManager& canvasManager);
 	void drawCursorModesWindow(CanvasManager& canvasManager);
 	void drawTimelineWindow(CanvasManager& canvasManager);
+
+
+	void drawTopPanel(CanvasManager& canvasManager);
 };
