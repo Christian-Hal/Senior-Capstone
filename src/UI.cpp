@@ -31,6 +31,9 @@ int BotSize = 0;
 int LeftSize = 0;
 int RightSize = 0;
 
+// state initial pop up 
+bool UI::showPopup = false;
+
 // show panels 
 static bool showPanels = true;
 
@@ -634,6 +637,113 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 	// new canvas pop up
 	if (ImGui::Button("New File")) {
 		showNewCanvasPopup = true;
+		UI::showPopup = true;
+	}
+
+	// menu to rebind the various actions that can be done with hotkeys
+	// the getHotkeyString(InputAction::setRotate).c_str() is the funciton 
+	// call to get the string version of the key combos
+	ImGui::SameLine();
+	if (ImGui::Button("Shortcuts")) {
+		ImGui::OpenPopup("Shortcuts Popup");
+	}
+
+	if (ImGui::BeginPopup("Shortcuts Popup"))
+	{
+		// create a lamda to grab the hotkey label for each action
+		auto hotkeyLabel = [this](InputAction action) {
+			if (getHotkeyLabelCb) {
+				return getHotkeyLabelCb(action);
+			}
+			return std::string{};
+			};
+
+		// create a lamda to trigger the rebind callback function for each action
+		auto triggerRebind = [this](InputAction action) {
+			if (startRebindCb) {
+				startRebindCb(action);
+			}
+			// Close to avoid consuming the next key press while rebinding.
+			ImGui::CloseCurrentPopup();
+			};
+
+		if (ImGui::MenuItem("Rotate", hotkeyLabel(InputAction::setRotate).c_str()))
+		{
+			triggerRebind(InputAction::setRotate);
+		}
+		if (ImGui::MenuItem("Pan", hotkeyLabel(InputAction::setPan).c_str()))
+		{
+			triggerRebind(InputAction::setPan);
+		}
+		if (ImGui::MenuItem("Draw", hotkeyLabel(InputAction::setDraw).c_str()))
+		{
+			triggerRebind(InputAction::setDraw);
+		}
+		if (ImGui::MenuItem("Fill", hotkeyLabel(InputAction::setFill).c_str())){
+			triggerRebind(InputAction::setFill);
+		}
+		if (ImGui::MenuItem("Erase", hotkeyLabel(InputAction::setErase).c_str()))
+		{
+			triggerRebind(InputAction::setErase);
+		}
+		if (ImGui::MenuItem("Undo", hotkeyLabel(InputAction::undo).c_str()))
+		{
+			triggerRebind(InputAction::undo);
+		}
+		if (ImGui::MenuItem("Redo", hotkeyLabel(InputAction::redo).c_str()))
+		{
+			triggerRebind(InputAction::redo);
+		}
+		if (ImGui::MenuItem("Zoom In", hotkeyLabel(InputAction::setClickZoomIn).c_str()))
+		{
+			triggerRebind(InputAction::setClickZoomIn);
+		}
+		if (ImGui::MenuItem("Zoom Out", hotkeyLabel(InputAction::setClickZoomOut).c_str()))
+		{
+			triggerRebind(InputAction::setClickZoomOut);
+		}
+		if (ImGui::MenuItem("Center Canvas", hotkeyLabel(InputAction::resetView).c_str()))
+		{
+			triggerRebind(InputAction::resetView);
+		}
+		if (ImGui::MenuItem("Color Picker", hotkeyLabel(InputAction::setColor).c_str()))
+		{
+			triggerRebind(InputAction::setColor);
+		}
+		if (ImGui::MenuItem("Onion Skin Toggle", hotkeyLabel(InputAction::onionSkinToggle).c_str()))
+		{
+			triggerRebind(InputAction::onionSkinToggle);
+		}
+		if (ImGui::MenuItem("Next Frame", hotkeyLabel(InputAction::nextFrame).c_str()))
+		{
+			triggerRebind(InputAction::nextFrame);
+		}
+		if (ImGui::MenuItem("Previous Frame", hotkeyLabel(InputAction::prevFrame).c_str()))
+		{
+			triggerRebind(InputAction::prevFrame);
+		}
+		if (ImGui::MenuItem("New File", hotkeyLabel(InputAction::newFile).c_str()))
+		{
+			triggerRebind(InputAction::newFile);
+		}
+		if (ImGui::MenuItem("New Frame", hotkeyLabel(InputAction::newFrame).c_str()))
+		{
+			triggerRebind(InputAction::newFrame);
+		}
+		if (ImGui::MenuItem("Remove Frame", hotkeyLabel(InputAction::removeFrame).c_str()))
+		{
+			triggerRebind(InputAction::removeFrame);
+		}
+		if (ImGui::MenuItem("Quick Play", hotkeyLabel(InputAction::quickPlay).c_str()))
+		{
+			triggerRebind(InputAction::quickPlay);
+		}
+		if (ImGui::MenuItem("Close Canvas", hotkeyLabel(InputAction::closeCanvas).c_str()))
+		{
+			triggerRebind(InputAction::closeCanvas);
+		}
+
+		ImGui::EndPopup();
 	}
 
 	ImGui::SameLine();
@@ -675,12 +785,8 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 				ImGuiFileDialog::Instance()->GetCurrentFilter();
 
 			if (extension == ".ora")
-			{
 				canvasManager.saveORA(filePath);
-			}
-
 			else
-			{
 				canvasManager.saveToFile(filePath);
 			}
 
@@ -725,6 +831,8 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 	
 			FrameRenderer::saveAnimation(filePath, canvasManager.getActive());
 			
+			
+			canvasManager.getActive().isDirty = false;
 		}
 
 		ImGuiFileDialog::Instance()->Close();
@@ -1197,30 +1305,134 @@ void UI::drawBlockPanel(CanvasManager& canvasManager) {
 
 void UI::drawCanvasTabs(CanvasManager& canvasManager)
 {
-	// initialize the panel
+	if (canvasManager.getNumCanvases() <= 0)
+		return;
+
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, 35), ImGuiCond_Always);
 	ImGui::Begin("Canvas Tabs Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
 
-	// add widgets
+	if (ImGui::BeginTabBar("CanvasTabBar", ImGuiTabBarFlags_None))
+	{
+		const std::vector<Canvas>& canvases = canvasManager.getOpenCanvases();
 
-	// --- Displaying the loaded canvases ---
-	// grabs the list of loaded canvases
+		for (int i = 0; i < canvasManager.getNumCanvases(); i++)
+		{
+			bool open = true;
+
+			ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
+			if (i == canvasManager.getActiveCanvasIndex())
+			{
+				flags |= ImGuiTabItemFlags_SetSelected;
+			}
+
+			const Canvas& c = canvasManager.getOpenCanvases()[i];
+			std::string label = c.getName()	+ "##canvas" + std::to_string(i);
+
+			if (ImGui::BeginTabItem(label.c_str(), &open, flags))
+			{
+				if (canvasManager.getActiveCanvasIndex() != i && ImGui::IsItemClicked())
+					canvasManager.setActiveCanvas(i);
+
+				ImGui::EndTabItem();
+			}
+
+			if (c.isDirty)
+			{
+				ImVec2 tabMin = ImGui::GetItemRectMin();
+				ImVec2 tabMax = ImGui::GetItemRectMax();
+
+				float textWidth = ImGui::CalcTextSize(c.getName().c_str()).x;
+
+				ImVec2 pos = ImVec2(tabMin.x + 6.0f + textWidth, tabMin.y + 2.0f);
+
+				ImGui::GetWindowDrawList()->AddText(pos, IM_COL32(255, 255, 255, 200), "*");
+			}
+
+			if (!open)
+			{
+				if (canvasManager.getOpenCanvases()[i].isDirty)
+				{
+					pendingCloseIndex = i;
+					showCloseConfirm = true;
+				}
+				else
+					canvasManager.closeCanvas(i);
+			}
+		}
+
+		ImGui::EndTabBar();
+	}
+
+	if (showCloseConfirm)
+		ImGui::OpenPopup("Close Canvas?");
+
 	const std::vector<Canvas>& canvases = canvasManager.getOpenCanvases();
 
-	// adds a button for each canvas that sets it to the active one
-	for (int i = 0; i < canvasManager.getNumCanvases(); i++)
+	if (ImGui::BeginPopupModal("Close Canvas?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		std::string buttonName = canvases[i].getName();
+		if (pendingCloseIndex >= 0 && pendingCloseIndex < canvasManager.getNumCanvases())
+			ImGui::Text("Close \"%s\"?", canvases[pendingCloseIndex].getName().c_str());
 
-		if (ImGui::Button(buttonName.c_str())) {
-			canvasManager.setActiveCanvas(i);
+		ImGui::Spacing();
+
+		if (ImGui::Button("Save and Close"))
+		{
+			canvasManager.setActiveCanvas(pendingCloseIndex);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.fileName = canvasManager.getActive().getName();
+			config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+			ImGuiFileDialog::Instance()->OpenDialog("SaveBeforeCloseDlg", "Save Image", ".png,.jpg,.ora", config);
+			showCloseConfirm = false;
+			ImGui::CloseCurrentPopup();
 		}
 
 		ImGui::SameLine();
+		if (ImGui::Button("Close Without Saving"))
+		{
+			canvasManager.closeCanvas(pendingCloseIndex);
+			pendingCloseIndex = -1;
+			showCloseConfirm = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel"))
+		{
+			pendingCloseIndex = -1;
+			showCloseConfirm = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
 	}
 
-	// end step
+	if (ImGuiFileDialog::Instance()->Display("SaveBeforeCloseDlg"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			canvasManager.setActiveCanvas(pendingCloseIndex);
+			int* meta = FrameRenderer::readMetaData();
+			canvasManager.getActive().setPixels(FrameRenderer::frames[FrameRenderer::curFrame - 1]);
+
+			std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+			std::string extension = ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+			if (extension == ".ora")
+				canvasManager.saveORA(filePath);
+			else
+				canvasManager.saveToFile(filePath);
+
+			canvasManager.getActive().isDirty = false; 
+			canvasManager.closeCanvas(pendingCloseIndex);
+		}
+
+		pendingCloseIndex = -1;
+		showCloseConfirm = false;
+		ImGuiFileDialog::Instance()->Close();
+	}
+
 	ImGui::End();
 }
 
@@ -2087,4 +2299,16 @@ void UI::shutdown() {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+}
+
+// function for closing hotkey
+void UI::requestCloseCanvas(int index, CanvasManager& canvasManager)
+{
+	if (canvasManager.getOpenCanvases()[index].isDirty)
+	{
+		pendingCloseIndex = index;
+		showCloseConfirm = true;
+	}
+	else
+		canvasManager.closeCanvas(index);
 }

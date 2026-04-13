@@ -85,6 +85,24 @@ void InputManager::init(GLFWwindow* window)
 	if (!loadKeybinds()) {
 		bindDefaultKeybinds();
 	}
+	bindAction(InputAction::setRotate, GLFW_KEY_R, 0);
+	bindAction(InputAction::setPan, GLFW_KEY_H, 0);
+	bindAction(InputAction::setDraw, GLFW_KEY_D, 0);
+	bindAction(InputAction::setFill, GLFW_KEY_F, 0);
+	bindAction(InputAction::setErase, GLFW_KEY_E, 0);
+	bindAction(InputAction::undo, GLFW_KEY_Z, GLFW_MOD_CONTROL);
+	bindAction(InputAction::redo, GLFW_KEY_X, GLFW_MOD_CONTROL);
+	bindAction(InputAction::resetView, GLFW_KEY_R, GLFW_MOD_CONTROL);
+	bindAction(InputAction::setColor, GLFW_KEY_C, 0);
+	bindAction(InputAction::setClickZoomIn, GLFW_KEY_Z, 0);
+	bindAction(InputAction::setClickZoomOut, GLFW_KEY_Z, GLFW_MOD_SHIFT);
+	bindAction(InputAction::onionSkinToggle, GLFW_KEY_4, 0);
+	bindAction(InputAction::nextFrame, GLFW_KEY_2, 0);
+	bindAction(InputAction::prevFrame, GLFW_KEY_1, 0);
+	bindAction(InputAction::newFile, GLFW_KEY_N, GLFW_MOD_CONTROL);
+	bindAction(InputAction::newFrame, GLFW_KEY_3, 0);
+	bindAction(InputAction::closeCanvas, GLFW_KEY_W, GLFW_MOD_CONTROL);
+	//bindAction(InputAction::setZoomDragging, GLFW_KEY_SPACE, GLFW_MOD_CONTROL);
 }
 
 //constant update function

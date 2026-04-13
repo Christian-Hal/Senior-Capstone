@@ -89,7 +89,7 @@ public:
 	void loadImage(unsigned char* data, int layerIndex);
     
     void setBackgroundColor(const Color& color); // sets the background color of the canvas
-
+    
     bool isAnimation() const { return animationTemplate; }
     void loadAnimTemplate();
 
@@ -101,6 +101,8 @@ private:
     int curLayer;
     Color backgroundColor = {255, 255, 255, 255};
     Color emptyColor = {0, 0, 0, 0};
+    bool isDirty = false; // bool to determine if the canvas has been modifiyed without saving
+
 
     std::vector<bool> editedPixels;
 

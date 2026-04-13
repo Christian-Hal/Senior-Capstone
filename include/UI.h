@@ -92,6 +92,10 @@ public:
 		start_menu,
 		main_screen
 	};
+	static bool showPopup;
+
+	void closeCanvasPopup(int index);
+	void requestCloseCanvas(int index, CanvasManager& canvasManager);
 
 private:
 	SetCursorModeCallback setCursorModeCb;
@@ -154,4 +158,6 @@ private:
 	bool showPanels = true;
 	bool showNewCanvasPopup = false;
 	bool showSettingsPopup = false;
+	bool showCloseConfirm = false;
+	int pendingCloseIndex = -1;
 };

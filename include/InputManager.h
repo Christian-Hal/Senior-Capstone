@@ -54,7 +54,15 @@ enum class InputAction
     resetView,
     setColor,
     setClickZoomIn,
-    setClickZoomOut
+    setClickZoomOut,
+    onionSkinToggle,
+    nextFrame,
+    prevFrame,
+    newFile,
+    newFrame,
+    removeFrame,
+    quickPlay,
+    closeCanvas
 };
 
 class InputManager

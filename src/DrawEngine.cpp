@@ -53,6 +53,7 @@ void DrawEngine::stop()
     distanceSinceLastStamp = 0;
     if (curCanvas) {
         curCanvas->endStrokeRecord();
+        curCanvas->isDirty = true;
     }
 }
 

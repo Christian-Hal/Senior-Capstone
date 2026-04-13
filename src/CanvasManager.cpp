@@ -17,31 +17,139 @@
 Canvas& CanvasManager::createCanvas(int width, int height, std::string name, bool isAnimation)
 {
     Canvas oldCanvasCopy;
-    if(this->hasActive()){
-        oldCanvasCopy = *activeCanvas;
+    if (hasActive()) {
+        oldCanvasCopy = getActive();
     }
+
     std::string fixed_name = checkName(name);
     canvases.emplace_back(Canvas(width, height, fixed_name, isAnimation));
-    FrameRenderer::newCanvas(&oldCanvasCopy, &canvases.back());
-    activeCanvas = &canvases.back();
+
+    activeCanvasIndex = canvases.size() - 1;
+
+    FrameRenderer::newCanvas(&oldCanvasCopy, &canvases[activeCanvasIndex]);
 
     canvasChange = true;
 
-    return *activeCanvas;
+    return canvases[activeCanvasIndex];
+}
+
+
+void CanvasManager::closeCanvas(int index)
+{
+    if (index < 0 || index >= (int)canvases.size())
+        return;
+
+    // some of the broken parts of update canvas, explaination further down
+    if (index == activeCanvasIndex && hasActive())
+    {
+        Canvas& active = getActive();
+        FrameRenderer::removeOnionSkin(active);
+        FrameRenderer::frames[FrameRenderer::curFrame - 1] =
+            std::vector<Color>(active.getData(), active.getData() + active.getWidth() * active.getHeight());
+    }
+
+    canvases.erase(canvases.begin() + index);
+
+    // Reindex folders   
+    reindexFrameFolders(index);
+
+    if (canvases.empty())
+    {
+        activeCanvasIndex = -1;
+        FrameRenderer::reset(); // nuke it bc no active canvas
+        canvasChange = true;
+        return;
+    }
+
+    // fix activeCanvasIndex becuase there are still canvases left
+    // if the canvas being closed is the active one chose the next one available
+    if (activeCanvasIndex == index)
+        activeCanvasIndex = std::min(index, (int)canvases.size() - 1);
+
+    // for the instance that he canvas being closed was one earlier down the vector with a lower index
+    // we dont need an if the index was higher since the activeCanvasIndex would not change
+    else if (index < activeCanvasIndex)
+        activeCanvasIndex--;
+
+  
+    FrameRenderer::curCanvas = activeCanvasIndex + 1;
+    FrameRenderer::curFrame = 1;
+
+    // clear any frames from the previous canvas
+    FrameRenderer::frames.clear();
+
+    // populate the now active canvas with any frames it might have had
+    // don't full understand everything going on here from frameRenderer but the canvas needed to update but
+    // would crash if the update function was used, so i broke it apart until it worked
+    Canvas& newActive = getActive();
+    int* meta = FrameRenderer::readMetaData(); 
+    FrameRenderer::numFrames = meta[3];
+    FrameRenderer::frames = FrameRenderer::readPixelData(meta);
+    newActive.setPixels(FrameRenderer::frames[0]);
+    newActive.setLayerData(FrameRenderer::readLayerData(meta));
+    FrameRenderer::updateOnionSkin(newActive);
+
+    // -1 of numCanvas because there is one less now
+    FrameRenderer::numCanvas--;
+
+    canvasChange = true;
+}
+
+
+
+void CanvasManager::reindexFrameFolders(int deletedIndex)
+{
+    namespace fs = std::filesystem;
+
+    int oldSize = (int)canvases.size() + 1; // erase already happened, so +1
+    int folderIndex = 0;
+
+    for (int i = 1; i <= oldSize; i++) // folders are labeled 1 for canvas 1, canvas 2...
+    {
+        std::string path = "./frameDatas/canvas" + std::to_string(i);
+
+        if (!fs::exists(path))
+            continue;
+
+        if (i == deletedIndex + 1) // +1 because folders are 1-indexed
+        {
+            fs::remove_all(path);
+            continue;
+        }
+
+        std::string tempPath = "./frameDatas/temp" + std::to_string(folderIndex++);
+        fs::rename(path, tempPath);
+    }
+
+    for (int i = 0; i < folderIndex; i++)
+    {
+        fs::rename(
+            "./frameDatas/temp" + std::to_string(i),
+            "./frameDatas/canvas" + std::to_string(i + 1) // back to 1-indexed
+        );
+    }
+}
+
+
+
+
+int CanvasManager::getActiveCanvasIndex() const
+{
+    return activeCanvasIndex;
 }
 
 ImVec4 CanvasManager::getPaperColor()
 {
-    if (!activeCanvas) {
+    if (!hasActive()) {
         return ImVec4(1.0f, 1.0f, 1.0f, 1.0f); // default white
     }
-    Color bgColor = activeCanvas->getBackgroundColor();
+    Color bgColor = getActive().getBackgroundColor();
     return ImVec4(bgColor.r / 255.0f, bgColor.g / 255.0f, bgColor.b / 255.0f, bgColor.a / 255.0f);
 }
 
 void CanvasManager::setPaperColor(const ImVec4& color)
 {
-    if (!activeCanvas) {
+    if (!hasActive()) {
         return;
     }
 
@@ -52,40 +160,34 @@ void CanvasManager::setPaperColor(const ImVec4& color)
         static_cast<unsigned char>(color.w * 255.0f)
     };
 
-    activeCanvas->setBackgroundColor(bgColor);
+    getActive().setBackgroundColor(bgColor);
 }
 
 void CanvasManager::undo()
 {
-    if (!activeCanvas) {
+    if (!hasActive()) {
         return;
     }
-    activeCanvas->undo();
+    getActive().undo();
 }
 
 void CanvasManager::redo()
 {
-    if (!activeCanvas) {
+    if (!hasActive()) {
         return;
     }
-    activeCanvas->redo();
+    getActive().redo();
 }
-
-
 
 Canvas& CanvasManager::getActive()
 {
-    return *activeCanvas;
+    return canvases[activeCanvasIndex];
 }
-
-
 
 bool CanvasManager::hasActive()
 {
-    return activeCanvas != nullptr;
+    return activeCanvasIndex >= 0 && activeCanvasIndex < canvases.size();
 }
-
-
 
 int CanvasManager::getNumCanvases()
 {
@@ -129,20 +231,24 @@ const std::vector<Canvas>& CanvasManager::getOpenCanvases() const
     return canvases;
 }
 
+
 void CanvasManager::setActiveCanvas(int index)
 {
-    if (index < 0 || static_cast<size_t>(index) >= canvases.size()) {
+    if (index < 0 || index >= canvases.size())
         return;
-    }
-    
+
     Canvas oldCanvasCopy;
-    if(this->hasActive()){
-        oldCanvasCopy = *activeCanvas;
+    if (hasActive()) {
+        oldCanvasCopy = getActive();
     }
-    activeCanvas = &canvases[index];
+
+    activeCanvasIndex = index;
+
     canvasChange = true;
-    FrameRenderer::updateCanvas(&oldCanvasCopy, activeCanvas, index);
+
+    FrameRenderer::updateCanvas(&oldCanvasCopy, &getActive(), index);
 }
+
 
 
 
@@ -163,11 +269,11 @@ void savingFlip(int height, int width, std::vector<Color> &pixels)
 // works for png and jpg
 void CanvasManager::saveToFile(const std::string& path)
 {
-    int width = activeCanvas->getWidth();
-    int height = activeCanvas->getHeight();
+    int width = getActive().getWidth();
+    int height = getActive().getHeight();
 
     std::vector<Color> pixels(width * height);
-    std::memcpy(pixels.data(), activeCanvas->getData(), width * height * sizeof(Color));
+    std::memcpy(pixels.data(), getActive().getData(), width * height * sizeof(Color));
 
     // flip image vertically
     savingFlip(height, width, pixels);
@@ -208,10 +314,10 @@ void CanvasManager::loadFromFile(const std::string& filePath)
 // saving for .ora files 
 void CanvasManager::saveORA(const std::string& path)
 {
-    const int width = activeCanvas->getWidth();
-    const int height = activeCanvas->getHeight();
-    const int numLayers = activeCanvas->getNumLayers();
-    const auto& layers = activeCanvas->getLayerData();
+    const int width = getActive().getWidth();
+    const int height = getActive().getHeight();
+    const int numLayers = getActive().getNumLayers();
+    const auto& layers = getActive().getLayerData();
 
     std::filesystem::create_directory("ora_temp");
     std::filesystem::create_directory("ora_temp/data");
@@ -260,9 +366,14 @@ void CanvasManager::saveORA(const std::string& path)
 
     
     mz_zip_archive zip{};
-    mz_zip_writer_init_file(&zip, path.c_str(), 0);
+    if (!mz_zip_writer_init_file(&zip, path.c_str(), 0))
+    {
+        std::cout << "Failed to create ORA file\n";
+        std::filesystem::remove_all("ora_temp");
+        return;
+    }
 
-    mz_zip_writer_add_file(&zip, "mimetype", "ora_temp/mimetype", NULL, 0, 0);
+    mz_zip_writer_add_file(&zip, "mimetype", "ora_temp/mimetype", NULL, 0, MZ_NO_COMPRESSION);
     mz_zip_writer_add_file(&zip, "stack.xml", "ora_temp/stack.xml", NULL, 0, 0);
     mz_zip_writer_add_file(&zip, "mergedimage.png", "ora_temp/mergedimage.png", NULL, 0, 0);
 
@@ -281,6 +392,7 @@ void CanvasManager::saveORA(const std::string& path)
 }
 
 
+
 void CanvasManager::loadORA(const std::string& path)
 {
     mz_zip_archive zip{};
@@ -291,12 +403,9 @@ void CanvasManager::loadORA(const std::string& path)
         return;
     }
 
-    // creating temporary folder for files
     std::filesystem::create_directory("ora_load");
 
-    // extracing the files from the zip
     int fileNum = mz_zip_reader_get_num_files(&zip);
-
     for (int i = 0; i < fileNum; i++)
     {
         mz_zip_archive_file_stat file_stat;
@@ -305,9 +414,7 @@ void CanvasManager::loadORA(const std::string& path)
         std::string outPath = "ora_load/" + std::string(file_stat.m_filename);
 
         if (mz_zip_reader_is_file_a_directory(&zip, i))
-        {
             std::filesystem::create_directories(outPath);
-        }
         else
         {
             std::filesystem::create_directories(std::filesystem::path(outPath).parent_path());
@@ -317,72 +424,132 @@ void CanvasManager::loadORA(const std::string& path)
 
     mz_zip_reader_end(&zip);
 
-    // reading stack.xml file
     std::ifstream xml("ora_load/stack.xml");
-
     std::string line;
     int width = 0, height = 0;
-    std::vector<std::string> layerPaths;
+
+    // store src path + x/y offset per layer
+    struct LayerEntry {
+        std::string path;
+        std::string name;
+        int x = 0;
+        int y = 0;
+    };
+    std::vector<LayerEntry> layers;
+
+    auto readAttr = [](const std::string& line, const std::string& attr) -> std::string {
+        std::string search = " " + attr + "=\"";
+        size_t pos = line.find(search);
+        if (pos == std::string::npos) return "";
+        pos += search.size();
+        size_t end = line.find("\"", pos);
+        if (end == std::string::npos) return "";
+        return line.substr(pos, end - pos);
+        };
 
     while (std::getline(xml, line))
     {
         if (line.find("<image") != std::string::npos)
         {
-            size_t wPos = line.find("w=\"");
-            size_t hPos = line.find("h=\"");
-
-            if (wPos != std::string::npos && hPos != std::string::npos)
-            {
-                width = std::stoi(line.substr(wPos + 3, line.find("\"", wPos + 3) - (wPos + 3)));
-                height = std::stoi(line.substr(hPos + 3, line.find("\"", hPos + 3) - (hPos + 3)));
-            }
+            std::string w = readAttr(line, "w");
+            std::string h = readAttr(line, "h");
+            if (!w.empty()) width = std::stoi(w);
+            if (!h.empty()) height = std::stoi(h);
         }
 
         if (line.find("<layer") != std::string::npos)
         {
-            size_t pos = line.find("src=\"");
-            if (pos != std::string::npos)
+            std::string src = readAttr(line, "src");
+            std::string x = readAttr(line, "x");
+            std::string y = readAttr(line, "y");
+            std::string name = readAttr(line, "name");
+
+            if (!src.empty())
             {
-                pos += 5;
-                size_t end = line.find("\"", pos);
-                layerPaths.push_back(line.substr(pos, end - pos));
+                LayerEntry entry;
+                entry.path = "ora_load/" + src;
+                entry.name = name;
+                entry.x = x.empty() ? 0 : std::stoi(x);
+                entry.y = y.empty() ? 0 : std::stoi(y);
+                layers.push_back(entry);
             }
         }
     }
 
     xml.close();
 
-    if (width == 0 || height == 0 || layerPaths.empty())
+    if (width == 0 || height == 0 || layers.empty())
     {
         std::cout << "Invalid ORA file\n";
+        std::filesystem::remove_all("ora_load");
         return;
     }
 
     std::string name = std::filesystem::path(path).stem().string();
     Canvas& canvas = createCanvas(width, height, name, false);
 
-    // creating correct number of layers
-    while (canvas.getNumLayers() < layerPaths.size())
-    {
+    std::cout << "Layer count after createCanvas: " << canvas.getNumLayers() << "\n";
+    std::cout << "Layers in ORA file: " << layers.size() << "\n";
+
+    while (canvas.getNumLayers() < (int)layers.size())
         canvas.createLayer();
+
+    for (int i = 0; i < (int)layers.size(); i++)
+    {
+        const LayerEntry& entry = layers[i];
+
+        int targetLayer;
+        if (entry.name == "Background")
+            targetLayer = 0;
+        else
+            targetLayer = (int)layers.size() - 1 - i;
     }
 
-    stbi_set_flip_vertically_on_load(true);
-
-    // loading the layer images into the layers
-    for (int i = 0; i < layerPaths.size(); i++)
+    for (int i = 0; i < (int)layers.size(); i++)
     {
-        int targetLayer = layerPaths.size() - 1 - i;
-        std::string fullPath = "ora_load/" + layerPaths[i];
+        int targetLayer = (int)layers.size() - 1 - i;
+        const LayerEntry& entry = layers[i];
 
         int w, h, ch;
-        unsigned char* data = stbi_load(fullPath.c_str(), &w, &h, &ch, 4);
+        unsigned char* data = stbi_load(entry.path.c_str(), &w, &h, &ch, 4);
+        if (!data)
+        {
+            std::cout << "Warning: failed to load layer: " << entry.path << "\n";
+            continue;
+        }
 
-        canvas.loadImage(data, targetLayer);
+        // load into a full-canvas-sized buffer, placing the image at x/y offset
+        // ORA y is from top, canvas y is from bottom so we flip it
+        std::vector<unsigned char> fullCanvas(width * height * 4, 0);
+
+        for (int row = 0; row < h; row++)
+        {
+            for (int col = 0; col < w; col++)
+            {
+                int srcX = col;
+                int srcY = row;
+
+                int dstX = entry.x + col;
+                // flip y: ORA counts from top, our canvas from bottom
+                int dstY = height - 1 - (entry.y + row);
+
+                if (dstX < 0 || dstX >= width || dstY < 0 || dstY >= height)
+                    continue;
+
+                int srcIdx = (srcY * w + srcX) * 4;
+                int dstIdx = (dstY * width + dstX) * 4;
+
+                fullCanvas[dstIdx + 0] = data[srcIdx + 0];
+                fullCanvas[dstIdx + 1] = data[srcIdx + 1];
+                fullCanvas[dstIdx + 2] = data[srcIdx + 2];
+                fullCanvas[dstIdx + 3] = data[srcIdx + 3];
+            }
+        }
+
         stbi_image_free(data);
+        canvas.loadImage(fullCanvas.data(), targetLayer);
     }
 
     stbi_set_flip_vertically_on_load(false);
-
     std::filesystem::remove_all("ora_load");
 }

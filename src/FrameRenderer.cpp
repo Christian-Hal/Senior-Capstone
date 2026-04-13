@@ -99,9 +99,9 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
 // pulls the correct layerData for the first frame.
 // [NOTE] : no matter what frame you were on last visit, you will always go back to frame 1 after changing canvases
 void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCanvasIndex){
-    
+
     // Save data
-    if(numCanvas != 0){
+    if(numCanvas != 0) {
         removeOnionSkin(*oldCanvas);
         frames[curFrame - 1] =  vector<Color>(oldCanvas->getData(), oldCanvas->getData() + (oldCanvas->getWidth() * oldCanvas->getHeight()));
         writeAllData(oldCanvas);
@@ -422,5 +422,47 @@ vector<vector<Color>> FrameRenderer::readPixelData(int* arr) {
 }
     
 vector<vector<Color>> FrameRenderer::readLayerData(int* arr){
-    return frLayerData[curCanvas-1][curFrame-1];
+    int width = arr[0];
+    int height = arr[1];
+    int numLay = arr[2];
+
+    vector<vector<Color>> returnData(numLay, vector<Color>(width*height));
+
+    string path = "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(curFrame) +  ".dat";
+    ifstream File(path, ios::binary);
+    if (!File){
+        return returnData;
+    }
+    bool firstCalled = false;
+    for(int i = 0; i < numLay; i++){
+        File.read(reinterpret_cast<char*>(returnData[i].data()), width * height * sizeof(Color));
+    }
+    return returnData;
+}
+
+void FrameRenderer::rename(bool isAdding){
+    if(isAdding){
+        for(int i = numFrames - 1; i >= curFrame; i--){
+            fs::rename(
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i+1) + ".dat");
+        }
+    }
+    else{
+        for(int i = curFrame + 1; i <= numFrames; i++){
+            fs::rename(
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i) + ".dat",
+                "./frameDatas/canvas" + to_string(curCanvas) + "/layerData" + to_string(i-1) + ".dat");
+            }
+        
+    }
+}
+
+void FrameRenderer::reset()
+{
+    frames.clear();
+    curFrame = 1;
+    numFrames = 0;
+    curCanvas = -1;
+    numCanvas = 0;
 }
