@@ -1550,6 +1550,7 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
             ShortcutRow("Zoom Out", InputAction::setClickZoomOut);
             ShortcutRow("Center Canvas", InputAction::resetView);
             ShortcutRow("Color Picker", InputAction::setColor);
+			// readd the shortcut stuff here
 
         } else if (settingsSection == 2) {
 			// only show canvas settings if there is an active canvas
