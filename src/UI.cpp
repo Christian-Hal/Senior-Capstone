@@ -307,7 +307,7 @@ void UI::init(GLFWwindow* window, Renderer& rendInst, Globals& g_inst) {
 
 	// loading font and setting size 
 	ImFont* font = io.Fonts->AddFontFromFileTTF(
-		"fa-solid-900.ttf", // possible pain point for Gavin
+		"assets/fa-solid-900.ttf", // possible pain point for Gavin
 		16.0f,
 		&config,
 		ranges
