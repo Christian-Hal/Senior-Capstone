@@ -535,7 +535,7 @@ void UI::drawMainScreen(CanvasManager& canvasManager, FrameRenderer frameRendere
 	//drawTopPanel(canvasManager);
 
 	// canvas tab panel shown only if more than 1 canvas is open
-	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
+	if (canvasManager.getNumCanvases() > 0) { drawCanvasTabs(canvasManager); }
 	
 	if(FrameRenderer::inputBlocked) {
 		drawBlockPanel(canvasManager);
@@ -1196,30 +1196,23 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 	ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, 35), ImGuiCond_Always);
 	ImGui::Begin("Canvas Tabs Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
 
-	if (ImGui::BeginTabBar("CanvasTabBar", ImGuiTabBarFlags_None))
+	if (ImGui::BeginTabBar("CanvasTabBar", ImGuiTabBarFlags_AutoSelectNewTabs))
 	{
 		const std::vector<Canvas>& canvases = canvasManager.getOpenCanvases();
 
 		for (int i = 0; i < canvasManager.getNumCanvases(); i++)
 		{
 			bool open = true;
-
-			ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
-			if (i == canvasManager.getActiveCanvasIndex())
-			{
-				flags |= ImGuiTabItemFlags_SetSelected;
-			}
-
 			const Canvas& c = canvasManager.getOpenCanvases()[i];
 			std::string label = c.getName()	+ "##canvas" + std::to_string(i);
 
-			if (ImGui::BeginTabItem(label.c_str(), &open, flags))
-			{
-				if (canvasManager.getActiveCanvasIndex() != i && ImGui::IsItemClicked())
-					canvasManager.setActiveCanvas(i);
+			bool tabvisible = ImGui::BeginTabItem(label.c_str(), &open);
+			
+			if (ImGui::IsItemActivated() && canvasManager.getActiveCanvasIndex() != i)
+				canvasManager.setActiveCanvas(i);
 
+			if (tabvisible)
 				ImGui::EndTabItem();
-			}
 
 			if (c.isDirty)
 			{

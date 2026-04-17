@@ -50,13 +50,10 @@ void CanvasManager::closeCanvas(int index)
 
     canvases.erase(canvases.begin() + index);
 
-    // Reindex folders   
-    reindexFrameFolders(index);
-
     if (canvases.empty())
     {
         activeCanvasIndex = -1;
-        FrameRenderer::reset(); // nuke it bc no active canvas
+        FrameRenderer::removeCanvas(index); 
         canvasChange = true;
         return;
     }
@@ -72,65 +69,9 @@ void CanvasManager::closeCanvas(int index)
         activeCanvasIndex--;
 
   
-    FrameRenderer::curCanvas = activeCanvasIndex + 1;
-    FrameRenderer::curFrame = 1;
-
-    // clear any frames from the previous canvas
-    FrameRenderer::frames.clear();
-
-    // populate the now active canvas with any frames it might have had
-    // don't full understand everything going on here from frameRenderer but the canvas needed to update but
-    // would crash if the update function was used, so i broke it apart until it worked
-    Canvas& newActive = getActive();
-    int* meta = FrameRenderer::readMetaData(); 
-    FrameRenderer::numFrames = meta[3];
-    FrameRenderer::frames = FrameRenderer::readPixelData(meta);
-    newActive.setPixels(FrameRenderer::frames[0]);
-    newActive.setLayerData(FrameRenderer::readLayerData(meta));
-    FrameRenderer::updateOnionSkin(newActive);
-
-    // -1 of numCanvas because there is one less now
-    FrameRenderer::numCanvas--;
-
+    FrameRenderer::removeCanvas(index, &canvases[activeCanvasIndex]);
     canvasChange = true;
 }
-
-
-
-void CanvasManager::reindexFrameFolders(int deletedIndex)
-{
-    namespace fs = std::filesystem;
-
-    int oldSize = (int)canvases.size() + 1; // erase already happened, so +1
-    int folderIndex = 0;
-
-    for (int i = 1; i <= oldSize; i++) // folders are labeled 1 for canvas 1, canvas 2...
-    {
-        std::string path = "./frameDatas/canvas" + std::to_string(i);
-
-        if (!fs::exists(path))
-            continue;
-
-        if (i == deletedIndex + 1) // +1 because folders are 1-indexed
-        {
-            fs::remove_all(path);
-            continue;
-        }
-
-        std::string tempPath = "./frameDatas/temp" + std::to_string(folderIndex++);
-        fs::rename(path, tempPath);
-    }
-
-    for (int i = 0; i < folderIndex; i++)
-    {
-        fs::rename(
-            "./frameDatas/temp" + std::to_string(i),
-            "./frameDatas/canvas" + std::to_string(i + 1) // back to 1-indexed
-        );
-    }
-}
-
-
 
 
 int CanvasManager::getActiveCanvasIndex() const
@@ -194,8 +135,6 @@ int CanvasManager::getNumCanvases()
     return canvases.size();
 }
 
-
-
 std::string CanvasManager::checkName(std::string name)
 {
     int i = 0;
@@ -224,13 +163,10 @@ std::string CanvasManager::checkName(std::string name)
     }
 }
 
-
-
 const std::vector<Canvas>& CanvasManager::getOpenCanvases() const
 {
     return canvases;
 }
-
 
 void CanvasManager::setActiveCanvas(int index)
 {
@@ -248,9 +184,6 @@ void CanvasManager::setActiveCanvas(int index)
 
     FrameRenderer::updateCanvas(&oldCanvasCopy, &getActive(), index);
 }
-
-
-
 
 void savingFlip(int height, int width, std::vector<Color> &pixels)
 {
@@ -390,8 +323,6 @@ void CanvasManager::saveORA(const std::string& path)
 
     std::filesystem::remove_all("ora_temp");
 }
-
-
 
 void CanvasManager::loadORA(const std::string& path)
 {

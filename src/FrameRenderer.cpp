@@ -26,15 +26,15 @@ int FrameRenderer::numAfter = 1;
 bool FrameRenderer::onionSkinEnabled = false;
 bool FrameRenderer::inputBlocked = false;
 
-// this will be stored in memory so we can access it quickly everything else gets written to a file
+// this will be stored in memory so we can access it quickly everything else gets written to a file (Frames/Pixels)
 // we need the frame data so we can play high fps animations
-vector<vector<Color>> FrameRenderer::frames;
+vector<vector<Color>> FrameRenderer::frames; 
 
-// this is the Layer data for each frame the first vector is the canvas, the second is the frame and the 3rd is the layer 4th is pixel location/color
+// this is the Layer data for each frame the first vector is the canvas, the second is the frame and the 3rd is the layer 4th is pixel location/color (Canvas/Frame/Layer/Color)
 vector<vector<vector<vector<Color>>>> FrameRenderer::frLayerData;
-// this is the frames data first vector is canvas, second is the frame, third is the pixel location/color
+// this is the frames data first vector is canvas, second is the frame, third is the pixel location/color (Canvas/Frame/Color)
 vector<vector<vector<Color>>> FrameRenderer::frameData;
-//this is how we store metadata each vector is a new canvas
+//this is how we store metadata each vector is a new canvas (Canvas/metadata)
 vector<array<int, 4>> FrameRenderer::metaData;
 
 // ONLY CALL THIS FUNCTION ONCE!!!
@@ -99,7 +99,6 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
 // pulls the correct layerData for the first frame.
 // [NOTE] : no matter what frame you were on last visit, you will always go back to frame 1 after changing canvases
 void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCanvasIndex){
-
     // Save data
     if(numCanvas != 0) {
         removeOnionSkin(*oldCanvas);
@@ -202,6 +201,44 @@ void FrameRenderer::removeFrame(Canvas& canvas){
         canvas.setPixels(frames[curFrame-1]);
         canvas.setLayerData(readLayerData(meta));
         updateOnionSkin(canvas);
+    }
+}
+
+void FrameRenderer::removeCanvas(int index, Canvas* newActiveCanvas)
+{
+    if (index < 0 || index >= numCanvas)
+        return;
+
+    frameData.erase(frameData.begin() + index);
+    frLayerData.erase(frLayerData.begin() + index);
+    metaData.erase(metaData.begin() + index);
+    numCanvas--;
+
+    if (numCanvas == 0) {
+        curCanvas = -1;
+        curFrame = -1;
+        numFrames = 0;
+        frames.clear();
+        return;
+    }
+
+    if (index < curCanvas - 1) 
+        curCanvas--;
+
+    else if (numCanvas <= curCanvas - 1)
+        curCanvas = numCanvas;
+
+    curFrame = 1;
+
+    int* meta = readMetaData();
+    numFrames = meta[3];
+    frames = readPixelData(meta);
+
+    if (newActiveCanvas)
+    {
+        newActiveCanvas->setPixels(frames[0]);
+        newActiveCanvas->setLayerData(readLayerData(meta));
+        updateOnionSkin(*newActiveCanvas);
     }
 }
 
@@ -428,9 +465,11 @@ void FrameRenderer::writeLayerData(Canvas* canvas){
     frLayerData[curCanvas-1][curFrame - 1] = curLayerDat;
 }
 
+
 // returns a pointer where you can access [width, height, NumLayers, NumFrames]
 int* FrameRenderer::readMetaData() {
-    return metaData[numCanvas-1].data();
+    assert(curCanvas >= 1 && curCanvas <= (int)metaData.size());
+    return metaData[curCanvas-1].data();
 }
 
 vector<vector<Color>> FrameRenderer::readPixelData(int* arr) {
@@ -439,13 +478,4 @@ vector<vector<Color>> FrameRenderer::readPixelData(int* arr) {
     
 vector<vector<Color>> FrameRenderer::readLayerData(int* arr){
     return frLayerData[curCanvas-1][curFrame-1];
-}
-
-void FrameRenderer::reset()
-{
-    frames.clear();
-    curFrame = -1;
-    numFrames = 0;
-    curCanvas = -1;
-    numCanvas = 0;
 }
