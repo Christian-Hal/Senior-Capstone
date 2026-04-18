@@ -1253,7 +1253,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 		// different tabs for drawing and for animation
 		ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
 		if (ImGui::BeginTabBar("New", tabBarFlags)) {
-			if (ImGui::BeginTabItem("New Illustraion")) {
+			if (ImGui::BeginTabItem("New Illustration")) {
 
 				// setting up combo box for illustration presets 
 				// presets as str and tuple of two ints 
@@ -1995,6 +1995,7 @@ void UI::drawCursorModesWindow(CanvasManager& canvasManager) {
 }
 
 void UI::drawTimelineWindow(CanvasManager& canvasManager) {
+	ImGui::Begin("Timeline");
 	// only display animation settings if there is an active canvas
 	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation())
 	{
@@ -2110,6 +2111,7 @@ void UI::drawTimelineWindow(CanvasManager& canvasManager) {
 		style.FramePadding = old_padding;
 		style.FrameRounding = old_rounding;
 		ImGui::SameLine();
+		ImGui::End();
 	}
 }
 
