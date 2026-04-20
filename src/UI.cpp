@@ -894,13 +894,6 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation()) {
-		if (ImGui::Button("Toggle Onion Skins")) {
-			FrameRenderer::removeOnionSkin(canvasManager.getActive());
-			FrameRenderer::toggleOnionSkin();
-			FrameRenderer::updateOnionSkin(canvasManager.getActive());
-		}
-	}
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
 	ImVec2 size = ImGui::GetWindowSize();
@@ -2072,13 +2065,6 @@ void UI::drawCursorModesWindow(CanvasManager& canvasManager) {
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation()) {
-		if (ImGui::Button("Toggle Onion Skins")) {
-			FrameRenderer::removeOnionSkin(canvasManager.getActive());
-			FrameRenderer::toggleOnionSkin();
-			FrameRenderer::updateOnionSkin(canvasManager.getActive());
-		}
-	}
 	ImGui::End();
 }
 
