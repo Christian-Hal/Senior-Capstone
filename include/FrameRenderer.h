@@ -21,7 +21,6 @@ class FrameRenderer{
         static void removeOnionSkin(Canvas& canvas);
         static void toggleOnionSkin();
         static void saveAnimation(const string& path, Canvas& canvas);
-        void shutdown();
         static bool inputBlocked;
         static int getCurFrame();
         static int getNumFrames();
@@ -29,19 +28,29 @@ class FrameRenderer{
         static void setNumAfter(int newNumAfter);
         static int getNumBefore();
         static void setNumBefore(int newNumBefore);
+        static long long timeFunction(const string& name, const function<void()>& fn);
 
-    private:
+        // frame number, pixel data for that frame
+        static vector<vector<Color>> frames;
         static int numFrames;
         static int curFrame;
         static int curCanvas;
         static int numCanvas;
+        static void reset();
+        
         static bool isPlaying;
         static int numBefore;
         static int numAfter;
         static bool onionSkinEnabled;
-        
-        // frame number, pixel data for that frame
-        static vector<vector<Color>> frames;
+
+        // functions that read from files
+        static int* readMetaData();
+        static vector<vector<Color>> readPixelData(int* arr);
+        static vector<vector<Color>> readLayerData(int* arr);
+
+        static void removeCanvas(int index, Canvas* newActiveCanvas = nullptr);
+
+    private:
 
         // create the data structures we will use to store all this information.
         static vector<vector<vector<vector<Color>>>> frLayerData;
@@ -54,10 +63,7 @@ class FrameRenderer{
         static void writePixelData(Canvas* canvas);
         static void writeLayerData(Canvas* canvas);
 
-        // functions that read from files
-        static int* readMetaData();
-        static vector<vector<Color>> readPixelData(int* arr);
-        static vector<vector<Color>> readLayerData(int* arr);
+        
 
         static void rename(bool isAdding);
 };

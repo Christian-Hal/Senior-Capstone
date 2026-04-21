@@ -31,6 +31,9 @@ int BotSize = 0;
 int LeftSize = 0;
 int RightSize = 0;
 
+// state initial pop up 
+bool UI::showNewCanvasPopup = false;
+
 // show panels 
 static bool showPanels = true;
 
@@ -391,7 +394,7 @@ void UI::drawStartScreen(CanvasManager& canvasManager)
 
 	if (ImGui::Button("Create File", buttonSize))
 	{
-		showNewCanvasPopup = true;
+		UI::showNewCanvasPopup = true;
 	}
 
 	ImGui::Dummy(ImVec2(0, 10)); 			// creates some vertical space
@@ -532,7 +535,7 @@ void UI::drawMainScreen(CanvasManager& canvasManager, FrameRenderer frameRendere
 	//drawTopPanel(canvasManager);
 
 	// canvas tab panel shown only if more than 1 canvas is open
-	if (canvasManager.getNumCanvases() > 1) { drawCanvasTabs(canvasManager); }
+	if (canvasManager.getNumCanvases() > 0) { drawCanvasTabs(canvasManager); }
 
 	if (FrameRenderer::inputBlocked) {
 		drawBlockPanel(canvasManager);
@@ -633,8 +636,12 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 	// add widgets
 	// new canvas pop up
 	if (ImGui::Button("New File")) {
-		showNewCanvasPopup = true;
+		UI::showNewCanvasPopup = true;
 	}
+
+	// menu to rebind the various actions that can be done with hotkeys
+	// the getHotkeyString(InputAction::setRotate).c_str() is the funciton 
+	// call to get the string version of the key combos
 
 	ImGui::SameLine();
 	// Save button
@@ -664,6 +671,7 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 			);
 		}
 	}
+
 	if (ImGuiFileDialog::Instance()->Display("SaveImageDlg"))
 	{
 		if (ImGuiFileDialog::Instance()->IsOk())
@@ -675,14 +683,9 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 				ImGuiFileDialog::Instance()->GetCurrentFilter();
 
 			if (extension == ".ora")
-			{
 				canvasManager.saveORA(filePath);
-			}
-
 			else
-			{
 				canvasManager.saveToFile(filePath);
-			}
 
 			saveToRecentActivityCb(filePath);
 		}
@@ -724,7 +727,9 @@ void UI::drawTopPanel(CanvasManager& canvasManager) {
 
 
 			FrameRenderer::saveAnimation(filePath, canvasManager.getActive());
-
+			
+			
+			canvasManager.getActive().isDirty = false;
 		}
 
 		ImGuiFileDialog::Instance()->Close();
@@ -889,13 +894,6 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation()) {
-		if (ImGui::Button("Toggle Onion Skins")) {
-			FrameRenderer::removeOnionSkin(canvasManager.getActive());
-			FrameRenderer::toggleOnionSkin();
-			FrameRenderer::updateOnionSkin(canvasManager.getActive());
-		}
-	}
 	// end step
 	LeftSize = ImGui::GetWindowWidth();
 	ImVec2 size = ImGui::GetWindowSize();
@@ -1090,20 +1088,6 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 			FrameRenderer::toggleOnionSkin();
 			FrameRenderer::updateOnionSkin(canvasManager.getActive());
 		}
-		/*
-				ImGui::SameLine();
-				if (ImGui::Button("<-")){
-					FrameRenderer::setNumBefore(FrameRenderer::getNumBefore() + 1);
-					FrameRenderer::updateOnionSkin(canvasManager.getActive());
-
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("->")){
-					FrameRenderer::setNumAfter(FrameRenderer::getNumAfter() + 1);
-					FrameRenderer::updateOnionSkin(canvasManager.getActive());
-				}
-		*/
-
 		// --- Timeline ---
 		ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1204,30 +1188,127 @@ void UI::drawBlockPanel(CanvasManager& canvasManager) {
 
 void UI::drawCanvasTabs(CanvasManager& canvasManager)
 {
-	// initialize the panel
+	if (canvasManager.getNumCanvases() <= 0)
+		return;
+
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, TopSize), ImGuiCond_Always);
 	ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, 35), ImGuiCond_Always);
 	ImGui::Begin("Canvas Tabs Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar);
 
-	// add widgets
+	if (ImGui::BeginTabBar("CanvasTabBar", ImGuiTabBarFlags_AutoSelectNewTabs))
+	{
+		const std::vector<Canvas>& canvases = canvasManager.getOpenCanvases();
 
-	// --- Displaying the loaded canvases ---
-	// grabs the list of loaded canvases
+		for (int i = 0; i < canvasManager.getNumCanvases(); i++)
+		{
+			bool open = true;
+			const Canvas& c = canvasManager.getOpenCanvases()[i];
+			std::string label = c.getName()	+ "##canvas" + std::to_string(i);
+
+			bool tabvisible = ImGui::BeginTabItem(label.c_str(), &open);
+			
+			if (ImGui::IsItemActivated() && canvasManager.getActiveCanvasIndex() != i)
+				canvasManager.setActiveCanvas(i);
+
+			if (tabvisible)
+				ImGui::EndTabItem();
+
+			if (c.isDirty)
+			{
+				ImVec2 tabMin = ImGui::GetItemRectMin();
+				ImVec2 tabMax = ImGui::GetItemRectMax();
+
+				float textWidth = ImGui::CalcTextSize(c.getName().c_str()).x;
+
+				ImVec2 pos = ImVec2(tabMin.x + 6.0f + textWidth, tabMin.y + 2.0f);
+
+				ImGui::GetWindowDrawList()->AddText(pos, IM_COL32(255, 255, 255, 200), "*");
+			}
+
+			if (!open)
+			{
+				if (canvasManager.getOpenCanvases()[i].isDirty)
+				{
+					pendingCloseIndex = i;
+					showCloseConfirm = true;
+				}
+				else
+					canvasManager.closeCanvas(i);
+			}
+		}
+
+		ImGui::EndTabBar();
+	}
+
+	if (showCloseConfirm)
+		ImGui::OpenPopup("Close Canvas?");
+
 	const std::vector<Canvas>& canvases = canvasManager.getOpenCanvases();
 
-	// adds a button for each canvas that sets it to the active one
-	for (int i = 0; i < canvasManager.getNumCanvases(); i++)
+	if (ImGui::BeginPopupModal("Close Canvas?", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		std::string buttonName = canvases[i].getName();
+		if (pendingCloseIndex >= 0 && pendingCloseIndex < canvasManager.getNumCanvases())
+			ImGui::Text("Close \"%s\"?", canvases[pendingCloseIndex].getName().c_str());
 
-		if (ImGui::Button(buttonName.c_str())) {
-			canvasManager.setActiveCanvas(i);
+		ImGui::Spacing();
+
+		if (ImGui::Button("Save and Close"))
+		{
+			canvasManager.setActiveCanvas(pendingCloseIndex);
+			IGFD::FileDialogConfig config;
+			config.path = ".";
+			config.fileName = canvasManager.getActive().getName();
+			config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+			ImGuiFileDialog::Instance()->OpenDialog("SaveBeforeCloseDlg", "Save Image", ".png,.jpg,.ora", config);
+			showCloseConfirm = false;
+			ImGui::CloseCurrentPopup();
 		}
 
 		ImGui::SameLine();
+		if (ImGui::Button("Close Without Saving"))
+		{
+			canvasManager.closeCanvas(pendingCloseIndex);
+			pendingCloseIndex = -1;
+			showCloseConfirm = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel"))
+		{
+			pendingCloseIndex = -1;
+			showCloseConfirm = false;
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
 	}
 
-	// end step
+	if (ImGuiFileDialog::Instance()->Display("SaveBeforeCloseDlg"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			canvasManager.setActiveCanvas(pendingCloseIndex);
+			int* meta = FrameRenderer::readMetaData();
+			canvasManager.getActive().setPixels(FrameRenderer::frames[FrameRenderer::curFrame - 1]);
+
+			std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+			std::string extension = ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+			if (extension == ".ora")
+				canvasManager.saveORA(filePath);
+			else
+				canvasManager.saveToFile(filePath);
+
+			canvasManager.getActive().isDirty = false; 
+			canvasManager.closeCanvas(pendingCloseIndex);
+		}
+
+		pendingCloseIndex = -1;
+		showCloseConfirm = false;
+		ImGuiFileDialog::Instance()->Close();
+	}
+
 	ImGui::End();
 }
 
@@ -1243,7 +1324,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 	// want to also add canvas size presets as a map accessed from a combo 
 	static bool animTemplate = false;
 
-	if (showNewCanvasPopup) {
+	if (UI::showNewCanvasPopup) {
 		ImGui::OpenPopup("New");
 	}
 
@@ -1304,7 +1385,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 					// centering the newly created canvas 
 					resetCanvasPositionCb();
 
-					showNewCanvasPopup = false;
+					UI::showNewCanvasPopup = false;
 					temp_n = "Illustration";
 
 					// if the current UI state is the start menu then change it to the main screen
@@ -1316,7 +1397,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 				ImGui::SameLine();
 
 				if (ImGui::Button("Cancel")) {
-					showNewCanvasPopup = false;
+					UI::showNewCanvasPopup = false;
 					ImGui::CloseCurrentPopup();
 				}
 				ImGui::EndTabItem();
@@ -1346,7 +1427,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 					// centering the newly created canvas 
 					resetCanvasPositionCb();
 
-					showNewCanvasPopup = false;
+					UI::showNewCanvasPopup = false;
 					temp_n = "Animation";
 
 					// if the current UI state is the start menu then change it to the main screen
@@ -1358,7 +1439,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 				ImGui::SameLine();
 
 				if (ImGui::Button("Cancel")) {
-					showNewCanvasPopup = false;
+					UI::showNewCanvasPopup = false;
 					ImGui::CloseCurrentPopup();
 				}
 				ImGui::EndTabItem();
@@ -1518,7 +1599,7 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("New...", "Ctrl+N")) {
-				showNewCanvasPopup = true;
+				UI::showNewCanvasPopup = true;
 			}
 			if (ImGui::MenuItem("Save...", "Ctrl+S", false, canvasManager.hasActive())) {
 				IGFD::FileDialogConfig config;
@@ -1984,13 +2065,6 @@ void UI::drawCursorModesWindow(CanvasManager& canvasManager) {
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation()) {
-		if (ImGui::Button("Toggle Onion Skins")) {
-			FrameRenderer::removeOnionSkin(canvasManager.getActive());
-			FrameRenderer::toggleOnionSkin();
-			FrameRenderer::updateOnionSkin(canvasManager.getActive());
-		}
-	}
 	ImGui::End();
 }
 
@@ -2120,4 +2194,16 @@ void UI::shutdown() {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+}
+
+// function for closing hotkey
+void UI::requestCloseCanvas(int index, CanvasManager& canvasManager)
+{
+	if (canvasManager.getOpenCanvases()[index].isDirty)
+	{
+		pendingCloseIndex = index;
+		showCloseConfirm = true;
+	}
+	else
+		canvasManager.closeCanvas(index);
 }

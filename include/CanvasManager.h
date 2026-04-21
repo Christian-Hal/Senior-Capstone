@@ -13,6 +13,9 @@ class CanvasManager {
         Canvas& getActive();
         bool hasActive();
 
+        void closeCanvas(int index);
+        int getActiveCanvasIndex() const;
+
         int getNumCanvases();
         const std::vector<Canvas>& getOpenCanvases() const;
         void setActiveCanvas(int index);
@@ -44,13 +47,14 @@ class CanvasManager {
         void saveORA(const std::string& path);
         void loadORA(const std::string& filepath);
 
+
+        // index of the active canvas
+        int activeCanvasIndex = -1;
     private:
         // list of active canvases for when we implement the tab system
         std::vector<Canvas> canvases;
 
-        // pointer to the active canvas
-        Canvas* activeCanvas = nullptr;
-        int activeIndex = -1;
+        
 
         // just a helper function to avoid having the same name in multiple files
         std::string checkName(std::string name);

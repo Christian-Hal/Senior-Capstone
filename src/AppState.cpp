@@ -41,7 +41,6 @@ void AppState::init()
 void AppState::shutdown()
 {
     // shut down components
-    frameRenderer.shutdown();
 	ui.shutdown();
 	renderer.shutdown();
 	inputManager.shutdown();

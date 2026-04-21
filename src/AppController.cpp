@@ -392,6 +392,53 @@ void AppController::onInputAction(InputAction action)
 			canvasManipulation.centerCamera(canvas);
 		}
 		break;
+	case InputAction::onionSkinToggle:
+		if (canvasManager.hasActive())
+		{
+			FrameRenderer::removeOnionSkin(canvasManager.getActive());
+			FrameRenderer::toggleOnionSkin();
+			FrameRenderer::updateOnionSkin(canvasManager.getActive());
+		}
+		break;
+	case InputAction::nextFrame:
+		if (canvasManager.hasActive())
+		{
+			FrameRenderer::selectFrame(canvasManager.getActive(), 1);
+		}
+		break;
+	case InputAction::prevFrame:
+		if (canvasManager.hasActive())
+		{
+			FrameRenderer::selectFrame(canvasManager.getActive(), -1);
+		}
+		break;
+	case InputAction::newFile:
+		UI::showNewCanvasPopup = true;
+		break;
+	case InputAction::newFrame:
+		if (canvasManager.hasActive())
+		{
+			FrameRenderer::createFrame(canvasManager.getActive());
+		}
+		break;
+	case InputAction::removeFrame:
+		if (canvasManager.hasActive())
+		{
+			FrameRenderer::removeFrame(canvasManager.getActive());
+		}
+		break;
+	case InputAction::quickPlay:
+		if (canvasManager.hasActive())
+		{
+			FrameRenderer::play(canvasManager.getActive());
+		}
+		break;
+	case InputAction::closeCanvas:
+		if (canvasManager.hasActive())
+		{
+			appState.getUI().requestCloseCanvas(canvasManager.getActiveCanvasIndex(), canvasManager);
+		}
+		break;
 	default:
 		break;
 	}
