@@ -1547,6 +1547,13 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 			ShortcutRow("Zoom Out", InputAction::setClickZoomOut);
 			ShortcutRow("Center Canvas", InputAction::resetView);
 			ShortcutRow("Color Picker", InputAction::setColor);
+			ShortcutRow("Onion Skin Toggle", InputAction::onionSkinToggle);
+			ShortcutRow("Next Frame", InputAction::nextFrame);
+			ShortcutRow("Previous Frame", InputAction::prevFrame);
+			ShortcutRow("New File", InputAction::newFile);
+			ShortcutRow("Remove Frame", InputAction::removeFrame);
+			ShortcutRow("Play animation", InputAction::quickPlay);
+			ShortcutRow("Close Canvas", InputAction::closeCanvas);
 
 		}
 		else if (settingsSection == 2) {

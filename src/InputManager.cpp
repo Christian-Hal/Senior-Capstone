@@ -344,6 +344,8 @@ void InputManager::saveKeybinds()
 		if (action == InputAction::newFile) str = "newFile";
 		if (action == InputAction::newFrame) str = "newFrame";
 		if (action == InputAction::closeCanvas) str = "closeCanvas";
+		if (action == InputAction::removeFrame) str = "removeFrame";
+		if (action == InputAction::quickPlay) str = "quickPlay";
 
         j[str] = {
             {"key", combo.key},
@@ -390,6 +392,8 @@ bool InputManager::loadKeybinds()
 		if (actionStr == "newFile") action = InputAction::newFile;
 		if (actionStr == "newFrame") action = InputAction::newFrame;
 		if (actionStr == "closeCanvas") action = InputAction::closeCanvas;
+		if (actionStr == "removeFrame")	action = InputAction::removeFrame;
+		if (actionStr == "quickPlay") action = InputAction::quickPlay;
 
         int key = value["key"];
         int mods = value["mods"];
