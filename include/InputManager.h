@@ -62,7 +62,9 @@ enum class InputAction
     newFrame,
     removeFrame,
     quickPlay,
-    closeCanvas
+    closeCanvas,
+    saveFile,
+    openFile
 };
 
 class InputManager

@@ -439,6 +439,15 @@ void AppController::onInputAction(InputAction action)
 			appState.getUI().requestCloseCanvas(canvasManager.getActiveCanvasIndex(), canvasManager);
 		}
 		break;
+	case InputAction::saveFile:
+		if (canvasManager.hasActive())
+		{
+			appState.getUI().showSaveDialog = true;
+		}
+		break;
+	case InputAction::openFile:
+		appState.getUI().showOpenDialog = true;
+		break;
 	default:
 		break;
 	}

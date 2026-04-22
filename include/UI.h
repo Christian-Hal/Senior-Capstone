@@ -93,8 +93,9 @@ public:
 		main_screen
 	};
 	static bool showNewCanvasPopup;
-
-	void closeCanvasPopup(int index);
+	static bool showSaveDialog;
+	static bool showOpenDialog;
+	
 	void requestCloseCanvas(int index, CanvasManager& canvasManager);
 
 private:

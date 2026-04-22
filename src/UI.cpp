@@ -33,6 +33,8 @@ int RightSize = 0;
 
 // state initial pop up 
 bool UI::showNewCanvasPopup = false;
+bool UI::showSaveDialog = false;
+bool UI::showOpenDialog = false;
 
 // show panels 
 static bool showPanels = true;
@@ -1536,24 +1538,28 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 					triggerRebind(action);
 				};
 
+			ShortcutRow("Draw", InputAction::setDraw);
+			ShortcutRow("Erase", InputAction::setErase);
+			ShortcutRow("Fill", InputAction::setFill);
+			ShortcutRow("Color Picker", InputAction::setColor);
 			ShortcutRow("Rotate", InputAction::setRotate);
 			ShortcutRow("Pan", InputAction::setPan);
-			ShortcutRow("Draw", InputAction::setDraw);
-			ShortcutRow("Fill", InputAction::setFill);
-			ShortcutRow("Erase", InputAction::setErase);
-			ShortcutRow("Undo", InputAction::undo);
-			ShortcutRow("Redo", InputAction::redo);
 			ShortcutRow("Zoom In", InputAction::setClickZoomIn);
 			ShortcutRow("Zoom Out", InputAction::setClickZoomOut);
 			ShortcutRow("Center Canvas", InputAction::resetView);
-			ShortcutRow("Color Picker", InputAction::setColor);
-			ShortcutRow("Onion Skin Toggle", InputAction::onionSkinToggle);
-			ShortcutRow("Next Frame", InputAction::nextFrame);
 			ShortcutRow("Previous Frame", InputAction::prevFrame);
-			ShortcutRow("New File", InputAction::newFile);
+			ShortcutRow("Next Frame", InputAction::nextFrame);
+			ShortcutRow("Create Frame", InputAction::newFrame);
 			ShortcutRow("Remove Frame", InputAction::removeFrame);
+			ShortcutRow("Onion Skin Toggle", InputAction::onionSkinToggle);
 			ShortcutRow("Play animation", InputAction::quickPlay);
-			ShortcutRow("Close Canvas", InputAction::closeCanvas);
+			ShortcutRow("New File", InputAction::newFile);
+			ShortcutRow("Close File", InputAction::closeCanvas);
+			ShortcutRow("Undo", InputAction::undo);
+			ShortcutRow("Redo", InputAction::redo);
+
+			ShortcutRow("Save File", InputAction::saveFile);
+			ShortcutRow("Open File", InputAction::openFile);
 
 		}
 		else if (settingsSection == 2) {
@@ -1603,6 +1609,39 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 void UI::drawMainMenu(CanvasManager& canvasManager) {
 	// starting the overall main menu bar
 	// testing the main menu implementation
+
+	// for saving hotkey
+	if (showSaveDialog && canvasManager.hasActive())
+	{
+		showSaveDialog = false;
+		IGFD::FileDialogConfig config;
+		if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
+		else config.path = ".";
+		config.fileName = canvasManager.getActive().getName();
+		config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
+		ImGuiFileDialog::Instance()->OpenDialog(
+			"SaveImageDlg",
+			"Save Image",
+			".png,.jpg,.ora",
+			config
+		);
+	}
+
+	// for opening hotkey
+	if (showOpenDialog)
+	{
+		showOpenDialog = false;
+		IGFD::FileDialogConfig config;
+		if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
+		else config.path = ".";
+		ImGuiFileDialog::Instance()->OpenDialog(
+			"LoadFileDlg",
+			"Choose File",
+			".png,.jpg,.ora",
+			config
+		);
+	}
+
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
 			if (ImGui::MenuItem("New...", "Ctrl+N")) {
