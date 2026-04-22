@@ -498,6 +498,7 @@ glm::vec2 AppController::mouseToCanvasCoords(double mouseX, double mouseY)
 
 void AppController::pickColor(Canvas& canvas, double mouseX, double mouseY)
 {
+	//std::cout << "picking color" << std::endl;
 	auto& ui = appState.getUI();
 
 	glm::vec2 canvasCoords = mouseToCanvasCoords(mouseX, mouseY);
