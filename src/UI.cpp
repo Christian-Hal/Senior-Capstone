@@ -53,6 +53,10 @@ static float color[4] = { .0f, .0f, .0f, 1.0f };
 static ImVec4 primary_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
 static ImVec4 secondary_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 
+// determines which color swatch the color wheel is bound to 
+static bool editing_primary = true;
+
+
 // storing time for user input 
 static double lastFrame = 0.0;
 
@@ -203,11 +207,18 @@ Color UI::getColor()
 							  hovering over.
 */
 void UI::setColor(Color currentPixelColor) {
-	std::cout << "setColor called" << std::endl; 
-	color[0] = currentPixelColor.r / 255.0f;
-	color[1] = currentPixelColor.g / 255.0f;
-	color[2] = currentPixelColor.b / 255.0f;
-	color[3] = currentPixelColor.a / 255.0f;
+	// picking which one to update 
+	ImVec4* active_color = editing_primary ? &primary_color : &secondary_color;
+
+	active_color->x = static_cast<float>(currentPixelColor.r) / 255.0f;  
+	active_color->y = static_cast<float>(currentPixelColor.g) / 255.0f; 
+	active_color->z = static_cast<float>(currentPixelColor.b) / 255.0f;
+	active_color->w = static_cast<float>(currentPixelColor.a) / 255.0f;  
+
+	color[0] = active_color->x;
+	color[1] = active_color->y;
+	color[2] = active_color->z;
+	color[3] = active_color->w;
 }
 
 
@@ -738,12 +749,7 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	ImGui::SetNextWindowSize(ImVec2(RightSize, displayHeight - TopSize), ImGuiCond_Always);
 	ImGui::Begin("Right Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
-	// color wheel 
-	// storing our two colors 
-	
-	// active color 
-	static bool editing_primary = true;
-
+	// ----- Color wheel ------
 	// Determine which pointer to pass to the picker
 	ImVec4* active_color = editing_primary ? &primary_color : &secondary_color;
 
@@ -1620,8 +1626,6 @@ void UI::drawColorWindow(CanvasManager& canvasManager) {
 	// name our window 
 	ImGui::Begin("Color");
 	ImGui::Text("Color");
-	// storing our two colors 
-	
 	// active color 
 	static bool editing_primary = true;
 
