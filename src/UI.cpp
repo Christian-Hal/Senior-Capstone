@@ -660,11 +660,11 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	}
 
 	else if (getCursorMode() == CursorMode::Erase) {
-		ImGui::Text("State: Erase");
+		ImGui::Text("State: Eraser");
 	}
 
 	else if (getCursorMode() == CursorMode::SoftErase) {
-		ImGui::Text("State: SoftErase");
+		ImGui::Text("State: Kneaded Eraser");
 	}
 
 	else if (getCursorMode() == CursorMode::ZoomIn) {
@@ -704,6 +704,12 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 		setCursorMode(CursorMode::Erase);
 	}
 	ImGui::SetItemTooltip("Erase");
+
+	// this FA icon is subject to change
+	if (ImGui::Button(ICON_FA_CIRCLE)) {
+		setCursorMode(CursorMode::SoftErase);
+	}
+	ImGui::SetItemTooltip("Kneaded Eraser");
 
 
 	if (ImGui::Button(ICON_FA_HAND)) {
@@ -814,18 +820,20 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 		ImGui::Text("%dx%d", canvasManager.getActive().getWidth(), canvasManager.getActive().getHeight());
 
 		// Create the layer buttons
-		if (ImGui::Button("New Layer")) {
+		if (ImGui::Button(ICON_FA_LAYER_GROUP "" ICON_FA_PLUS)) {
 			// increase the number of layers by 1
 			canvasManager.getActive().createLayer();
 		}
+		ImGui::SetItemTooltip("New Layer");
 		// remove a layer button 
 
-		if (ImGui::Button("Remove Layer")) {
+		if (ImGui::Button(ICON_FA_LAYER_GROUP "" ICON_FA_MINUS)) {
 			if (canvasManager.getActive().getNumLayers() > 2) {
 				// decrease the number of layers by 1
 				canvasManager.getActive().removeLayer();
 			}
 		}
+		ImGui::SetItemTooltip("Remove Layer");
 
 		for (int i = 1; i < canvasManager.getActive().getNumLayers(); i++) {
 			std::string buttonName = "Canvas Layer " + std::to_string(i);
