@@ -49,6 +49,10 @@ static float curFrame = 1.0f;
 // RBGA values for the color wheel 
 static float color[4] = { .0f, .0f, .0f, 1.0f };
 
+// RGBA values for primary and secondary color swatches 
+static ImVec4 primary_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+static ImVec4 secondary_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+
 // storing time for user input 
 static double lastFrame = 0.0;
 
@@ -199,6 +203,7 @@ Color UI::getColor()
 							  hovering over.
 */
 void UI::setColor(Color currentPixelColor) {
+	std::cout << "setColor called" << std::endl; 
 	color[0] = currentPixelColor.r / 255.0f;
 	color[1] = currentPixelColor.g / 255.0f;
 	color[2] = currentPixelColor.b / 255.0f;
@@ -625,11 +630,7 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 	}
 }
 
-
 // methods for drawing the individual menu panels
-
-
-
 void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(0, TopSize), ImGuiCond_Always); // line that needs to change to make it fit MainMenuBar
@@ -731,7 +732,6 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::End();
 }
 
-
 void UI::drawRightPanel(CanvasManager& canvasManager) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(displayWidth - RightSize, TopSize), ImGuiCond_Always);
@@ -740,8 +740,7 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 
 	// color wheel 
 	// storing our two colors 
-	static ImVec4 primary_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-	static ImVec4 secondary_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+	
 	// active color 
 	static bool editing_primary = true;
 
@@ -1622,8 +1621,7 @@ void UI::drawColorWindow(CanvasManager& canvasManager) {
 	ImGui::Begin("Color");
 	ImGui::Text("Color");
 	// storing our two colors 
-	static ImVec4 primary_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-	static ImVec4 secondary_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+	
 	// active color 
 	static bool editing_primary = true;
 
