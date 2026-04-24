@@ -1188,7 +1188,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 		// different tabs for drawing and for animation
 		ImGuiTabBarFlags tabBarFlags = ImGuiTabBarFlags_None;
 		if (ImGui::BeginTabBar("New", tabBarFlags)) {
-			if (ImGui::BeginTabItem("New Illustration")) {
+			if (ImGui::BeginTabItem("Illustration")) {
 
 				// trying to implement changing paper color upon canvas creation
 				static bool changePaperColor = false;
@@ -1274,7 +1274,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 				ImGui::EndTabItem();
 			}
 
-			if (ImGui::BeginTabItem("New Animation")) {
+			if (ImGui::BeginTabItem("Animation")) {
 				// input params animation creation
 				ImGui::InputInt("Width:", &temp_w);
 				ImGui::InputInt("Height:", &temp_h);
@@ -1759,26 +1759,30 @@ void UI::drawLayersWindow(CanvasManager& canvasManager) {
 		ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
 
 		// save the active canvas for later use
-		ImGui::Text("file is open");
-		ImGui::Text("file size is: ");
+		ImGui::Text("Canvas Size: ");
 		ImGui::Text("%dx%d", canvasManager.getActive().getWidth(), canvasManager.getActive().getHeight());
 
 		// Create the layer buttons
-		if (ImGui::Button("New Layer")) {
+		if (ImGui::Button(ICON_FA_LAYER_GROUP "" ICON_FA_PLUS)) {
 			// increase the number of layers by 1
 			canvasManager.getActive().createLayer();
 		}
-		// remove a layer button 
+		ImGui::SetItemTooltip("New Layer");
 
-		if (ImGui::Button("Remove Layer")) {
+		// remove a layer button 
+		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 100, 100, 255));
+		if (ImGui::Button(ICON_FA_LAYER_GROUP)) {
 			if (canvasManager.getActive().getNumLayers() > 2) {
 				// decrease the number of layers by 1
 				canvasManager.getActive().removeLayer();
 			}
 		}
 
+		ImGui::PopStyleColor();
+		ImGui::SetItemTooltip("Remove Layer");
+
 		for (int i = 1; i < canvasManager.getActive().getNumLayers(); i++) {
-			std::string buttonName = "Canvas Layer " + std::to_string(i);
+			std::string buttonName = ICON_FA_LAYER_GROUP + std::to_string(i);
 			if (ImGui::Button(buttonName.c_str())) {
 				canvasManager.getActive().selectLayer(i);
 			}
@@ -1791,7 +1795,7 @@ void UI::drawLayersWindow(CanvasManager& canvasManager) {
 void UI::drawBrushesWindow(CanvasManager& canvasManager) {
 	ImGui::Begin("Brushes");
 	// brush import system, will probably get moved when I eventually do a UI overhaul
-	if (ImGui::Button("Import Brush"))
+	if (ImGui::Button(ICON_FA_PAINTBRUSH))
 	{
 		ImGuiFileDialog::Instance()->OpenDialog(
 			"ChooseFileDlgKey",
@@ -1799,6 +1803,7 @@ void UI::drawBrushesWindow(CanvasManager& canvasManager) {
 			".gbr,.png,.kpp,.jbr"
 		);
 	}
+
 
 	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
 	{
@@ -1937,10 +1942,11 @@ void UI::drawCursorModesWindow(CanvasManager& canvasManager) {
 }
 
 void UI::drawTimelineWindow(CanvasManager& canvasManager) {
-	ImGui::Begin("Timeline");
 	// only display animation settings if there is an active canvas
 	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation())
 	{
+		ImGui::Begin("Timeline");
+
 		int currentFrame = FrameRenderer::getCurFrame();
 		int totalFrames = FrameRenderer::getNumFrames();
 		if (ImGui::Button("+")) {
@@ -2053,8 +2059,10 @@ void UI::drawTimelineWindow(CanvasManager& canvasManager) {
 		style.FramePadding = old_padding;
 		style.FrameRounding = old_rounding;
 		ImGui::SameLine();
+
+		ImGui::End();
+
 	}
-	ImGui::End();
 }
 
 // ending and cleanup 
