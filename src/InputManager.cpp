@@ -80,11 +80,7 @@ void InputManager::init(GLFWwindow* window)
 	glfwSetCursorPosCallback(window, cursorPosCallBack);
 	glfwSetScrollCallback(window, scrollCallBack);
 	glfwSetKeyCallback(window, keyboardCallBack);
-
-
-	if (!loadKeybinds()) {
-		bindDefaultKeybinds();
-	}
+	bindDefaultKeybinds();
 }
 
 //constant update function
