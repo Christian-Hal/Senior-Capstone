@@ -848,6 +848,15 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	color[2] = c->z; // B
 	color[3] = c->w; // A
 
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	// color palette section 
+	// comment that says Mori Calliope 
+
+
+
 	// brush size slider 
 	ImGui::SliderInt("Size", &brushSize, 1, 500, "%d", ImGuiSliderFlags_Logarithmic);
 	// preset brush size buttons 
