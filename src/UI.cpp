@@ -843,19 +843,30 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 
 	ImVec4* c = active_color;
 
-	color[0] = c->x; // R
-	color[1] = c->y; // G
-	color[2] = c->z; // B
-	color[3] = c->w; // A
-
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
 
 	// color palette section 
 	// comment that says Mori Calliope 
+	ImGui::Text("Color Set:");
+	static ImVec4 palette[32] = {
+	ImVec4(1.0f, 0.0f, 0.0f, 1.0f), ImVec4(0.0f, 1.0f, 0.0f, 1.0f), // need to add more colors 
+	};
 
+	for (int n = 0; n < 32; n++) {
+		ImGui::PushID(n); 
+		if (ImGui::ColorButton("##palette_button", palette[n])) {
+			*active_color = palette[n]; 
+		}
+		if ((n + 1) % 8 != 0) ImGui::SameLine();
+		ImGui::PopID();
+	}
 
+	color[0] = c->x; // R
+	color[1] = c->y; // G
+	color[2] = c->z; // B
+	color[3] = c->w; // A
 
 	// brush size slider 
 	ImGui::SliderInt("Size", &brushSize, 1, 500, "%d", ImGuiSliderFlags_Logarithmic);
