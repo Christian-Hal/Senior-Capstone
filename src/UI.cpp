@@ -1195,19 +1195,13 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 
 				// trying to implement changing paper color upon canvas creation
 				if (ImGui::Button("Set Paper Color")) {
-					changePaperColor = true;
+					changePaperColor = !changePaperColor;
 				}
 				if (changePaperColor) {
 					ImGuiColorEditFlags flags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
 					ImGui::SetNextItemWidth(180.0f);
 					ImGui::ColorPicker4("##papercolorpicker", (float*)&paperColor, flags);
-					if (ImGui::Button("Apply")) {
-						//canvasManager.setPaperColor(paperColor);
-						// closes the picker
-						changePaperColor = false;
-					}
-				}
-
+				}	
 
 				// setting up combo box for illustration presets 
 				// presets as str and tuple of two ints 
