@@ -72,6 +72,18 @@ GLuint my_image_texture = 0;
 // state for draw erase button 
 static CursorMode cursorMode = CursorMode::Draw;
 
+// struct for storing one loaded preview texture 
+struct PreviewImage
+{
+	GLuint texture = 0; // texture ID
+	int width = 0;
+	int height = 0;
+};
+
+// cache to prevent image reloading every frame 
+std::unordered_map<std::string, PreviewImage> previewCache;
+
+
 
 void UI::bindCursorCallbacks(SetCursorModeCallback setCb, GetCursorModeCallback getCb)
 {
@@ -169,6 +181,28 @@ bool LoadTextureFromFile(const char* file_name, GLuint* out_texture, int* out_wi
 	bool ret = LoadTextureFromMemory(file_data, file_size, out_texture, out_width, out_height);
 	IM_FREE(file_data);
 	return ret;
+}
+
+PreviewImage* getPreview(const std::string& path) {
+	// check if we have already loaded this image, stop if we have
+	auto imageThumbnail = previewCache.find(path);
+	if (imageThumbnail != previewCache.end())
+		// reusing stored image
+		return &imageThumbnail->second; 
+
+	// if we haven't used it before, load it from file
+	PreviewImage preview;
+
+	bool previewLoaded = LoadTextureFromFile(path.c_str(), &preview.texture, &preview.width, &preview.height);
+
+	if (!previewLoaded) {
+		// fuckin explode if it didn't work
+		return nullptr;
+	}
+	
+	// store in cache to prevent reloading constantly	
+	previewCache[path] = preview;
+	return &previewCache[path];
 }
 
 
@@ -489,24 +523,43 @@ void UI::drawStartScreen(CanvasManager& canvasManager)
 			size_t lastSlash = filePath.find_last_of("/\\");
 			std::string fileName = (lastSlash != std::string::npos) ? filePath.substr(lastSlash + 1) : filePath;
 
-			// if the button is clicked then load in the file
-			if (ImGui::Button(fileName.c_str(), ImVec2(150, 0))) {
-				std::string extension = filePath.substr(filePath.find_last_of('.'));
+			// putting button and image preview together	
+			ImGui::BeginGroup();
 
-				if (extension == ".ora") {
+			// if the button is clicked then load in the file
+			std::string extension = filePath.substr(filePath.find_last_of('.'));
+
+			// need to figure something out for ora files 
+			if (extension != ".ora") {
+				PreviewImage* preview = getPreview(filePath);
+
+				if (preview && preview->texture) {
+					float maxSize = 200.0f;
+					float ratio = (float)preview->width / (float)preview->height;
+
+					ImVec2 size;
+					if (ratio > 1.0f)
+						size = ImVec2(maxSize, maxSize / ratio);
+					else
+						size = ImVec2(maxSize * ratio, maxSize);
+					ImGui::Image((ImTextureID)(intptr_t)preview->texture, size);
+				}
+			}
+
+			if (ImGui::Button(fileName.c_str(), ImVec2(150, 0))) {
+				if (extension == ".ora")
 					canvasManager.loadORA(filePath);
-					// centering the loaded image 
-					resetCanvasPositionCb();
-				}
-				else {
+				else
 					canvasManager.loadFromFile(filePath);
-					// centering the loaded image 
-					resetCanvasPositionCb();
-				}
+				// centering the loaded image 
+				resetCanvasPositionCb();
 
 				// if the current UI state is the start menu then change it to the main screen
 				if (curState == UIState::start_menu) { curState = UIState::main_screen; }
 			}
+
+			ImGui::EndGroup();
+
 		}
 	}
 
@@ -1201,7 +1254,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 					ImGuiColorEditFlags flags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
 					ImGui::SetNextItemWidth(180.0f);
 					ImGui::ColorPicker4("##papercolorpicker", (float*)&paperColor, flags);
-				}	
+				}
 
 				// setting up combo box for illustration presets 
 				// presets as str and tuple of two ints 
