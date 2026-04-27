@@ -837,55 +837,8 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 		ImGui::Spacing();
 	}
 
-	// brush import system, will probably get moved when I eventually do a UI overhaul
-	if (ImGui::Button(ICON_FA_PAINTBRUSH))
-	{
-		IGFD::FileDialogConfig config;
-		config.path = ".";
-
-		if (getDefaultFolderPathCb) {
-			config.path = getDefaultFolderPathCb();
-		}
-
-		ImGuiFileDialog::Instance()->OpenDialog(
-			"ChooseFileDlgKey",
-			"Choose File",
-			".gbr,.png,.kpp,.jbr",
-			config
-		);
-	}
-
-	ImGui::SetItemTooltip("Import Brush");
-
-	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
-	{
-		if (ImGuiFileDialog::Instance()->IsOk())
-		{
-			std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
-			if (loadBrushFromFileCb) {
-				loadBrushFromFileCb(filePath);
-			}
-		}
-		ImGuiFileDialog::Instance()->Close();
-	}
-
-	// --- Displaying loaded brush options ---
-	// grabs the list of loaded brushes
-	static const std::vector<BrushTool> emptyBrushes;
-	const std::vector<BrushTool>& brushes = getBrushListCb ? getBrushListCb() : emptyBrushes;
-
-	// adds a button for each brush that sets it to the active one
-	ImGui::Text("Loaded Brushes: ");
-	for (int i = 0; i < brushes.size(); i++)
-	{
-		std::string buttonName = brushes[i].brushName;
-
-		if (ImGui::Button(buttonName.c_str())) {
-			if (setActiveBrushCb) {
-				setActiveBrushCb(i);
-			}
-		}
-	}
+	// brush import system
+	renderBrushImports(canvasManager);
 
 	// end step
 	RightSize = ImGui::GetWindowWidth();
@@ -1602,46 +1555,7 @@ void UI::drawLayersWindow(CanvasManager& canvasManager) {
 
 void UI::drawBrushesWindow(CanvasManager& canvasManager) {
 	ImGui::Begin("Brushes");
-	// brush import system, will probably get moved when I eventually do a UI overhaul
-	if (ImGui::Button(ICON_FA_PAINTBRUSH))
-	{
-		ImGuiFileDialog::Instance()->OpenDialog(
-			"ChooseFileDlgKey",
-			"Choose File",
-			".gbr,.png,.kpp,.jbr"
-		);
-	}
-
-
-	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
-	{
-		if (ImGuiFileDialog::Instance()->IsOk())
-		{
-			std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
-			if (loadBrushFromFileCb) {
-				loadBrushFromFileCb(filePath);
-			}
-		}
-		ImGuiFileDialog::Instance()->Close();
-	}
-
-	// --- Displaying loaded brush options ---
-	// grabs the list of loaded brushes
-	static const std::vector<BrushTool> emptyBrushes;
-	const std::vector<BrushTool>& brushes = getBrushListCb ? getBrushListCb() : emptyBrushes;
-
-	// adds a button for each brush that sets it to the active one
-	ImGui::Text("Loaded Brushes: ");
-	for (int i = 0; i < brushes.size(); i++)
-	{
-		std::string buttonName = brushes[i].brushName;
-
-		if (ImGui::Button(buttonName.c_str())) {
-			if (setActiveBrushCb) {
-				setActiveBrushCb(i);
-			}
-		}
-	}
+	renderBrushImports(canvasManager);
 	ImGui::End();
 }
 
@@ -2041,6 +1955,53 @@ void UI::renderLayerInfo(CanvasManager& canvasManager) {
 		}
 	}
 	ImGui::Text("Current Layer: %d", canvasManager.getActive().getCurLayer());
+}
+
+void UI::renderBrushImports(CanvasManager& canvasManager) {
+	// brush import system, will probably get moved when I eventually do a UI overhaul
+	if (ImGui::Button(ICON_FA_PAINTBRUSH))
+	{
+		ImGuiFileDialog::Instance()->OpenDialog(
+			"ChooseFileDlgKey",
+			"Choose File",
+			".gbr,.png,.kpp,.jbr"
+		);
+	}
+	ImGui::SetItemTooltip("Import Brush");
+
+	if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+			if (loadBrushFromFileCb) {
+				loadBrushFromFileCb(filePath);
+			}
+		}
+		ImGuiFileDialog::Instance()->Close();
+	}
+
+	// --- Displaying loaded brush options ---
+	// grabs the list of loaded brushes
+	static const std::vector<BrushTool> emptyBrushes;
+	const std::vector<BrushTool>& brushes = getBrushListCb ? getBrushListCb() : emptyBrushes;
+
+	// adds a button for each brush that sets it to the active one
+	ImGui::Text("Loaded Brushes: ");
+	for (int i = 0; i < brushes.size(); i++)
+	{
+		std::string buttonName = brushes[i].brushName;
+
+		if (ImGui::Button(buttonName.c_str())) {
+			if (setActiveBrushCb) {
+				setActiveBrushCb(i);
+			}
+		}
+	}
+}
+
+void UI::renderCursorModes(CanvasManager& canvasManager) {
+
 }
 
 // ending and cleanup 

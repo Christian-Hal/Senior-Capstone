@@ -151,6 +151,8 @@ private:
 	void renderColorWheel(CanvasManager& canvasManager, ImVec4* active_color);
 	void renderBrushSize(CanvasManager& canvasManager);
 	void renderLayerInfo(CanvasManager& canvasManager);
+	void renderBrushImports(CanvasManager& canvasManager);
+	void renderCursorModes(CanvasManager& canvasManager);
 
 	void drawNewCanvasPopup(CanvasManager& canvasManager);
 	void drawSettingsPopup(CanvasManager& canvasManager);
