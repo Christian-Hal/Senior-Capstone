@@ -630,7 +630,7 @@ void UI::drawCustomCursor(CanvasManager& canvasManager) {
 		// calculating and centering offset by subtracting half the width/height of the GENERATED dab
 		ImVec2 origin = ImVec2(mousePos.x - (displayW * 0.5f), mousePos.y - (displayH * 0.5f));
 
-		if (brushSize >= 3) {
+		if (brushSize >= 5) {
 			for (int y = 0; y < H; y++) {
 				int flippedY = H - 1 - y;
 				for (int x = 0; x < W; x++) {
@@ -787,6 +787,7 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::Separator();
 	ImGui::Spacing();
 
+	// color set section
 	// need active color here so that it is updated every frame
 	ImVec4* active_color = editing_primary ? &primary_color : &secondary_color;
 	renderColorSet(canvasManager, active_color);
@@ -808,43 +809,12 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	// Determine which pointer to pass to the picker
 	ImVec4* active_color = editing_primary ? &primary_color : &secondary_color;
 
-	// drawing the swatches
-	if (ImGui::ColorButton("Primary", primary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
-		editing_primary = true;
-	}
-	// active swatch indicator, orange rectangle
-	if (editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
-
-	ImGui::SameLine();
-
-	if (ImGui::ColorButton("Secondary", secondary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
-		editing_primary = false;
-	}
-	if (!editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
-
-	// the actual color picker 
-	// using active color so wheel only edits last clicked swatch
-	ImGui::ColorPicker4("##wheel", (float*)active_color,
-		ImGuiColorEditFlags_PickerHueWheel |
-		ImGuiColorEditFlags_NoSidePreview |
-		ImGuiColorEditFlags_NoInputs |
-		ImGuiColorEditFlags_AlphaPreview |
-		ImGuiColorEditFlags_AlphaBar |
-		ImGuiWindowFlags_AlwaysAutoResize);
-
-	ImVec4* c = active_color;
+	renderColorWheel(canvasManager, active_color);
 
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
-
 	// comment that says Mori Calliope 
-	
-	color[0] = c->x; // R
-	color[1] = c->y; // G
-	color[2] = c->z; // B
-	color[3] = c->w; // A
-
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
@@ -1637,31 +1607,7 @@ void UI::drawColorWindow(CanvasManager& canvasManager) {
 	// Determine which pointer to pass to the picker
 	ImVec4* active_color = editing_primary ? &primary_color : &secondary_color;
 
-	// drawing the swatches
-	if (ImGui::ColorButton("Primary", primary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
-		editing_primary = true;
-	}
-	// active swatch indicator, orange rectangle
-	if (editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
-
-	ImGui::SameLine();
-
-	if (ImGui::ColorButton("Secondary", secondary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
-		editing_primary = false;
-	}
-	if (!editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
-
-	// the actual color picker 
-	// using active color so wheel only edits last clicked swatch
-	ImGui::ColorPicker4("##wheel", (float*)active_color,
-		ImGuiColorEditFlags_PickerHueWheel |
-		ImGuiColorEditFlags_NoSidePreview |
-		ImGuiColorEditFlags_NoInputs |
-		ImGuiColorEditFlags_AlphaPreview |
-		ImGuiColorEditFlags_AlphaBar |
-		ImGuiWindowFlags_AlwaysAutoResize);
-
-	ImVec4* c = active_color;
+	renderColorWheel(canvasManager, active_color); 
 
 	ImGui::Spacing();
 	ImGui::Separator();
@@ -1673,10 +1619,6 @@ void UI::drawColorWindow(CanvasManager& canvasManager) {
 	if (showPalette) {
 		renderColorSet(canvasManager, active_color);
 	}
-	color[0] = c->x; // R
-	color[1] = c->y; // G
-	color[2] = c->z; // B
-	color[3] = c->w; // A
 	ImGui::End();
 }
 
@@ -2095,8 +2037,43 @@ void UI::renderColorSet(CanvasManager& canvasManager, ImVec4* active_color) {
 
 		ImGui::PopID();
 	}
+
+	color[0] = active_color->x; // R
+	color[1] = active_color->y; // G
+	color[2] = active_color->z; // B
+	color[3] = active_color->w; // A
 }
 
+void UI::renderColorWheel(CanvasManager& canvasManager, ImVec4* active_color) {
+	// drawing the swatches
+	if (ImGui::ColorButton("Primary", primary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
+		editing_primary = true;
+	}
+	// active swatch indicator, orange rectangle
+	if (editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+
+	ImGui::SameLine();
+
+	if (ImGui::ColorButton("Secondary", secondary_color, ImGuiColorEditFlags_None, ImVec2(30, 30))) {
+		editing_primary = false;
+	}
+	if (!editing_primary) ImGui::GetWindowDrawList()->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), IM_COL32(255, 255, 0, 255));
+
+	// the actual color picker 
+	// using active color so wheel only edits last clicked swatch
+	ImGui::ColorPicker4("##wheel", (float*)active_color,
+		ImGuiColorEditFlags_PickerHueWheel |
+		ImGuiColorEditFlags_NoSidePreview |
+		ImGuiColorEditFlags_NoInputs |
+		ImGuiColorEditFlags_AlphaPreview |
+		ImGuiColorEditFlags_AlphaBar |
+		ImGuiWindowFlags_AlwaysAutoResize);
+
+	color[0] = active_color->x; // R
+	color[1] = active_color->y; // G
+	color[2] = active_color->z; // B
+	color[3] = active_color->w; // A
+}
 
 // ending and cleanup 
 void UI::shutdown() {

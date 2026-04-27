@@ -147,6 +147,7 @@ private:
 	void renderTimeline(CanvasManager& canvasManager);
 	void renderTimelineControls(CanvasManager& canvasManager);
 	void renderColorSet(CanvasManager& canvasManager, ImVec4* active_color);
+	void renderColorWheel(CanvasManager& canvasManager, ImVec4* active_color);
 
 	void drawNewCanvasPopup(CanvasManager& canvasManager);
 	void drawSettingsPopup(CanvasManager& canvasManager);
