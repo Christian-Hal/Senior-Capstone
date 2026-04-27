@@ -265,6 +265,11 @@ void FrameRenderer::selectFrame(Canvas& canvas, int frameDelta){
         frames[curFrame - 1] =  vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
         writeAllData(&canvas);
         curFrame = curFrame + frameDelta;
+        while(frLayerData[curCanvas-1][curFrame-1].size() < canvas.getNumLayers()){
+            frLayerData[curCanvas-1][curFrame-1].push_back(vector<Color>(canvas.getWidth() * canvas.getHeight(), {0,0,0,0}));
+            cout << "inserted a layer" << endl;
+            cout << frLayerData[curCanvas-1][curFrame-1].size() << endl;
+        }
         int* meta = readMetaData();
         canvas.setPixels(frames[curFrame-1]);
         canvas.setLayerData(readLayerData(meta));
