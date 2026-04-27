@@ -819,16 +819,8 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	// brush size slider 
-	ImGui::SliderInt("Size", &brushSize, 1, 500, "%d", ImGuiSliderFlags_Logarithmic);
-	// preset brush size buttons 
-	// ----- NOTE: a limited amount is added right now, will add full when UI rework is settled -----
-	if (ImGui::Button("5"))  brushSize = 5;
-	ImGui::SameLine();
-	if (ImGui::Button("10")) brushSize = 10;
-	ImGui::SameLine();
-	if (ImGui::Button("100")) brushSize = 100;
-
+	// brush size slider and presets
+	renderBrushSize(canvasManager);
 
 	// adds a little visual split between sections
 	ImGui::Spacing();
@@ -838,39 +830,7 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	// if there is a canvas then display the layer options
 	if (canvasManager.hasActive())
 	{
-		// save the active canvas for later use
-		//ImGui::Text("File is open");
-		ImGui::Text("Canvas size: ");
-		ImGui::Text("%dx%d", canvasManager.getActive().getWidth(), canvasManager.getActive().getHeight());
-
-		// Create the layer buttons
-		if (ImGui::Button(ICON_FA_LAYER_GROUP "" ICON_FA_PLUS)) {
-			// increase the number of layers by 1
-			canvasManager.getActive().createLayer();
-		}
-		ImGui::SetItemTooltip("New Layer");
-		// remove a layer button 
-
-		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 100, 100, 255));
-
-		if (ImGui::Button(ICON_FA_LAYER_GROUP)) {
-			if (canvasManager.getActive().getNumLayers() > 2) {
-				// decrease the number of layers by 1
-				canvasManager.getActive().removeLayer();
-			}
-		}
-
-		ImGui::PopStyleColor();
-		ImGui::SetItemTooltip("Remove Layer");
-
-		for (int i = 1; i < canvasManager.getActive().getNumLayers(); i++) {
-			std::string buttonName = ICON_FA_LAYER_GROUP + std::to_string(i);
-			if (ImGui::Button(buttonName.c_str())) {
-				canvasManager.getActive().selectLayer(i);
-			}
-		}
-		ImGui::Text("Current Layer: %d", canvasManager.getActive().getCurLayer());
-
+		renderLayerInfo(canvasManager);
 		// adds a little visual split between sections
 		ImGui::Spacing();
 		ImGui::Separator();
@@ -1624,48 +1584,7 @@ void UI::drawColorWindow(CanvasManager& canvasManager) {
 
 void UI::drawBrushSizeWindow(CanvasManager& canvasManager) {
 	ImGui::Begin("Brush Size");
-	ImGui::SliderInt("Size", &brushSize, 1, 500, "%d", ImGuiSliderFlags_Logarithmic);
-	// presets 
-	if (ImGui::Button("5"))  brushSize = 5;
-	ImGui::SameLine();
-	if (ImGui::Button("10")) brushSize = 10;
-	ImGui::SameLine();
-	if (ImGui::Button("20")) brushSize = 20;
-
-	if (ImGui::Button("30"))  brushSize = 30;
-	ImGui::SameLine();
-	if (ImGui::Button("40")) brushSize = 40;
-	ImGui::SameLine();
-	if (ImGui::Button("50")) brushSize = 50;
-
-	if (ImGui::Button("60"))  brushSize = 60;
-	ImGui::SameLine();
-	if (ImGui::Button("70")) brushSize = 70;
-	ImGui::SameLine();
-	if (ImGui::Button("80")) brushSize = 80;
-
-	if (ImGui::Button("90"))  brushSize = 90;
-	ImGui::SameLine();
-	if (ImGui::Button("100")) brushSize = 100;
-	ImGui::SameLine();
-	if (ImGui::Button("120")) brushSize = 120;
-
-	if (ImGui::Button("150"))  brushSize = 150;
-	ImGui::SameLine();
-	if (ImGui::Button("200")) brushSize = 200;
-	ImGui::SameLine();
-	if (ImGui::Button("250")) brushSize = 250;
-
-	if (ImGui::Button("300")) brushSize = 300;
-	ImGui::SameLine();
-	if (ImGui::Button("350")) brushSize = 350;
-	ImGui::SameLine();
-	if (ImGui::Button("400")) brushSize = 400;
-
-	if (ImGui::Button("450")) brushSize = 450;
-	ImGui::SameLine();
-	if (ImGui::Button("500")) brushSize = 500;
-
+	renderBrushSize(canvasManager);
 	ImGui::End();
 }
 
@@ -1676,38 +1595,7 @@ void UI::drawLayersWindow(CanvasManager& canvasManager) {
 	if (canvasManager.hasActive())
 	{
 		ImGui::Begin("Layers");
-		ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
-
-		// save the active canvas for later use
-		ImGui::Text("Canvas Size: ");
-		ImGui::Text("%dx%d", canvasManager.getActive().getWidth(), canvasManager.getActive().getHeight());
-
-		// Create the layer buttons
-		if (ImGui::Button(ICON_FA_LAYER_GROUP "" ICON_FA_PLUS)) {
-			// increase the number of layers by 1
-			canvasManager.getActive().createLayer();
-		}
-		ImGui::SetItemTooltip("New Layer");
-
-		// remove a layer button 
-		ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 100, 100, 255));
-		if (ImGui::Button(ICON_FA_LAYER_GROUP)) {
-			if (canvasManager.getActive().getNumLayers() > 2) {
-				// decrease the number of layers by 1
-				canvasManager.getActive().removeLayer();
-			}
-		}
-
-		ImGui::PopStyleColor();
-		ImGui::SetItemTooltip("Remove Layer");
-
-		for (int i = 1; i < canvasManager.getActive().getNumLayers(); i++) {
-			std::string buttonName = ICON_FA_LAYER_GROUP + std::to_string(i);
-			if (ImGui::Button(buttonName.c_str())) {
-				canvasManager.getActive().selectLayer(i);
-			}
-		}
-		ImGui::Text("Current Layer: %d", canvasManager.getActive().getCurLayer());
+		renderLayerInfo(canvasManager);
 		ImGui::End();
 	}
 }
@@ -2073,6 +1961,86 @@ void UI::renderColorWheel(CanvasManager& canvasManager, ImVec4* active_color) {
 	color[1] = active_color->y; // G
 	color[2] = active_color->z; // B
 	color[3] = active_color->w; // A
+}
+
+void UI::renderBrushSize(CanvasManager& canvasManager) {
+	// * make these wrap with the panel like the color set does * 
+	ImGui::SliderInt("Size", &brushSize, 1, 500, "%d", ImGuiSliderFlags_Logarithmic);
+	// presets 
+	if (ImGui::Button("5"))  brushSize = 5;
+	ImGui::SameLine();
+	if (ImGui::Button("10")) brushSize = 10;
+	ImGui::SameLine();
+	if (ImGui::Button("20")) brushSize = 20;
+
+	if (ImGui::Button("30"))  brushSize = 30;
+	ImGui::SameLine();
+	if (ImGui::Button("40")) brushSize = 40;
+	ImGui::SameLine();
+	if (ImGui::Button("50")) brushSize = 50;
+
+	if (ImGui::Button("60"))  brushSize = 60;
+	ImGui::SameLine();
+	if (ImGui::Button("70")) brushSize = 70;
+	ImGui::SameLine();
+	if (ImGui::Button("80")) brushSize = 80;
+
+	if (ImGui::Button("90"))  brushSize = 90;
+	ImGui::SameLine();
+	if (ImGui::Button("100")) brushSize = 100;
+	ImGui::SameLine();
+	if (ImGui::Button("120")) brushSize = 120;
+
+	if (ImGui::Button("150"))  brushSize = 150;
+	ImGui::SameLine();
+	if (ImGui::Button("200")) brushSize = 200;
+	ImGui::SameLine();
+	if (ImGui::Button("250")) brushSize = 250;
+
+	if (ImGui::Button("300")) brushSize = 300;
+	ImGui::SameLine();
+	if (ImGui::Button("350")) brushSize = 350;
+	ImGui::SameLine();
+	if (ImGui::Button("400")) brushSize = 400;
+
+	if (ImGui::Button("450")) brushSize = 450;
+	ImGui::SameLine();
+	if (ImGui::Button("500")) brushSize = 500;
+}
+
+void UI::renderLayerInfo(CanvasManager& canvasManager) {
+	ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
+
+	// save the active canvas for later use
+	ImGui::Text("Canvas Size: ");
+	ImGui::Text("%dx%d", canvasManager.getActive().getWidth(), canvasManager.getActive().getHeight());
+
+	// Create the layer buttons
+	if (ImGui::Button(ICON_FA_LAYER_GROUP "" ICON_FA_PLUS)) {
+		// increase the number of layers by 1
+		canvasManager.getActive().createLayer();
+	}
+	ImGui::SetItemTooltip("New Layer");
+
+	// remove a layer button 
+	ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 100, 100, 255));
+	if (ImGui::Button(ICON_FA_LAYER_GROUP)) {
+		if (canvasManager.getActive().getNumLayers() > 2) {
+			// decrease the number of layers by 1
+			canvasManager.getActive().removeLayer();
+		}
+	}
+
+	ImGui::PopStyleColor();
+	ImGui::SetItemTooltip("Remove Layer");
+
+	for (int i = 1; i < canvasManager.getActive().getNumLayers(); i++) {
+		std::string buttonName = ICON_FA_LAYER_GROUP + std::to_string(i);
+		if (ImGui::Button(buttonName.c_str())) {
+			canvasManager.getActive().selectLayer(i);
+		}
+	}
+	ImGui::Text("Current Layer: %d", canvasManager.getActive().getCurLayer());
 }
 
 // ending and cleanup 

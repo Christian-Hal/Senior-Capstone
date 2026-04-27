@@ -146,8 +146,11 @@ private:
 	// separate rendering functions for all components to unify the windows and panels 
 	void renderTimeline(CanvasManager& canvasManager);
 	void renderTimelineControls(CanvasManager& canvasManager);
+	// color renderers need active color as param to update the color swatches
 	void renderColorSet(CanvasManager& canvasManager, ImVec4* active_color);
 	void renderColorWheel(CanvasManager& canvasManager, ImVec4* active_color);
+	void renderBrushSize(CanvasManager& canvasManager);
+	void renderLayerInfo(CanvasManager& canvasManager);
 
 	void drawNewCanvasPopup(CanvasManager& canvasManager);
 	void drawSettingsPopup(CanvasManager& canvasManager);
