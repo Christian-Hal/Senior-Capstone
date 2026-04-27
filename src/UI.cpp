@@ -420,9 +420,6 @@ void UI::drawUI(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 	if (curState == UIState::start_menu) { drawStartScreen(canvasManager); }
 	else if (curState == UIState::main_screen) { drawMainScreen(canvasManager, frameRenderer); }
 
-	// top panel is drawn regardless of the state 
-	//drawTopPanel(canvasManager);
-
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -604,9 +601,6 @@ void UI::drawMainScreen(CanvasManager& canvasManager, FrameRenderer frameRendere
 			if (elementVisibility[UIElement::layers]) { drawLayersWindow(canvasManager); }
 		}
 	}
-
-	// top panel drawn regardless of input 
-	//drawTopPanel(canvasManager);
 
 	if (FrameRenderer::inputBlocked) {
 		drawBlockPanel(canvasManager);
@@ -1031,109 +1025,12 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 	ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, BotSize), ImGuiCond_Always);
 	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
-	// add widgets
-	// only display animation settings if there is an active canvas
-	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation())
-	{
-		int currentFrame = FrameRenderer::getCurFrame();
-		int totalFrames = FrameRenderer::getNumFrames();
-		if (ImGui::Button("+")) {
-			FrameRenderer::createFrame(canvasManager.getActive());
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("-")) {
-			FrameRenderer::removeFrame(canvasManager.getActive());
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Play animation")) {
-			FrameRenderer::play(canvasManager.getActive());
-		}
-		ImGui::SameLine();
-		ImGui::Spacing();
-		if (ImGui::Button("Toggle Onion Skins")) {
-			FrameRenderer::removeOnionSkin(canvasManager.getActive());
-			FrameRenderer::toggleOnionSkin();
-			FrameRenderer::updateOnionSkin(canvasManager.getActive());
-		}
-		// --- Timeline ---
-		ImGuiStyle& style = ImGui::GetStyle();
+	// only draw if there is an animations
+	if (!canvasManager.hasActive() || !canvasManager.getActive().isAnimation())
+		return;
 
-		float old_rounding = style.FrameRounding;
-		ImVec2 old_padding = style.FramePadding;
-		ImVec4 old_bg = style.Colors[ImGuiCol_FrameBg];
-		ImVec4 old_bg_hovered = style.Colors[ImGuiCol_FrameBgHovered];
-		ImVec4 old_bg_active = style.Colors[ImGuiCol_FrameBgActive];
-		float old_border = style.FrameBorderSize;
-		ImVec4 old_border_color = style.Colors[ImGuiCol_Border];
-
-		style.Colors[ImGuiCol_FrameBg] = ImVec4(0, 0, 0, 0);
-		style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0, 0, 0, 0);
-		style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0, 0, 0, 0);
-		style.FrameBorderSize = 0.0f;
-		style.Colors[ImGuiCol_Border] = ImVec4(0, 0, 0, 0);
-
-		style.FramePadding = ImVec2(6, 12);
-		style.FrameRounding = 2.0f;
-		ImGui::SetNextItemWidth(displayWidth - (LeftSize + RightSize * 1.1));
-		// Save old color
-		ImVec4 old_color = style.Colors[ImGuiCol_SliderGrab];
-
-		// Set grab to red
-		style.Colors[ImGuiCol_SliderGrab] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-		style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-		style.GrabMinSize = 4.0f;
-		// Draw the slider
-		bool isPressed = ImGui::SliderFloat("##wide_slider", &curFrame, 1.0f, static_cast<float>(FrameRenderer::getNumFrames()), "");
-		curFrame = (int)roundf(curFrame);
-		if (curFrame != FrameRenderer::getCurFrame() && isPressed) {
-			FrameRenderer::selectFrame(canvasManager.getActive(), curFrame - FrameRenderer::getCurFrame());
-		}
-		else {
-			curFrame = FrameRenderer::getCurFrame();
-		}
-
-		ImDrawList* draw = ImGui::GetWindowDrawList();
-
-		// Get slider bounds
-		ImVec2 min = ImGui::GetItemRectMin();
-		ImVec2 max = ImGui::GetItemRectMax();
-
-		float width = max.x - min.x;
-
-		draw->AddLine(
-			ImVec2(min.x, (min.y + max.y) / 2),
-			ImVec2(max.x, (min.y + max.y) / 2),
-			IM_COL32(255, 255, 255, 100),
-			1.0f
-		);
-		// number of segments = steps - 1
-		for (int i = 0; i < FrameRenderer::getNumFrames(); i++)
-		{
-			float t = (float)i / (float)(FrameRenderer::getNumFrames() - 1);
-			float x = min.x + t * width;
-
-			// draw a vertical line (divider)
-			draw->AddLine(
-				ImVec2(x, min.y),
-				ImVec2(x, max.y),
-				IM_COL32(255, 255, 255, 100),
-				1.0f
-			);
-		}
-		// Restore style
-		style.Colors[ImGuiCol_SliderGrab] = old_color;
-		style.Colors[ImGuiCol_SliderGrabActive] = old_color;
-		style.Colors[ImGuiCol_FrameBg] = old_bg;
-		style.Colors[ImGuiCol_FrameBgHovered] = old_bg_hovered;
-		style.Colors[ImGuiCol_FrameBgActive] = old_bg_active;
-		style.FrameBorderSize = old_border;
-		style.Colors[ImGuiCol_Border] = old_border_color;
-
-		// Restore frame settings
-		style.FramePadding = old_padding;
-		style.FrameRounding = old_rounding;
-		ImGui::SameLine();
-	}
+	renderTimelineControls(canvasManager);
+	renderTimeline(canvasManager);
 
 	// end step
 	if (ImGui::GetWindowHeight() > displayHeight - 2 * TopSize)
@@ -2128,8 +2025,94 @@ void UI::drawCursorModesWindow(CanvasManager& canvasManager) {
 	ImGui::End();
 }
 
+// ---- separate methods to handle rendering all components ----- 
+//      done to unify the components across windows and panels
+void UI::renderTimeline(CanvasManager& canvasManager) {
+	Canvas& activeCanvas = canvasManager.getActive();
+
+	// dimensions for our animation cels
+	const float k_cellWidth = 20.0f;
+	const float k_cellHeight = 20.0f;
+	int totalFrames = FrameRenderer::getNumFrames();
+	int currentFrame = FrameRenderer::getCurFrame();
+	int numLayers = activeCanvas.getNumLayers();
+	int currentLayerIdx = activeCanvas.getCurLayer();
+
+	// timeline flags
+	static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollX |
+		ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders |
+		ImGuiTableFlags_RowBg |
+		ImGuiTableFlags_SizingFixedFit;
+
+	if (ImGui::BeginTable("TimelineGrid", totalFrames + 1, flags)) {
+
+		ImGui::TableSetupScrollFreeze(1, 1);
+
+		// column 0 - contains timeline title 
+		ImGui::TableSetupColumn("Animation Layers", ImGuiTableColumnFlags_WidthFixed, 150.0f);
+
+		// remaining columns - frame numbers 
+		for (int n = 1; n <= totalFrames; n++) {
+			// Use a pointer to a string or a static buffer to ensure the label persists during the call
+			std::string frameLabel = std::to_string(n);
+			ImGui::TableSetupColumn(frameLabel.c_str(), ImGuiTableColumnFlags_WidthFixed, k_cellWidth);
+		}
+
+		ImGui::TableHeadersRow();
+
+
+
+		// iterating through layers starting at 1 
+		for (int row = 1; row < numLayers; row++) {
+			ImGui::TableNextRow(ImGuiTableRowFlags_None, k_cellHeight);
+
+			// column 0 - layer information
+			ImGui::TableSetColumnIndex(0);
+			bool isLayerSelected = (row == currentLayerIdx);
+
+			std::string label = ICON_FA_LAYER_GROUP " Layer " + std::to_string(row);
+			// need to fix the selectable row size here, currently too small 
+			if (ImGui::Selectable(label.c_str(), isLayerSelected, ImGuiSelectableFlags_SpanAllColumns)) {
+				activeCanvas.selectLayer(row);
+			}
+
+			// remaining columns - animation cels
+			for (int frame = 1; frame <= totalFrames; frame++) {
+				ImGui::TableSetColumnIndex(frame);
+				ImGui::PushID(row * 1000 + frame); // unique ID per cell
+
+				bool isCurrentFrame = (frame == currentFrame);
+
+				// colors:
+				// 1. red if its the selected cel
+				// 2. darker if its the selected layer
+				// 3. grey for all others
+				ImU32 cellBgColor = IM_COL32(50, 50, 50, 255);
+				if (isCurrentFrame) cellBgColor = IM_COL32(255, 0, 0, 80);
+				else if (isLayerSelected) cellBgColor = IM_COL32(80, 80, 80, 255);
+
+				ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cellBgColor);
+
+				// interaction: able to select frame and layer simultaneously 
+				// EX: selecting layer y at frame x 
+				if (ImGui::Selectable("##cell", isCurrentFrame && isLayerSelected, ImGuiSelectableFlags_None, ImVec2(k_cellWidth, k_cellHeight))) {
+					// update Layer
+					activeCanvas.selectLayer(row);
+					// update Frame
+					int offset = frame - currentFrame;
+					if (offset != 0) {
+						FrameRenderer::selectFrame(activeCanvas, offset);
+					}
+				}
+				ImGui::PopID();
+			}
+		}
+		ImGui::EndTable();
+	}
+}
+
 // helper method to render the buttons for the timeline
-void renderTimelineControls(CanvasManager& canvasManager) {
+void UI::renderTimelineControls(CanvasManager& canvasManager) {
 	if (ImGui::Button("+")) {
 		FrameRenderer::createFrame(canvasManager.getActive());
 	}
@@ -2156,106 +2139,19 @@ void renderTimelineControls(CanvasManager& canvasManager) {
 	ImGui::Text("Frame: %d / %d", FrameRenderer::getCurFrame(), FrameRenderer::getNumFrames());
 }
 
+
+
 void UI::drawTimelineWindow(CanvasManager& canvasManager) {
 	// only draw if there is an animations
 	if (!canvasManager.hasActive() || !canvasManager.getActive().isAnimation())
 		return;
 
-	Canvas& activeCanvas = canvasManager.getActive();
 	ImGui::Begin("Timeline");
-
 	renderTimelineControls(canvasManager);
-
-	// dimensions for our animation cels
-	const float k_cellWidth = 20.0f;
-	const float k_cellHeight = 20.0f;
-	int totalFrames = FrameRenderer::getNumFrames();
-	int currentFrame = FrameRenderer::getCurFrame();
-	int numLayers = activeCanvas.getNumLayers();
-	int currentLayerIdx = activeCanvas.getCurLayer();
-
-	// timeline flags
-	static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollX |
-		ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders |
-		ImGuiTableFlags_RowBg |
-		ImGuiTableFlags_SizingFixedFit; 
-
-	if (ImGui::BeginTable("TimelineGrid", totalFrames + 1, flags)) {
-
-		ImGui::TableSetupScrollFreeze(1, 1);
-
-		// column 0 - contains timeline title 
-		ImGui::TableSetupColumn("Animation Layers", ImGuiTableColumnFlags_WidthFixed, 150.0f);
-
-		// remaining columns - frame numbers 
-		for (int n = 1; n <= totalFrames; n++) {
-			// Use a pointer to a string or a static buffer to ensure the label persists during the call
-			std::string frameLabel = std::to_string(n);
-			ImGui::TableSetupColumn(frameLabel.c_str(), ImGuiTableColumnFlags_WidthFixed, k_cellWidth);
-		}
-
-		ImGui::TableHeadersRow();
-	
-
-
-		// iterating through layers starting at 1 
-		for (int row = 1; row < numLayers; row++) {
-			ImGui::TableNextRow(ImGuiTableRowFlags_None, k_cellHeight);
-
-			// column 0 - layer information
-			ImGui::TableSetColumnIndex(0);
-			bool isLayerSelected = (row == currentLayerIdx);
-
-			std::string label = ICON_FA_LAYER_GROUP " Layer " + std::to_string(row);
-			if (ImGui::Selectable(label.c_str(), isLayerSelected, ImGuiSelectableFlags_SpanAllColumns)) {
-				activeCanvas.selectLayer(row);
-			}
-
-			// remaining columns - animation cels
-			for (int frame = 1; frame <= totalFrames; frame++) {
-				ImGui::TableSetColumnIndex(frame);
-				ImGui::PushID(row * 1000 + frame); // Unique ID per cell
-
-				bool isCurrentFrame = (frame == currentFrame);
-
-				// colors:
-				// 1. red if its the selected cel
-				// 2. darker if its the selected layer
-				// 3. grey for all others
-				ImU32 cellBgColor = IM_COL32(50, 50, 50, 255);
-				if (isCurrentFrame) cellBgColor = IM_COL32(255, 0, 0, 80);
-				else if (isLayerSelected) cellBgColor = IM_COL32(80, 80, 80, 255);
-
-				ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cellBgColor);
-
-				// Interaction: Select Frame and Layer simultaneously
-				if (ImGui::Selectable("##cell", isCurrentFrame && isLayerSelected, ImGuiSelectableFlags_None, ImVec2(k_cellWidth, k_cellHeight))) {
-					// Update Layer
-					activeCanvas.selectLayer(row);
-					// Update Frame
-					int offset = frame - currentFrame;
-					if (offset != 0) {
-						FrameRenderer::selectFrame(activeCanvas, offset);
-					}
-				}
-
-				// Visual decoration: Draw a small circle if a "Cel" (drawing) exists here
-				// (You would need a function like activeCanvas.hasContent(layer, frame))
-				/*
-				if (activeCanvas.hasContent(row, frame)) {
-					ImGui::GetWindowDrawList()->AddCircleFilled(
-						ImVec2(ImGui::GetItemRectMin().x + k_cellWidth/2, ImGui::GetItemRectMin().y + k_cellHeight/2),
-						4.0f, IM_COL32(200, 200, 200, 255));
-				}
-				*/
-
-				ImGui::PopID();
-			}
-		}
-		ImGui::EndTable();
-	}
+	renderTimeline(canvasManager);
 	ImGui::End();
 }
+
 
 
 // ending and cleanup 

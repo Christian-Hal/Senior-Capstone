@@ -143,10 +143,13 @@ private:
 	void drawCursorModesWindow(CanvasManager& canvasManager);
 	void drawTimelineWindow(CanvasManager& canvasManager);
 
+	// separate rendering functions for all components to unify the windows and panels 
+	void renderTimeline(CanvasManager& canvasManager);
+	void renderTimelineControls(CanvasManager& canvasManager);
+
 	void drawNewCanvasPopup(CanvasManager& canvasManager);
 	void drawSettingsPopup(CanvasManager& canvasManager);
 
-	void drawTopPanel(CanvasManager& canvasManager);
 	// keeps track of the UI's current state so we know what stuff to draw
 	UIState curState = UIState::start_menu;
 
