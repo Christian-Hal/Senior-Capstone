@@ -1525,8 +1525,7 @@ void UI::renderTimeline(CanvasManager& canvasManager) {
 			bool isLayerSelected = (row == currentLayerIdx);
 
 			std::string label = ICON_FA_LAYER_GROUP " Layer " + std::to_string(row);
-			// need to fix the selectable row size here, currently too small 
-			if (ImGui::Selectable(label.c_str(), isLayerSelected, ImGuiSelectableFlags_SpanAllColumns)) {
+			if (ImGui::Selectable(label.c_str(), isLayerSelected, ImGuiSelectableFlags_None, ImVec2(0.0f, k_cellHeight))) {
 				activeCanvas.selectLayer(row);
 			}
 
