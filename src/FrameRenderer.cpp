@@ -151,7 +151,7 @@ void FrameRenderer::createFrame(Canvas& canvas){
     );
     frameData[curCanvas-1].insert(frameData[curCanvas-1].begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], canvas.getBackgroundColor()));
     vector<Color> backgroundLayer = canvas.getLayerData()[0];
-    frames.insert(frames.begin() + (curFrame - 1), backgroundLayer);
+    
 
     canvas.setPixels(frames[curFrame - 1]);
     //band-aid solution. this does not fix removing layers fully
@@ -488,4 +488,29 @@ vector<vector<Color>> FrameRenderer::readPixelData(int* arr) {
     
 vector<vector<Color>> FrameRenderer::readLayerData(int* arr){
     return frLayerData[curCanvas-1][curFrame-1];
+}
+
+void FrameRenderer::copyFrame(Canvas& canvas)
+{
+    removeOnionSkin(canvas);
+    frames[curFrame - 1] = vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
+    writeAllData(&canvas);
+
+    int* meta = readMetaData();
+
+    vector<Color> copiedPixels = frames[curFrame - 1];
+    vector<vector<Color>> copiedLayers = frLayerData[curCanvas - 1][curFrame - 1];
+
+    numFrames++;
+    curFrame++;
+
+    frames.insert(frames.begin() + (curFrame - 1), copiedPixels);
+    frameData[curCanvas - 1].insert(frameData[curCanvas - 1].begin() + (curFrame - 1), copiedPixels);
+    frLayerData[curCanvas - 1].insert(frLayerData[curCanvas - 1].begin() + (curFrame - 1), copiedLayers);
+
+    canvas.setPixels(frames[curFrame - 1]);
+    canvas.setLayerData(readLayerData(meta));
+
+    writeAllData(&canvas);
+    updateOnionSkin(canvas);
 }

@@ -1080,6 +1080,11 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 			FrameRenderer::removeFrame(canvasManager.getActive());
 		}
 		ImGui::SameLine();
+		if (ImGui::Button("Copy Frame"))
+		{
+			FrameRenderer::copyFrame(canvasManager.getActive());
+		}
+		ImGui::SameLine();
 		if (ImGui::Button("Play animation")) {
 			FrameRenderer::play(canvasManager.getActive());
 		}
@@ -1610,7 +1615,7 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 	// starting the overall main menu bar
 	// testing the main menu implementation
 
-	// for saving hotkey
+	// for saving file hotkey
 	if (showSaveDialog && canvasManager.hasActive())
 	{
 		showSaveDialog = false;
@@ -1627,7 +1632,7 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 		);
 	}
 
-	// for opening hotkey
+	// for opening file hotkey
 	if (showOpenDialog)
 	{
 		showOpenDialog = false;
@@ -2127,6 +2132,11 @@ void UI::drawTimelineWindow(CanvasManager& canvasManager) {
 		ImGui::SameLine();
 		if (ImGui::Button("-")) {
 			FrameRenderer::removeFrame(canvasManager.getActive());
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Copy Frame"))
+		{
+			FrameRenderer::copyFrame(canvasManager.getActive());
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Play animation")) {

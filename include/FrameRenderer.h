@@ -49,7 +49,7 @@ class FrameRenderer{
         static vector<vector<Color>> readLayerData(int* arr);
 
         static void removeCanvas(int index, Canvas* newActiveCanvas = nullptr);
-
+        static void copyFrame(Canvas& canvas);
     private:
 
         // create the data structures we will use to store all this information.
