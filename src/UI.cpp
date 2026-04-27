@@ -1590,6 +1590,7 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 					if (ImGui::Button("Apply")) {
 						canvasManager.setPaperColor(paperColor);
 						changePaperColor = false;
+						canvasManager.getActive().isDirty = true;
 					}
 				}
 			}
