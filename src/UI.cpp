@@ -723,10 +723,6 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	ImGui::Separator();
 	ImGui::Spacing();
 	// comment that says Mori Calliope 
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-
 	// brush size slider and presets
 	renderBrushSize(canvasManager);
 
@@ -1570,27 +1566,32 @@ void UI::renderTimeline(CanvasManager& canvasManager) {
 }
 
 void UI::renderTimelineControls(CanvasManager& canvasManager) {
-	if (ImGui::Button("+")) {
+	if (ImGui::Button(ICON_FA_PLUS)) {
 		FrameRenderer::createFrame(canvasManager.getActive());
 	}
+	ImGui::SetItemTooltip("Add Frame");
 	ImGui::SameLine();
+
 	if (ImGui::Button("-")) {
 		FrameRenderer::removeFrame(canvasManager.getActive());
 	}
+	ImGui::SetItemTooltip("Remove Frame");
 	ImGui::SameLine();
 	ImGui::Spacing();
 	ImGui::SameLine();
 
-	if (ImGui::Button("Play")) {
+	if (ImGui::Button(ICON_FA_PLAY)) {
 		FrameRenderer::play(canvasManager.getActive());
 	}
+	ImGui::SetItemTooltip("Play Animation");
 	ImGui::SameLine();
 
-	if (ImGui::Button("Onion Skins")) {
+	if (ImGui::Button(ICON_FA_CLONE)) {
 		FrameRenderer::removeOnionSkin(canvasManager.getActive());
 		FrameRenderer::toggleOnionSkin();
 		FrameRenderer::updateOnionSkin(canvasManager.getActive());
 	}
+	ImGui::SetItemTooltip("Toggle Onion Skins");
 
 	ImGui::SameLine();
 	ImGui::Text("Frame: %d / %d", FrameRenderer::getCurFrame(), FrameRenderer::getNumFrames());
