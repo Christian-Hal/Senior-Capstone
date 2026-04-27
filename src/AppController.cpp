@@ -523,8 +523,6 @@ void AppController::pickColor(Canvas& canvas, double mouseX, double mouseY)
 void AppController::fill(Canvas& canvas, Color oldColor, Color newColor, int canvasX, int canvasY)
 {
 	oldColor = canvas.getLayerPixel(canvasX, canvasY);
-	cout << "Old Color: " << oldColor << endl;
-	cout << "New Color: " << newColor << endl;
 	if(oldColor == newColor) return;
 
 	std::queue<glm::ivec2> pixels;

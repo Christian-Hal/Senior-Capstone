@@ -75,7 +75,7 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
             numFrames,
             vector<vector<Color>>(
                 1,
-                vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), newCanvas->getBackgroundColor())
+                vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), {0,0,0,0})
             )
         )
     );
@@ -83,7 +83,7 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
     frameData.push_back(
         vector<vector<Color>>(
             numFrames,
-            vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), newCanvas->getBackgroundColor())
+            vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), {0,0,0,0})
         )
     );
     // save a blank "new canvas" in metaData
@@ -141,15 +141,15 @@ void FrameRenderer::createFrame(Canvas& canvas){
     int* meta = readMetaData(); // meta[0] is width, meta[1] is height
 
     // this ought to insert inbetween the oldCurrent frame
-    frames.insert(frames.begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], canvas.getBackgroundColor()));
+    frames.insert(frames.begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], {0,0,0,0}));
     
     frLayerData[curCanvas-1].insert(frLayerData[curCanvas-1].begin() + (curFrame-1), vector<vector<Color>>(
             canvas.getNumLayers(), vector<Color>(
-                meta[0] * meta[1], canvas.getBackgroundColor()
+                meta[0] * meta[1], {0,0,0,0}
             )
         )
     );
-    frameData[curCanvas-1].insert(frameData[curCanvas-1].begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], canvas.getBackgroundColor()));
+    frameData[curCanvas-1].insert(frameData[curCanvas-1].begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], {0,0,0,0}));
     vector<Color> backgroundLayer = canvas.getLayerData()[0];
     frames.insert(frames.begin() + (curFrame - 1), backgroundLayer);
 
@@ -160,7 +160,6 @@ void FrameRenderer::createFrame(Canvas& canvas){
     // normal behavior
     int numLayers = meta[2];
     layDat.resize(numLayers, vector<Color>(meta[0] * meta[1], {0,0,0,0}));
-    layDat[0] = backgroundLayer;
 
     canvas.setLayerData(layDat);
     
@@ -336,7 +335,7 @@ void FrameRenderer::removeOnionSkin(Canvas& canvas){
     canvas.selectLayer(0);
     int wid = canvas.getWidth();
     int hei = canvas.getHeight();
-    Color bg = canvas.getBackgroundColor();
+    Color bg = {0,0,0,0};
     background[0] = vector<Color>(wid * hei, bg);
     canvas.setLayerData(background);
     for(int i = 0; i < hei * wid; i++){
