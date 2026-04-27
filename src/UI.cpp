@@ -689,100 +689,8 @@ void UI::drawLeftPanel(CanvasManager& canvasManager) {
 	ImGui::SetNextWindowSize(ImVec2(LeftSize, displayHeight - TopSize), ImGuiCond_Always);
 	ImGui::Begin("Left Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
-	/////// add widgets here ///////
-	// text label that displays current cursor mode
-	if (getCursorMode() == CursorMode::Draw) {
-		ImGui::Text("State: Draw");
-	}
+	renderCursorModes(canvasManager);
 
-	else if (getCursorMode() == CursorMode::Fill) {
-		ImGui::Text("State: Fill");
-	}
-
-	else if (getCursorMode() == CursorMode::Erase) {
-		ImGui::Text("State: Eraser");
-	}
-
-	else if (getCursorMode() == CursorMode::SoftErase) {
-		ImGui::Text("State: Kneaded Eraser");
-	}
-
-	else if (getCursorMode() == CursorMode::ZoomIn) {
-		ImGui::Text("State: Zoom In");
-	}
-
-	else if (getCursorMode() == CursorMode::ZoomOut) {
-		ImGui::Text("State: Zoom Out");
-	}
-
-	else if (getCursorMode() == CursorMode::Rotate) {
-		ImGui::Text("State: Rotate");
-	}
-
-	else if (getCursorMode() == CursorMode::Pan) {
-		ImGui::Text("State: Pan");
-	}
-
-	else if (getCursorMode() == CursorMode::ColorPick) {
-		ImGui::Text("State: Color Pick");
-	}
-
-	// buttons that change the current cursor mode
-	if (ImGui::Button(ICON_FA_PEN)) {
-		setCursorMode(CursorMode::Draw);
-	}
-	ImGui::SetItemTooltip("Pen");
-
-
-	if (ImGui::Button(ICON_FA_FILL_DRIP)) {
-		setCursorMode(CursorMode::Fill);
-	}
-	ImGui::SetItemTooltip("Fill");
-
-
-	if (ImGui::Button(ICON_FA_ERASER)) {
-		setCursorMode(CursorMode::Erase);
-	}
-	ImGui::SetItemTooltip("Erase");
-
-	// this FA icon is subject to change
-	if (ImGui::Button(ICON_FA_CIRCLE)) {
-		setCursorMode(CursorMode::SoftErase);
-	}
-	ImGui::SetItemTooltip("Kneaded Eraser");
-
-
-	if (ImGui::Button(ICON_FA_EYE_DROPPER)) {
-		setCursorMode(CursorMode::ColorPick);
-	}
-	ImGui::SetItemTooltip("ColorPick");
-
-
-	if (ImGui::Button(ICON_FA_HAND)) {
-		setCursorMode(CursorMode::Pan);
-	}
-	ImGui::SetItemTooltip("Grab");
-
-
-	if (ImGui::Button(ICON_FA_ARROWS_ROTATE)) {
-		setCursorMode(CursorMode::Rotate);
-	}
-	ImGui::SetItemTooltip("Rotate");
-
-
-	if (ImGui::Button(ICON_FA_MAGNIFYING_GLASS_PLUS)) {
-		setCursorMode(CursorMode::ZoomIn);
-	}
-	ImGui::SetItemTooltip("ZoomIn");
-
-
-	if (ImGui::Button(ICON_FA_MAGNIFYING_GLASS_MINUS)) {
-		setCursorMode(CursorMode::ZoomOut);
-	}
-	ImGui::SetItemTooltip("ZoomOut");
-
-
-	// adds a little visual split between sections
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
@@ -854,12 +762,12 @@ void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRender
 	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
 	// only draw if there is an animations
-	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation()){
+	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation()) {
 		// drawing the actual timeline 
 		renderTimelineControls(canvasManager);
 		renderTimeline(canvasManager);
 	}
-	
+
 
 	// end step
 	if (ImGui::GetWindowHeight() > displayHeight - 2 * TopSize)
@@ -1520,7 +1428,7 @@ void UI::drawColorWindow(CanvasManager& canvasManager) {
 	// Determine which pointer to pass to the picker
 	ImVec4* active_color = editing_primary ? &primary_color : &secondary_color;
 
-	renderColorWheel(canvasManager, active_color); 
+	renderColorWheel(canvasManager, active_color);
 
 	ImGui::Spacing();
 	ImGui::Separator();
@@ -1561,107 +1469,7 @@ void UI::drawBrushesWindow(CanvasManager& canvasManager) {
 
 void UI::drawCursorModesWindow(CanvasManager& canvasManager) {
 	ImGui::Begin("CursorModes");
-	/////// add widgets here ///////
-	// text label that displays current cursor mode
-	if (getCursorMode() == CursorMode::Draw) {
-		ImGui::Text("State: Draw");
-	}
-
-	else if (getCursorMode() == CursorMode::Fill) {
-		ImGui::Text("State: Fill");
-	}
-
-	else if (getCursorMode() == CursorMode::Erase) {
-		ImGui::Text("State: Erase");
-	}
-
-	else if (getCursorMode() == CursorMode::ZoomIn) {
-		ImGui::Text("State: Zoom In");
-	}
-
-	else if (getCursorMode() == CursorMode::ZoomOut) {
-		ImGui::Text("State: Zoom Out");
-	}
-
-	else if (getCursorMode() == CursorMode::Rotate) {
-		ImGui::Text("State: Rotate");
-	}
-
-	else if (getCursorMode() == CursorMode::Pan) {
-		ImGui::Text("State: Pan");
-	}
-
-	else if (getCursorMode() == CursorMode::ColorPick) {
-		ImGui::Text("State: Color Pick");
-	}
-
-	// text label that displays rebind status
-	if (isWaitingForRebindCb && isWaitingForRebindCb())
-	{
-		ImGui::Text("Press any key...");
-	}
-
-	if (didRebindFailCb && didRebindFailCb())
-	{
-		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Key already bound!");
-	}
-
-	// buttons that change the current cursor mode
-	if (ImGui::Button(ICON_FA_PEN)) {
-		setCursorMode(CursorMode::Draw);
-	}
-	ImGui::SetItemTooltip("Pen");
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(ICON_FA_FILL_DRIP)) {
-		setCursorMode(CursorMode::Fill);
-	}
-	ImGui::SetItemTooltip("Fill");
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(ICON_FA_ERASER)) {
-		setCursorMode(CursorMode::Erase);
-	}
-	ImGui::SetItemTooltip("Erase");
-
-	if (ImGui::Button(ICON_FA_EYE_DROPPER)) {
-		setCursorMode(CursorMode::ColorPick);
-	}
-	ImGui::SetItemTooltip("ColorPick");
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(ICON_FA_HAND)) {
-		setCursorMode(CursorMode::Pan);
-	}
-	ImGui::SetItemTooltip("Grab");
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(ICON_FA_ARROWS_ROTATE)) {
-		setCursorMode(CursorMode::Rotate);
-	}
-	ImGui::SetItemTooltip("Rotate");
-
-	if (ImGui::Button(ICON_FA_MAGNIFYING_GLASS_PLUS)) {
-		setCursorMode(CursorMode::ZoomIn);
-	}
-	ImGui::SetItemTooltip("ZoomIn");
-
-	ImGui::SameLine();
-
-	if (ImGui::Button(ICON_FA_MAGNIFYING_GLASS_MINUS)) {
-		setCursorMode(CursorMode::ZoomOut);
-	}
-	ImGui::SetItemTooltip("ZoomOut");
-
-	// adds a little visual split between sections
-	ImGui::Spacing();
-	ImGui::Separator();
-	ImGui::Spacing();
-
+	renderCursorModes(canvasManager);
 	ImGui::End();
 }
 
@@ -2001,7 +1809,99 @@ void UI::renderBrushImports(CanvasManager& canvasManager) {
 }
 
 void UI::renderCursorModes(CanvasManager& canvasManager) {
+	if (getCursorMode() == CursorMode::Draw) {
+		ImGui::Text("State: Draw");
+	}
 
+	else if (getCursorMode() == CursorMode::Fill) {
+		ImGui::Text("State: Fill");
+	}
+
+	else if (getCursorMode() == CursorMode::Erase) {
+		ImGui::Text("State: Erase");
+	}
+
+	else if (getCursorMode() == CursorMode::ZoomIn) {
+		ImGui::Text("State: Zoom In");
+	}
+
+	else if (getCursorMode() == CursorMode::ZoomOut) {
+		ImGui::Text("State: Zoom Out");
+	}
+
+	else if (getCursorMode() == CursorMode::Rotate) {
+		ImGui::Text("State: Rotate");
+	}
+
+	else if (getCursorMode() == CursorMode::Pan) {
+		ImGui::Text("State: Pan");
+	}
+
+	else if (getCursorMode() == CursorMode::ColorPick) {
+		ImGui::Text("State: Color Pick");
+	}
+
+	// text label that displays rebind status
+	if (isWaitingForRebindCb && isWaitingForRebindCb())
+	{
+		ImGui::Text("Press any key...");
+	}
+
+	if (didRebindFailCb && didRebindFailCb())
+	{
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Key already bound!");
+	}
+
+	// buttons that change the current cursor mode
+	if (ImGui::Button(ICON_FA_PEN)) {
+		setCursorMode(CursorMode::Draw);
+	}
+	ImGui::SetItemTooltip("Pen");
+
+	ImGui::SameLine();
+
+	if (ImGui::Button(ICON_FA_FILL_DRIP)) {
+		setCursorMode(CursorMode::Fill);
+	}
+	ImGui::SetItemTooltip("Fill");
+
+	ImGui::SameLine();
+
+	if (ImGui::Button(ICON_FA_ERASER)) {
+		setCursorMode(CursorMode::Erase);
+	}
+	ImGui::SetItemTooltip("Erase");
+
+	if (ImGui::Button(ICON_FA_EYE_DROPPER)) {
+		setCursorMode(CursorMode::ColorPick);
+	}
+	ImGui::SetItemTooltip("ColorPick");
+
+	ImGui::SameLine();
+
+	if (ImGui::Button(ICON_FA_HAND)) {
+		setCursorMode(CursorMode::Pan);
+	}
+	ImGui::SetItemTooltip("Grab");
+
+	ImGui::SameLine();
+
+	if (ImGui::Button(ICON_FA_ARROWS_ROTATE)) {
+		setCursorMode(CursorMode::Rotate);
+	}
+	ImGui::SetItemTooltip("Rotate");
+
+	if (ImGui::Button(ICON_FA_MAGNIFYING_GLASS_PLUS)) {
+		setCursorMode(CursorMode::ZoomIn);
+	}
+	ImGui::SetItemTooltip("ZoomIn");
+
+	ImGui::SameLine();
+
+	if (ImGui::Button(ICON_FA_MAGNIFYING_GLASS_MINUS)) {
+		setCursorMode(CursorMode::ZoomOut);
+	}
+	ImGui::SetItemTooltip("ZoomOut");
 }
 
 // ending and cleanup 
