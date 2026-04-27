@@ -1782,8 +1782,15 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 				canvasManager.saveToFile(filePath);
 			}
 
+			size_t lastSlash = filePath.find_last_of("/\\");
+			size_t lastDot = filePath.find_last_of('.');
+			std::string newName = filePath.substr(lastSlash + 1, lastDot - lastSlash - 1);
+			canvasManager.getActive().setName(newName);
+
 			saveToRecentActivityCb(filePath);
 			canvasManager.getActive().isDirty = false;
+			
+
 		}
 
 		ImGuiFileDialog::Instance()->Close();
