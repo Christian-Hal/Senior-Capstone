@@ -29,6 +29,8 @@ std::string overwritePath;
 struct DragState {
     float offsetY = 0.0f;
 	int index = 0;
+	bool notActive = false;
+	int order = index;
 };
 static std::unordered_map<ImGuiID, DragState> dragStates;
 
@@ -2234,19 +2236,25 @@ void UI::drawTimelineWindow(CanvasManager& canvasManager) {
 }
 
 std::tuple<bool, float, int> UI::drawDraggableButton(CanvasManager& canvasManager, const char* buttonName, int index){
+	float buttonLoc = 400.0f;
 	float height = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f + 4;
-	int count = dragStates.size();
+	
 	ImGuiID id = ImGui::GetID(buttonName);
     DragState& state = dragStates[id];
 	state.index = index;
+	if(state.order == 0){
+		state.order = state.index;
+	}
+
+	int count = dragStates.size();
 
 	// Base position reacts to UI/layout changes
 	float baseX = displayWidth - (RightSize - 8);
-	float baseY = 400.0f + (RightSize * .66f) + (index * height);
+	float baseY = buttonLoc + (RightSize * .66f) + (index * height);
 	float finalY = baseY + state.offsetY;
 	
 
-	float boxTop = 400.0f + (RightSize * .66f);
+	float boxTop = buttonLoc + (RightSize * .66f);
 	float boxBottom = boxTop + (count * height);
 
 	ImVec2 btnPos(baseX, finalY);
@@ -2254,33 +2262,57 @@ std::tuple<bool, float, int> UI::drawDraggableButton(CanvasManager& canvasManage
 	// Draw
 	ImGui::SetCursorScreenPos(btnPos);
 	bool isPressed = ImGui::Button(buttonName);
-	bool notActive = true;
+	state.notActive = true;
+	float newOffset = 0;
 	if (ImGui::IsItemActive())
 	{
-		notActive = false;
+		state.notActive = false;
 		float dy = ImGui::GetIO().MouseDelta.y;
-		float newOffset = state.offsetY + dy;
+		newOffset = state.offsetY + dy;
 
 		if (finalY >= boxTop && finalY <= boxBottom)
 		{
 			state.offsetY = newOffset;
 		}
 	}
-	if (!notActive){
+
+	// If this button is now outside the valid region, shift it up
+	if(state.notActive){
+		while ((baseY + state.offsetY) > boxBottom + height)
+		{
+			state.offsetY -= height;
+		}
+		while ((baseY + state.offsetY) < boxTop){
+			state.offsetY += height;
+		} 	
+		for (auto& [idA, a] : dragStates){
+			if (idA == id || a.notActive == false) continue;
+			float aY = (400.0f + (RightSize * .66f)) + (a.index * height) + a.offsetY;
+			if (std::abs(aY - finalY) < height * 0.5f){
+				state.offsetY -= height;
+			}
+		}
+	}
+	if (!state.notActive){
 		for (auto& [otherID, other] : dragStates)
 		{
 			if (otherID == id) continue;
-			float otherFinalY = std::min(400.0f + (RightSize * .66f) + (other.index * height) + other.offsetY, displayHeight - 29.0f);
+			float otherFinalY = std::min(buttonLoc + (RightSize * .66f) + (other.index * height) + other.offsetY, displayHeight - 29.0f);
 			if (std::abs(finalY - otherFinalY) < height * 0.5f)
 			{
 				if(otherFinalY > finalY){
 					other.offsetY = std::round(((other.offsetY / height) * height) - height);
-					canvasManager.getActive().swapLayers(other.index, index);
+					canvasManager.getActive().swapLayers(other.order, state.order);
+					int tempOrder = other.order;
+					other.order = state.order;
+					state.order = tempOrder;
 				}
 				else{
 					other.offsetY = std::round(((other.offsetY / height) * height) + height);
-					canvasManager.getActive().swapLayers(other.index, index);
-
+					canvasManager.getActive().swapLayers(other.order, state.order);
+					int tempOrder = other.order;
+					other.order = state.order;
+					state.order = tempOrder;
 				}
 			}
 		}
