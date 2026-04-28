@@ -1265,7 +1265,11 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 		{
 			canvasManager.setActiveCanvas(pendingCloseIndex);
 			IGFD::FileDialogConfig config;
-			config.path = ".";
+
+			// the  path the file explorer starts in. "." is the current active directory
+			if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
+			else config.path = ".";
+			
 			config.fileName = canvasManager.getActive().getName();
 			config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
 			ImGuiFileDialog::Instance()->OpenDialog("SaveBeforeCloseDlg", "Save Image", ".png,.jpg,.ora", config);
@@ -1846,7 +1850,6 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 
 			std::string extension =
 				ImGuiFileDialog::Instance()->GetCurrentFilter();
-
 
 			FrameRenderer::saveAnimation(filePath, canvasManager.getActive());
 			canvasManager.getActive().isDirty = false;
