@@ -1269,10 +1269,14 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 			// the  path the file explorer starts in. "." is the current active directory
 			if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
 			else config.path = ".";
-			
 			config.fileName = canvasManager.getActive().getName();
 			config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
-			ImGuiFileDialog::Instance()->OpenDialog("SaveBeforeCloseDlg", "Save Image", ".png,.jpg,.ora", config);
+
+			const char* filters = canvasManager.getActive().isAnimation()
+				? ".png,.jpg"
+				: ".png,.jpg,.ora";
+
+			ImGuiFileDialog::Instance()->OpenDialog("SaveBeforeCloseDlg", "Save Image", filters, config);
 			showCloseConfirm = false;
 			ImGui::CloseCurrentPopup();
 		}
@@ -1306,13 +1310,15 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 		if (ImGuiFileDialog::Instance()->IsOk())
 		{
 			canvasManager.setActiveCanvas(pendingCloseIndex);
-			int* meta = FrameRenderer::readMetaData();
-			canvasManager.getActive().setPixels(FrameRenderer::frames[FrameRenderer::curFrame - 1]);
+			//int* meta = FrameRenderer::readMetaData();
+			//canvasManager.getActive().setPixels(FrameRenderer::frames[FrameRenderer::curFrame - 1]);
 
 			std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
 			std::string extension = ImGuiFileDialog::Instance()->GetCurrentFilter();
 
-			if (extension == ".ora")
+			if (canvasManager.getActive().isAnimation() && (extension == ".png" || extension == ".jpg"))
+				FrameRenderer::saveAnimation(filePath, canvasManager.getActive());
+			else if (extension == ".ora")
 				canvasManager.saveORA(filePath);
 			else
 				canvasManager.saveToFile(filePath);
@@ -1644,12 +1650,12 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 		else config.path = ".";
 		config.fileName = canvasManager.getActive().getName();
 		config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
-		ImGuiFileDialog::Instance()->OpenDialog(
-			"SaveImageDlg",
-			"Save Image",
-			".png,.jpg,.ora",
-			config
-		);
+
+		if (canvasManager.getActive().isAnimation())
+			ImGuiFileDialog::Instance()->OpenDialog("SaveImageAnm", "Save Image", ".png,.jpg", config);
+		
+		else
+			ImGuiFileDialog::Instance()->OpenDialog("SaveImageDlg", "Save Image", ".png,.jpg,.ora", config);
 	}
 
 	// for opening file hotkey
