@@ -375,39 +375,45 @@ void FrameRenderer::toggleOnionSkin(){
 }
 
 void FrameRenderer::saveAnimation(const string& path, Canvas& canvas){
-    stbi_set_flip_vertically_on_load(true);
+    // set up the filepath
+    fs::path filePath = path;
+    string ext = filePath.extension().string();
+    filePath = filePath.replace_extension("");
+
+    //save data in current frame (shorthand, needs less expensive implementation)
     selectFrame(canvas, 0);
+
+    // get data that will be needed to save images
     int width = canvas.getWidth();
     int height = canvas.getHeight();
-    string prefix = path.substr(0, path.find_last_of('.'));
-    string ext = path.substr(path.find_last_of('.') + 1);
-    size_t slash = path.find_last_of('/');
-    bool isMac = false;
-    // if your on mac
-    if (slash == std::string::npos) {
-        slash = path.find_last_of("\\");
-        isMac = true;
-    }
-    string title = path.substr(slash + 1, path.find_last_of('.') - (slash + 1));
-    fs::create_directory(prefix);
-    for(int i = 0; i < frames.size(); i++){
-        string finalPath;
-        if(!isMac){
-            finalPath = prefix + "/" + title + "-" + to_string(i) + "." + ext;
-        }
-        else{
-            finalPath = prefix + "\\" + title + "-" + to_string(i) + "." + ext;
-        }
+    
+    // create the directory that will house all images
+    fs::create_directory(filePath);
+    
+
+    // main loop to save each image
+    for(int i = 0; i < numFrames; i++){
+        // create a copy of frames[i]
         vector<Color> pixels(width * height);
         memcpy(pixels.data(), frames[i].data(), width * height * sizeof(Color));
-        if (ext == "png")
-            stbi_write_png(finalPath.c_str(), width, height, 4, pixels.data(), width * 4);
+        // flip it around
+        for (int y = 0; y < height / 2; y++){
+            int opposite = height - y - 1;
+            for (int x = 0; x < width; x++)
+            {
+                swap(pixels[y * width + x], pixels[opposite * width + x]);
+            }
+        }
+        // create the correct filepath
+        fs::path finalPath = fs::path(filePath) / (filePath.stem().string() + "-" + to_string(i) + ext);    // main save loop
+        
+        // saves either a png or jpg depending on the extension
+        if (ext == ".png")
+            stbi_write_png(finalPath.string().c_str(), width, height, 4, pixels.data(), width * 4);
     
-        else if (ext == "jpg")
-            stbi_write_jpg(finalPath.c_str(), width, height, 4, pixels.data(), 100);
-    }
-    stbi_set_flip_vertically_on_load(false);
-
+        else if (ext == ".jpg")
+            stbi_write_jpg(finalPath.string().c_str(), width, height, 4, pixels.data(), 100);
+    }    
 }
 
 void FrameRenderer::loadAnimation(Canvas& canvas, vector<filesystem::path> images){
