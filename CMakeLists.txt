@@ -3,20 +3,6 @@ project(MockUp)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Set Release as default build type for better performance
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
-endif()
-
-# Platform-specific optimizations
-if(MSVC)
-    # Windows MSVC
-    add_compile_options(/O2 /arch:AVX2)
-else()
-    # macOS and Linux
-    add_compile_options(-O3 -march=native)
-endif()
-
 # GLFW
 add_subdirectory(external/glfw)
 
