@@ -93,7 +93,6 @@ public:
 
     bool isAnimation() const { return isAnim; }
     bool isUsingAnimTemplate() const { return animationTemplate; }
-    void loadAnimTemplate();
 
     bool isDirty = false; // bool to determine if the canvas has been modifiyed without saving
 
@@ -106,13 +105,19 @@ private:
     Color backgroundColor = {255, 255, 255, 255};
     Color emptyColor = {0, 0, 0, 0};
     
-
+	// pixel vectors
+	std::vector<Color> pixels;
+    std::vector<std::vector<Color>> layerData;
 
     std::vector<bool> editedPixels;
 
-    // RGBA pixel data
-    std::vector<Color> pixels;
-    std::vector<std::vector<Color>> layerData;
+	// seen pixels is a flat vector the size of the canvas that records if an index was seen during this stroke or not
+	// currentStrokeIndex is just the int value that seenPixels sets the index too if seen
+	// it gets checked for in recordPixelChange
+	bool seenPixelsInitialized = false;
+	std::vector<int> seenPixels;
+	int currentStrokeIndex;
+    
 
 	/////// VARIABLES FOR THE UNDO AND REDO STUFF
 	// Stacks for undo and redo strokes
@@ -121,12 +126,6 @@ private:
 
 	// keeps track of the active stroke to record pixels into
 	StrokePath activeStroke;
-
-	// seen pixels is a flat vector the size of the canvas that records if an index was seen during this stroke or not
-	// currentStrokeIndex is just the int value that seenPixels sets the index too if seen
-	// it gets checked for in recordPixelChange
-	std::vector<int> seenPixels;
-	int currentStrokeIndex;
 
     // variable to state if the canvas should be using the animation template or not
     bool isAnim = false;

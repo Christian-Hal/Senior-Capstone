@@ -10,29 +10,19 @@
 
 // constructor
 Canvas::Canvas() : width(0), height(0), numLayers(0), curLayer(0), pixels(), layerData(), canvasName("") {}
-Canvas::Canvas(int w, int h, std::string name, bool isAnimation, bool useAnimTemplate) : width(w), height(h), 
-                    numLayers(2), curLayer(1), pixels(w * h, emptyColor), 
-                    canvasName(name), currentStrokeIndex(-1), seenPixels(w * h, -1), isAnim(isAnimation), animationTemplate(useAnimTemplate), editedPixels(w * h, false)
+Canvas::Canvas(int w, int h, std::string name, bool isAnimation, bool useAnimTemplate) 
+				: width(w), height(h), numLayers(2), curLayer(1), canvasName(name), 
+				currentStrokeIndex(-1), isAnim(isAnimation), 
+				animationTemplate(useAnimTemplate)
 {
+	// resize pixel vector to exist (default-initialized, fast)
+	// pixels will be properly set when layers are composited
+	pixels.resize(w * h);
+	editedPixels.resize(w * h, false);
+
     // Initialize layerData before loading animation
     layerData.push_back(std::vector<Color>(w * h, emptyColor));
     layerData.push_back(std::vector<Color>(w * h, emptyColor));
-}
-
-void Canvas::loadAnimTemplate() {
-    stbi_set_flip_vertically_on_load(true);
-    const std::string templatePath = "assets/Animation_Template_PNG.png";
-    
-    int imgWidth = 0, imgHeight = 0;
-    unsigned char* data = stbi_load(templatePath.c_str(), &imgWidth, &imgHeight, nullptr, 4);
-    if (data) {
-        loadImage(data, 1);
-        stbi_image_free(data);
-
-    } else {
-        std::cout << "ERROR: Failed to load animation template from: " << templatePath << std::endl;
-        std::cout << "stbi error: " << stbi_failure_reason() << std::endl;
-    }
 }
 
 void Canvas::setBackgroundColor(const Color& color)
@@ -43,6 +33,12 @@ void Canvas::setBackgroundColor(const Color& color)
 // Undo and Redo stuff
 void Canvas::beginStrokeRecord()
 {
+	// initialize the seenPixels vector if needed
+	if (!seenPixelsInitialized) {
+		seenPixels.resize(width * height, -1);
+		seenPixelsInitialized = true;
+	}
+
 	// create a new StrokePath on the current layer
 	activeStroke = StrokePath{};
 	activeStroke.layerNum = curLayer;
