@@ -327,6 +327,17 @@ void Canvas::setLayerData(std::vector<std::vector<Color>> newLayerData) {
 	layerData = newLayerData;
 }
 
+// recomputes the pixel values from all layers
+void Canvas::recompositePixelsFromLayers() {
+	for (int i = 0; i < width * height; i++) {
+		Color col = layerData[0][i];
+
+		for (int j = 1; j < numLayers; j++) {
+			col = col * layerData[j][i];
+		}
+		pixels[i] = col;
+	}
+}
 
 
 /*

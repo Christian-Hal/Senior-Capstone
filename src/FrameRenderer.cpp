@@ -123,6 +123,7 @@ void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCa
     frames = readPixelData(meta);
     newCanvas->setPixels(frames[curFrame - 1]);
     newCanvas->setLayerData(readLayerData(meta));
+    newCanvas->recompositePixelsFromLayers();  // Ensure pixels are recomposited from layers
     updateOnionSkin(*newCanvas);
 }
 
@@ -164,6 +165,7 @@ void FrameRenderer::createFrame(Canvas& canvas){
     layDat[0] = backgroundLayer;
 
     canvas.setLayerData(layDat);
+    canvas.recompositePixelsFromLayers();  // Ensure pixels are recomposited from layers
     
     // create function that renames any other frames that come after
     writeAllData(&canvas);
@@ -191,6 +193,7 @@ void FrameRenderer::removeFrame(Canvas& canvas){
         int* meta = readMetaData();
         canvas.setPixels(frames[curFrame-1]);
         canvas.setLayerData(readLayerData(meta));
+        canvas.recompositePixelsFromLayers();  // Ensure pixels are recomposited from layers
         updateOnionSkin(canvas);
     }
 }
@@ -257,6 +260,7 @@ void FrameRenderer::selectFrame(Canvas& canvas, int frameDelta){
         int* meta = readMetaData();
         canvas.setPixels(frames[curFrame-1]);
         canvas.setLayerData(readLayerData(meta));
+        canvas.recompositePixelsFromLayers();
         updateOnionSkin(canvas);
     }
 }

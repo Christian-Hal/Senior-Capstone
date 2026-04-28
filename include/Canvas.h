@@ -64,6 +64,7 @@ public:
 	const Color& getPixel(int x, int y) const;
 	void setPixels(std::vector<Color> newPixels);
 	void setLayerData(std::vector<std::vector<Color>> newLayerData);
+	void recompositePixelsFromLayers();  // Recompute pixel composite from all layers
 
 	// layer manipulation
 	void createLayer();
