@@ -568,9 +568,6 @@ void UI::drawMainScreen(CanvasManager& canvasManager, FrameRenderer frameRendere
 		}
 	}
 
-	// ----- Cursor Customization -----
-	drawCustomCursor(canvasManager);
-
 	// draw the UI elements only if showPanels is true
 	// draw the three main screen panels
 	if (showPanels) {
@@ -852,7 +849,10 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 		{
 			canvasManager.setActiveCanvas(pendingCloseIndex);
 			IGFD::FileDialogConfig config;
-			config.path = ".";
+
+			if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
+				else config.path = ".";
+			
 			config.fileName = canvasManager.getActive().getName();
 			config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
 			ImGuiFileDialog::Instance()->OpenDialog("SaveBeforeCloseDlg", "Save Image", ".png,.jpg,.ora", config);
@@ -1172,12 +1172,17 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 		else if (settingsSection == 2) {
 			// only show canvas settings if there is an active canvas
 			if (canvasManager.hasActive()) {
+				bool isAnimTemplate = canvasManager.getActive().isUsingAnimTemplate();
 				ImGui::Text("Canvas settings: Canvas behavior, animation settings, etc.");
 				static bool changePaperColor = false;
+				if (isAnimTemplate) {
+					ImGui::TextWrapped("Some settings are disabled for canvases using the animation template.");
+				}
+
 				if (ImGui::Button("Change Paper Color")) {
 					changePaperColor = true;
 				}
-				if (changePaperColor) {
+				if (changePaperColor && !isAnimTemplate) {
 					ImGuiColorEditFlags flags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
 					static ImVec4 paperColor = { 1.0f, 1.0f, 1.0f, 1.0f }; // default white
 					ImGui::SetNextItemWidth(180.0f);
@@ -1281,7 +1286,8 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 				ImGuiFileDialog::Instance()->OpenDialog(
 					"LoadFileDlg",
 					"Choose File",
-					".png, .jpg, .ora"
+					".png, .jpg, .ora",
+					config
 				);
 			}
 			ImGui::EndMenu();
@@ -1387,6 +1393,7 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 
 			// if the current UI state is the start menu then change it to the main screen
 			if (curState == UIState::start_menu) { curState = UIState::main_screen; }
+			saveToRecentActivityCb(filePath);
 
 		}
 

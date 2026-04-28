@@ -43,6 +43,8 @@ class DrawEngine
         glm::vec2 prev;                         // last point we moved from
         float distanceSinceLastStamp;           // leftover distance since last stamp
         float spacing;                          // spacing between stamps
+        float brushDiameter;
+        float stampInterval;
         bool hasPrev;
         
         Canvas* curCanvas = nullptr;            // the canvas we're currently drawing on

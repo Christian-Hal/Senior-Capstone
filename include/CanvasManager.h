@@ -24,6 +24,7 @@ class CanvasManager {
         // this is set to true when the active canvas is changed and
         // set to false when something acknolwedges the change
         bool canvasChange = false;
+        bool paperChange = false;
 
         // saving 
         void getFrameData(CanvasManager& canvasManagerA);

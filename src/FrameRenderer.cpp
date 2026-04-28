@@ -2,6 +2,7 @@
 // included libraries for functionality
 #include "FrameRenderer.h"
 #include "stb_image_write.h"
+#include "stb_image.h"
 #include "imgui.h"
 
 #include <iostream>
@@ -122,6 +123,7 @@ void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCa
     frames = readPixelData(meta);
     newCanvas->setPixels(frames[curFrame - 1]);
     newCanvas->setLayerData(readLayerData(meta));
+    newCanvas->recompositePixelsFromLayers();  // Ensure pixels are recomposited from layers
     updateOnionSkin(*newCanvas);
 }
 
@@ -141,8 +143,6 @@ void FrameRenderer::createFrame(Canvas& canvas){
     int* meta = readMetaData(); // meta[0] is width, meta[1] is height
 
     // this ought to insert inbetween the oldCurrent frame
-    frames.insert(frames.begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], canvas.getBackgroundColor()));
-    
     frLayerData[curCanvas-1].insert(frLayerData[curCanvas-1].begin() + (curFrame-1), vector<vector<Color>>(
             canvas.getNumLayers(), vector<Color>(
                 meta[0] * meta[1], canvas.getBackgroundColor()
@@ -157,22 +157,13 @@ void FrameRenderer::createFrame(Canvas& canvas){
     //band-aid solution. this does not fix removing layers fully
 
     vector<vector<Color>> layDat;
-    if (canvas.isUsingAnimTemplate()) {
-        // 3 layers: background, template, empty drawing layer
-        layDat.resize(3, vector<Color>(meta[0] * meta[1], {0,0,0,0}));
-
-        layDat[0] = backgroundLayer;
-        //canvas.loadAnimTemplate(); // sets the template layer to the animation template
-        layDat[1] = canvas.getLayerData()[1]; // sets the template layer
-
-    } else {
-        // normal behavior
-        int numLayers = meta[2];
-        layDat.resize(numLayers, vector<Color>(meta[0] * meta[1], {0,0,0,0}));
-        layDat[0] = backgroundLayer;
-    }
+    // normal behavior
+    int numLayers = meta[2];
+    layDat.resize(numLayers, vector<Color>(meta[0] * meta[1], {0,0,0,0}));
+    layDat[0] = backgroundLayer;
 
     canvas.setLayerData(layDat);
+    canvas.recompositePixelsFromLayers();  // Ensure pixels are recomposited from layers
     
     // create function that renames any other frames that come after
     writeAllData(&canvas);
@@ -202,6 +193,7 @@ void FrameRenderer::removeFrame(Canvas& canvas){
         int* meta = readMetaData();
         canvas.setPixels(frames[curFrame-1]);
         canvas.setLayerData(readLayerData(meta));
+        canvas.recompositePixelsFromLayers();  // Ensure pixels are recomposited from layers
         updateOnionSkin(canvas);
     }
 }
@@ -271,6 +263,7 @@ void FrameRenderer::selectFrame(Canvas& canvas, int frameDelta){
         int* meta = readMetaData();
         canvas.setPixels(frames[curFrame-1]);
         canvas.setLayerData(readLayerData(meta));
+        canvas.recompositePixelsFromLayers();
         updateOnionSkin(canvas);
     }
 }
@@ -367,6 +360,9 @@ void FrameRenderer::toggleOnionSkin(){
 
 void FrameRenderer::saveAnimation(const string& path, Canvas& canvas){
     writeAllData(&canvas);
+    // Ensure current frame is synced with canvas before saving
+    frames[curFrame - 1] = vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
+    
     int width = canvas.getWidth();
     int height = canvas.getHeight();
     string prefix = path.substr(0, path.find_last_of('.'));
@@ -380,16 +376,60 @@ void FrameRenderer::saveAnimation(const string& path, Canvas& canvas){
     }
     string title = path.substr(slash + 1, path.find_last_of('.') - (slash + 1));
     fs::create_directory(prefix);
-    for(int i = 0; i < frames.size(); i++){
+    
+    // Load template if using animation template
+    vector<Color> templateLayer;
+    if (canvas.isUsingAnimTemplate()) {
+        stbi_set_flip_vertically_on_load(true);
+        const string templatePath = "assets/Animation_Template_PNG.png";
+        int templateWidth = 0, templateHeight = 0;
+        unsigned char* templateData = stbi_load(templatePath.c_str(), &templateWidth, &templateHeight, nullptr, 4);
+        
+        if (templateData) {
+            templateLayer.resize(width * height);
+            for (int i = 0; i < width * height; i++) {
+                if (i < templateWidth * templateHeight) {
+                    templateLayer[i].r = templateData[i * 4 + 0];
+                    templateLayer[i].g = templateData[i * 4 + 1];
+                    templateLayer[i].b = templateData[i * 4 + 2];
+                    templateLayer[i].a = templateData[i * 4 + 3];
+                } else {
+                    templateLayer[i] = {0, 0, 0, 0};
+                }
+            }
+            stbi_image_free(templateData);
+        }
+    }
+    
+    for(int frameIdx = 0; frameIdx < frames.size(); frameIdx++){
         string finalPath;
         if(!isMac){
-            finalPath = prefix + "/" + title + "-" + to_string(i) + "." + ext;
+            finalPath = prefix + "/" + title + "-" + to_string(frameIdx) + "." + ext;
         }
         else{
-            finalPath = prefix + "\\" + title + "-" + to_string(i) + "." + ext;
+            finalPath = prefix + "\\" + title + "-" + to_string(frameIdx) + "." + ext;
         }
+        
         vector<Color> pixels(width * height);
-        memcpy(pixels.data(), frames[i].data(), width * height * sizeof(Color));
+        memcpy(pixels.data(), frames[frameIdx].data(), width * height * sizeof(Color));
+        
+        // if using animation template, fill empty pixels with template pixels
+        if (canvas.isUsingAnimTemplate() && !templateLayer.empty()) {
+            for (int i = 0; i < width * height; i++) {
+                if (pixels[i].a == 0) {
+                    pixels[i] = templateLayer[i];
+                }
+            }
+        } else {
+            // fill empty pixels with background color
+            for (int i = 0; i < width * height; i++) {
+                if (pixels[i].a == 0) {
+                    pixels[i] = canvas.getBackgroundColor();
+                }
+            }
+        }
+        
+        // Flip vertically for saving
         for (int y = 0; y < height / 2; y++)
         {
             int opposite = height - y - 1;

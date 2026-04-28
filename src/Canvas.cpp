@@ -10,78 +10,47 @@
 
 // constructor
 Canvas::Canvas() : width(0), height(0), numLayers(0), curLayer(0), pixels(), layerData(), canvasName("") {}
-Canvas::Canvas(int w, int h, std::string name, bool isAnimation, bool useAnimTemplate, const Color& paperColor) : width(w), height(h),
-numLayers(2), curLayer(1), backgroundColor(paperColor), pixels(w* h, backgroundColor), canvasName(name),
-currentStrokeIndex(-1), seenPixels(w* h, -1), isAnim(isAnimation), animationTemplate(useAnimTemplate),
-editedPixels(w* h, false)
+Canvas::Canvas(int w, int h, std::string name, bool isAnimation, bool useAnimTemplate, const Color& paperColor) 
+				: width(w), height(h), numLayers(2), curLayer(1), backgroundColor(paperColor), 
+				canvasName(name), isAnim(isAnimation), animationTemplate(useAnimTemplate)
 {
-	// Initialize layerData before loading animation
-	layerData.push_back(std::vector<Color>(w * h, backgroundColor));
-	layerData.push_back(std::vector<Color>(w * h, emptyColor));
+	// resize pixel vector to exist (default-initialized, fast)
+	// pixels will be properly set when layers are composited
+	pixels.resize(w * h);
+	editedPixels.resize(w * h, false);
 
-	// if its an animation then load in the animation template image
-	if (animationTemplate) {
-		loadAnimTemplate();
-
-		// add another empty layer for the animation template
-		createLayer();
-	}
-}
-
-void Canvas::loadAnimTemplate() {
-	stbi_set_flip_vertically_on_load(true);
-	const std::string templatePath = "assets/Animation_Template_PNG.png";
-
-	int imgWidth = 0, imgHeight = 0;
-	unsigned char* data = stbi_load(templatePath.c_str(), &imgWidth, &imgHeight, nullptr, 4);
-	if (data) {
-		loadImage(data, 1);
-		stbi_image_free(data);
-
-	}
-	else {
-		std::cout << "ERROR: Failed to load animation template from: " << templatePath << std::endl;
-		std::cout << "stbi error: " << stbi_failure_reason() << std::endl;
-	}
+    // Initialize layerData before loading animation
+    layerData.push_back(std::vector<Color>(w * h, emptyColor));
+    layerData.push_back(std::vector<Color>(w * h, emptyColor));
 }
 
 void Canvas::setBackgroundColor(const Color& color)
 {
-	for (int i = 0; i < width * height; i++)
-	{
-		if (layerData[0][i] == backgroundColor) {
-			layerData[0][i] = color;
-
-			if (editedPixels[i] == false) {
-				pixels[i] = color;
-			}
-		}
-	}
-
-	backgroundColor = color;
+    backgroundColor = color;
 }
 
 // Undo and Redo stuff
 void Canvas::beginStrokeRecord()
 {
+	// initialize the seenPixels vector if needed
+	if (!seenPixelsInitialized) {
+		seenPixels.resize(width * height, false);
+		seenPixelsInitialized = true;
+	} else {
+		// clear from previous stroke
+		std::fill(seenPixels.begin(), seenPixels.end(), false);
+	}
+	
 	// create a new StrokePath on the current layer
 	activeStroke = StrokePath{};
 	activeStroke.layerNum = curLayer;
-
-	// sets a new stroke index for the seenPixel list
-	currentStrokeIndex++;
 }
 
 // Records the change of a single pixel during a stroke, storing the index of the pixel and its previous color value
 void Canvas::recordPixelChange(int index, const Color& before)
 {
-	// check if we've seen the pixel before during this stroke, keeps from reassigning the same pixel multiple times
-	if (seenPixels[index] == currentStrokeIndex) {
-		return;
-	}
-
-	// if we haven't seen the pixel before, then we mark it as seen and save it to the active stroke
-	seenPixels[index] = currentStrokeIndex;
+	// mark pixel as seen and save it to the active stroke
+	seenPixels[index] = true;
 	Pixel pixel = { index, before, before };
 	activeStroke.pixels.push_back(pixel);
 }
@@ -291,15 +260,10 @@ const Color Canvas::colorTimes(const Color& c2, const Color& c1) {
 */
 void Canvas::setPixel(int x, int y, const Color& color)
 {
-	// do not let the user draw onto the animation template
-	if (isUsingAnimTemplate() && curLayer == 1) {
-		return;
-	}
-
-	// making sure (x, y) is within bounds
-	if (x < 0 || x >= width || y < 0 || y >= height) {
-		return;
-	}
+    // making sure (x, y) is within bounds
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+        return;
+    }
 
 	int index = y * width + x;
 
@@ -358,6 +322,17 @@ void Canvas::setLayerData(std::vector<std::vector<Color>> newLayerData) {
 	layerData = newLayerData;
 }
 
+// recomputes the pixel values from all layers
+void Canvas::recompositePixelsFromLayers() {
+	for (int i = 0; i < width * height; i++) {
+		Color col = layerData[0][i];
+
+		for (int j = 1; j < numLayers; j++) {
+			col = col * layerData[j][i];
+		}
+		pixels[i] = col;
+	}
+}
 
 
 /*
@@ -377,13 +352,15 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 
 	// idea: 	result = color_s * alpha_s + color_d * (1 - alpha_s)
 
-	// do not let the user draw onto the animation template
-	if (isUsingAnimTemplate() && curLayer == 1) {
-		return;
-	}
+    // making sure (x, y) is within bounds 
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+        return;
+    }
 
-	// making sure (x, y) is within bounds 
-	if (x < 0 || x >= width || y < 0 || y >= height) {
+	int index = y * width + x;
+
+	// if this pixel was already blended during this stroke, skip it to prevent over-blending
+	if (seenPixels[index]) {
 		return;
 	}
 
@@ -391,13 +368,6 @@ void Canvas::blendPixel(int x, int y, const Color& src, float brushAlpha) {
 	// Transparent writes are used by erase mode.
 	if (src.a == 255 || src.a == 0) {
 		this->setPixel(x, y, src);
-		return;
-	}
-
-	int index = y * width + x;
-
-	// if this pixel was already blended during this stroke, skip it to prevent over-blending
-	if (seenPixels[index] == currentStrokeIndex) {
 		return;
 	}
 
@@ -461,34 +431,29 @@ void Canvas::createLayer() {
 
 
 // removes a layer from layerData and removes the pixel values on that layer
-void Canvas::removeLayer() {
-	// do not let the user remove the animation template layer
-	if (isUsingAnimTemplate() && curLayer == 1) {
-		return;
-	}
-
-	// do not remove layers if there is only one layer
-	if (numLayers > 2) {
-		// when removing a layer we need to iterate through through every pixel 
-		for (int i = 0; i < pixels.size(); i++) {
-			// if the pixel value is not transparent
-			if (pixels[i].a != 0 || layerData[curLayer][i].a) {
-				// place a transparent pixel at i
-				layerData[curLayer][i] = { 0,0,0,0 };
-				// calculate what pixel will be with the new empty value
-				Color col = layerData[0][i];
-				for (int j = 0; j < numLayers; j++) {
-					col = col * layerData[j][i];
-				}
-				pixels[i] = col;
-			}
-		}
-		layerData.erase(layerData.begin() + curLayer);
-		// update the number of layers and the current layer if needed
-		numLayers--;
-		if (layerData.size() == curLayer) {
-			curLayer--;
-		}
+void Canvas::removeLayer(){
+    // do not remove layers if there is only one layer
+    if(numLayers > 2){
+        // when removing a layer we need to iterate through through every pixel 
+        for(int i = 0; i < pixels.size(); i++){
+            // if the pixel value is not transparent
+            if(pixels[i].a != 0 || layerData[curLayer][i].a ){
+                // place a transparent pixel at i
+                layerData[curLayer][i] = {0,0,0,0};
+                // calculate what pixel will be with the new empty value
+                Color col = layerData[0][i];
+                for(int j = 0; j < numLayers; j++){
+                    col = col * layerData[j][i];
+                }
+                pixels[i] = col;
+            }
+        }
+        layerData.erase(layerData.begin()+curLayer);
+        // update the number of layers and the current layer if needed
+        numLayers--;
+        if(layerData.size() == curLayer){
+            curLayer--;
+        }
 
 		// since this has the unintended effected of ruining the data in
 		// pixel, we need to reiterate through each value for each layer to

@@ -16,6 +16,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "stb_image.h"
+
 
 // shader sources 
 static const char* vertexShaderSource = R"(
@@ -33,14 +35,33 @@ void main(){
 }
 )";
 
+// static const char* fragmentShaderSource = R"(
+// #version 330 core
+// in vec2 TexCoord;
+// out vec4 FragColor;
+// uniform sampler2D canvasTex;
+
+// void main(){
+//     FragColor = texture(canvasTex, TexCoord);
+// }
+// )";
+
 static const char* fragmentShaderSource = R"(
 #version 330 core
 in vec2 TexCoord;
 out vec4 FragColor;
 uniform sampler2D canvasTex;
+uniform sampler2D paperTex;
 
 void main(){
-    FragColor = texture(canvasTex, TexCoord);
+    vec4 canvasColor = texture(canvasTex, TexCoord);
+    vec4 paperColor = texture(paperTex, TexCoord);
+
+	if (canvasColor.a > 0.001) 
+        canvasColor.rgb /= canvasColor.a;
+    
+    // Blend using canvas's alpha channel - canvas appears on top
+    FragColor = mix(paperColor, canvasColor, canvasColor.a);
 }
 )";
 
@@ -90,12 +111,19 @@ bool Renderer::init(GLFWwindow* window, Globals& g_inst)
 	glDeleteShader(fragmentShader);
 
 	// ----- Texture Setup -----
-
 	glGenTextures(1, &canvasTexture);
 
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glGenTextures(1, &paperTexture);
+
+	glBindTexture(GL_TEXTURE_2D, paperTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -112,6 +140,12 @@ void Renderer::beginFrame(CanvasManager& canvasManager)
 	// render the active canvas
 	if (canvasManager.hasActive())
 	{
+		// if the active canvas' paper has changed then update the texture
+		if (canvasManager.paperChange) {
+			uploadExtraTexture(canvasManager.getActive());
+			canvasManager.paperChange = false;
+		}
+
 		// if the active canvas has chaneged then recreate the vbo/vao
 		if (canvasManager.canvasChange || global.dirtyScreen) {
 			createCanvasQuad(canvasManager.getActive());
@@ -185,28 +219,73 @@ void Renderer::createCanvasQuad(const Canvas& canvas)
 
 
 
-// uploads the canvas pixel data to the quad texture
-void Renderer::uploadTexture(const Canvas& canvas) {
+// uploads the canvas pixel data and paper layer to the quad texture
+void Renderer::uploadCanvasTexture(const Canvas& canvas) {
 
-	// sets the active texture
+	// set the active texture and bind the canvas data to the texture
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
-
-	// binds the image data to the texture
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA8, canvas.getWidth(), canvas.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas.getData());
-
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, canvas.getWidth(), canvas.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas.getData());
+	glGenerateMipmap(GL_TEXTURE_2D);
 }
 
+void Renderer::uploadExtraTexture(const Canvas& canvas) {
+	// upload the anim tempalte if its needed
+	if (canvas.isUsingAnimTemplate()) {
+		// load and generate the texture
+		int width, height, nrChannels;
+		stbi_set_flip_vertically_on_load(true);
+		unsigned char *data = stbi_load("assets/Animation_Template_PNG.png", &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+		}
+		else
+		{
+			std::cout << "Failed to load texture" << std::endl;
+		}
+		stbi_image_free(data);
+	} else { // other wise just use the paper color
+		// set the active texture and bind the paper color to the texture
+		glBindTexture(GL_TEXTURE_2D, paperTexture);
+		
+		// Create a vector filled with the canvas's paper (background) color
+		Color paperColor = canvas.getBackgroundColor();
+		std::vector<Color> paperLayerData(canvas.getWidth() * canvas.getHeight(), paperColor);
+		
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, canvas.getWidth(), canvas.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, paperLayerData.data());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+}
+
+// uploads the canvas pixel data and paper layer to the quad texture
+void Renderer::uploadAnimTextures(const Canvas& canvas) {
+
+	// set the active texture and bind the canvas data to the texture
+	glBindTexture(GL_TEXTURE_2D, canvasTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, canvas.getWidth(), canvas.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, canvas.getData());
+
+	// load and generate the texture
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data = stbi_load("assets/Animation_Template_PNG.png", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
+}
 
 
 // renders the quad using the uploaded pixel data
 void Renderer::renderCanvas(const Canvas& canvas)
 {
-	////// if no active canvas then don't do any of this
-	////// will give the effect of a "main screen" when no file is open
-
-	// uplaod the canvas to the texture
-	uploadTexture(canvas);
+	uploadCanvasTexture(canvas);
 
 	glm::mat4 projection = glm::ortho(
 		0.0f,
@@ -231,6 +310,7 @@ void Renderer::renderCanvas(const Canvas& canvas)
 	glm::mat4 mvp = projection * view;
 
 	glUseProgram(shaderProgram);
+
 	glUniformMatrix4fv(
 		glGetUniformLocation(shaderProgram, "u_MVP"),
 		1,
@@ -240,8 +320,21 @@ void Renderer::renderCanvas(const Canvas& canvas)
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, canvasTexture);
+
+	// check to see how the mag filter should be handled based on the zoom level
+	if (canvas.zoom < 0.5f) {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	} else {
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	}
+
 	glUseProgram(shaderProgram);
 	glUniform1i(glGetUniformLocation(shaderProgram, "canvasTex"), 0);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, paperTexture);
+	glUseProgram(shaderProgram);
+	glUniform1i(glGetUniformLocation(shaderProgram, "paperTex"), 1);
 
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, 6);

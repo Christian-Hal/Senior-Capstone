@@ -72,9 +72,6 @@ void DrawEngine::update()
 
 void DrawEngine::drawPath(const std::vector<glm::vec2>& eventPath)
 {
-    const float brushDiameter = (curBrushDab[0] + curBrushDab[1]) / 2.0f;
-    const float stampInterval = std::max(0.001f, spacing * brushDiameter);
-
     // for each smoothed point in the event path
     for (const auto& point : eventPath)
     {
@@ -132,23 +129,28 @@ void DrawEngine::stampBrush(glm::vec2 position)
     int W = static_cast<int>(std::lround(curBrushDab[0])); 
     int H = static_cast<int>(std::lround(curBrushDab[1])); 
 
-    // this copies everything but the first two values, which are the width and height
-    std::vector<float> alpha(curBrushDab.begin() + 2, curBrushDab.end());
 
     // calculate other needed information
-    int topLeftX = static_cast<int>(std::floor(position.x - (W / 2.0f))); 
-    int topLeftY = static_cast<int>(std::floor(position.y - (H / 2.0f))); 
+    int topLeftX = static_cast<int>(std::round(position.x - (W / 2.0f))); 
+    int topLeftY = static_cast<int>(std::round(position.y - (H / 2.0f))); 
+
+    // skip the stamp if its completely off the canvas
+    if (topLeftX + W < 0 || topLeftX >= curCanvas->getWidth() ||
+        topLeftY + H < 0 || topLeftY >= curCanvas->getHeight()) return;
+
+    float colorAlpha = curColor.a / 255.0f;
 
     for (int r = 0; r < H; r++) 
     {
         for (int c = 0; c < W; c++) 
         {
-            float a = alpha[r * W + c];
+            // offset the lookup by 2 to skip over the width and height values at the start of curBrushDab
+            float a = curBrushDab[r * W + c + 2];
             if (a > 0.01f) {
                 int finalX = topLeftX + c;
                 int finalY = topLeftY + r;
 
-                curCanvas->blendPixel(finalX, finalY, curColor, curColor.a/255.0);
+                curCanvas->blendPixel(finalX, finalY, curColor, colorAlpha);
             }
         }
     }
@@ -165,12 +167,13 @@ void DrawEngine::processMousePos(double canvasX, double canvasY)
 
 // updates the information needed to draw: the canvas being drawn on, the brush dab being stamped, and the color used to draw
 void DrawEngine::setBrushDab(std::vector<float> newBrushDab, float spacing, int drawSize) {
-    //curBrushDab = newBrushDab;
     curBrushDab = std::move(newBrushDab); 
 
     this->spacing = spacing;
-    //this->drawSize = drawSize;
     this->drawSize = std::max(1, drawSize); 
+
+    brushDiameter = (curBrushDab[0] + curBrushDab[1]) / 2.0f;
+    stampInterval = std::max(0.001f, this->spacing * brushDiameter);
 }
 void DrawEngine::setColor(Color newColor) {
     curColor = newColor;

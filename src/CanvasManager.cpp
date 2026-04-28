@@ -35,8 +35,8 @@ Canvas& CanvasManager::createCanvas(int width, int height, std::string name, boo
 	activeCanvasIndex = canvases.size() - 1;
 
 	FrameRenderer::newCanvas(&oldCanvasCopy, &canvases[activeCanvasIndex]);
-
-	canvasChange = true;
+    canvasChange = true;
+    paperChange = true;
 
 	return canvases[activeCanvasIndex];
 }
@@ -76,9 +76,9 @@ void CanvasManager::closeCanvas(int index)
 	else if (index < activeCanvasIndex)
 		activeCanvasIndex--;
 
-
-	FrameRenderer::removeCanvas(index, &canvases[activeCanvasIndex]);
-	canvasChange = true;
+    FrameRenderer::removeCanvas(index, &canvases[activeCanvasIndex]);
+    canvasChange = true;
+    paperChange = true;
 }
 
 
@@ -109,7 +109,8 @@ void CanvasManager::setPaperColor(const ImVec4& color)
 		static_cast<unsigned char>(color.w * 255.0f)
 	};
 
-	getActive().setBackgroundColor(bgColor);
+    getActive().setBackgroundColor(bgColor);
+    paperChange = true;
 }
 
 void CanvasManager::undo()
@@ -188,7 +189,8 @@ void CanvasManager::setActiveCanvas(int index)
 
 	activeCanvasIndex = index;
 
-	canvasChange = true;
+    canvasChange = true;
+    paperChange = true;
 
 	FrameRenderer::updateCanvas(&oldCanvasCopy, &getActive(), index);
 }
@@ -216,8 +218,34 @@ void CanvasManager::saveToFile(const std::string& path)
 	std::vector<Color> pixels(width * height);
 	std::memcpy(pixels.data(), getActive().getData(), width * height * sizeof(Color));
 
-	// flip image vertically
-	savingFlip(height, width, pixels);
+    // if using animation template, fill empty pixels with template pixels
+    if (getActive().isUsingAnimTemplate()) {
+        stbi_set_flip_vertically_on_load(true);
+        const std::string templatePath = "assets/Animation_Template_PNG.png";
+        int templateWidth = 0, templateHeight = 0;
+        unsigned char* templateData = stbi_load(templatePath.c_str(), &templateWidth, &templateHeight, nullptr, 4);
+        
+        if (templateData) {
+            for (int i = 0; i < width * height; i++) {
+                if (pixels[i].a == 0 && i < templateWidth * templateHeight) {
+                    pixels[i].r = templateData[i * 4 + 0];
+                    pixels[i].g = templateData[i * 4 + 1];
+                    pixels[i].b = templateData[i * 4 + 2];
+                    pixels[i].a = templateData[i * 4 + 3];
+                }
+            }
+            stbi_image_free(templateData);
+        }
+    } else { // else change all empty pixels to the background color before saving
+        for (int i = 0; i < width * height; i++)
+        {
+            if (pixels[i].a == 0)
+                pixels[i] = getActive().getBackgroundColor();
+        }
+    }
+
+    // flip image vertically
+    savingFlip(height, width, pixels);
 
 	std::string ext = path.substr(path.find_last_of('.') + 1);
 
@@ -267,6 +295,16 @@ void CanvasManager::saveORA(const std::string& path)
 	for (int i = 0; i < numLayers; i++)
 	{
 		std::vector<Color> flipped = layers[i];
+        // layer 0 needs to be filled with background color for saving
+        if (i == 0) {
+            for (int j = 0; j < width * height; j++)
+            {
+                if (flipped[j].a == 0)
+                    flipped[j] = getActive().getBackgroundColor();
+            }
+        }
+
+        savingFlip(height, width, flipped);
 
 		savingFlip(height, width, flipped);
 
@@ -445,7 +483,17 @@ void CanvasManager::loadORA(const std::string& path)
 			continue;
 		}
 
-		std::vector<unsigned char> fullCanvas(width * height * 4, 0);
+        // special behavior for the final layer from the ORA file
+        if (i == (int)layers.size() - 1)
+        {
+            // grab the first color of the final layer and set it as the background color of the canvas
+            Color bgColor = {data[0], data[1], data[2], data[3]};
+            canvas.setBackgroundColor(bgColor);
+            stbi_image_free(data);
+            continue;
+        }
+
+        std::vector<unsigned char> fullCanvas(width * height * 4, 0);
 
 		for (int row = 0; row < h; row++)
 		{

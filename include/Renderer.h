@@ -39,7 +39,9 @@ public:
 
 	// canvas rendering functions
 	void createCanvasQuad(const Canvas& canvas);
-	void uploadTexture(const Canvas& canvas);
+	void uploadCanvasTexture(const Canvas& canvas);
+	void uploadAnimTextures(const Canvas& canvas);
+	void uploadExtraTexture(const Canvas& canvas);
 	void renderCanvas(const Canvas& canvas);
 
 	// color picking 
@@ -61,4 +63,5 @@ private:
 
 	unsigned int fbo = 0;
 	unsigned int colorTexture;
+	unsigned int paperTexture;
 };
