@@ -399,7 +399,7 @@ void UI::drawUI(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 
 	// compute the panel sizes
 	if (TopSize == 0) { TopSize = 20; }
-	if (BotSize == 0) { BotSize = static_cast<int>(0.1 * displayHeight); }
+	if (BotSize == 0) { BotSize = static_cast<int>(0.05 * displayHeight); }
 	if (LeftSize == 0) { LeftSize = static_cast<int>(0.1 * displayWidth); }
 	if (RightSize == 0) { RightSize = static_cast<int>(0.1 * displayWidth); }
 
@@ -753,6 +753,11 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer) {
 	// initialize the panel
 	ImGui::SetNextWindowPos(ImVec2(LeftSize, displayHeight - BotSize), ImGuiCond_Always);
+	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation()) {
+		BotSize = static_cast<int>(0.2 * displayHeight);
+	} else {
+		BotSize = static_cast<int>(0.05 * displayHeight);
+	}
 	ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, BotSize), ImGuiCond_Always);
 	ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
@@ -1651,6 +1656,12 @@ void UI::renderTimelineControls(CanvasManager& canvasManager) {
 	ImGui::SetItemTooltip("Remove Frame");
 	ImGui::SameLine();
 	ImGui::Spacing();
+	ImGui::SameLine();
+
+	if (ImGui::Button(ICON_FA_COPY)) {
+		FrameRenderer::copyFrame(canvasManager.getActive());
+	}
+	ImGui::SetItemTooltip("Duplicate Frame");
 	ImGui::SameLine();
 
 	if (ImGui::Button(ICON_FA_PLAY)) {
