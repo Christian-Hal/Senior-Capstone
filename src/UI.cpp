@@ -1809,7 +1809,7 @@ void UI::renderTimelineControls(CanvasManager& canvasManager) {
 		FrameRenderer::reorderFrame(canvasManager.getActive(), curFrame - 1, curFrame - 2);
 		FrameRenderer::selectFrame(canvasManager.getActive(), -1);
 	}
-	ImGui::SetItemTooltip("Play Animation");
+	ImGui::SetItemTooltip("Swap with Previous Frame");
 	ImGui::SameLine();
 
 	if (ImGui::Button(">>")) {
@@ -1818,7 +1818,7 @@ void UI::renderTimelineControls(CanvasManager& canvasManager) {
 		FrameRenderer::selectFrame(canvasManager.getActive(), 1);
 
 	}
-	ImGui::SetItemTooltip("Play Animation");
+	ImGui::SetItemTooltip("Swap with Next Frame");
 	ImGui::SameLine();
 
 	ImGui::Text("Frame: %d / %d", FrameRenderer::getCurFrame(), FrameRenderer::getNumFrames());
