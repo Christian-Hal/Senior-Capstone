@@ -57,6 +57,9 @@ static GLFWwindow* windowStorage;
 static int canvasWidth = 1920;
 static int canvasHeight = 1080;
 
+// fps value
+int fpsValue = 24;
+
 // the default starting frame
 static float curFrame = 1.0f;
 // RBGA values for the color wheel 
@@ -1289,6 +1292,7 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 				if (ImGui::Button("Change Paper Color")) {
 					changePaperColor = true;
 				}
+				
 				if (changePaperColor && !isAnimTemplate) {
 					ImGuiColorEditFlags flags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
 					static ImVec4 paperColor = { 1.0f, 1.0f, 1.0f, 1.0f }; // default white
@@ -1299,6 +1303,12 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 						changePaperColor = false;
 						canvasManager.getActive().isDirty = true;
 					}
+				}
+				if(canvasManager.getActive().isAnimation()){
+					ImGui::Text("Animation FPS value");
+					ImGui::SameLine();
+					ImGui::InputInt("##value", &fpsValue);
+					FrameRenderer::changeFPS(fpsValue);
 				}
 			}
 			else

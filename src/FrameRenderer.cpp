@@ -30,7 +30,7 @@ int FrameRenderer::numFrames = -1;
 int FrameRenderer::curCanvas = -1;
 int FrameRenderer::curFrame = -1;
 bool FrameRenderer::isPlaying = false;
-int FrameRenderer::fps = 42;
+int FrameRenderer::fps = 24;
 int FrameRenderer::numBefore = 1;
 int FrameRenderer::numAfter = 1;
 bool FrameRenderer::onionSkinEnabled = false;
@@ -57,6 +57,21 @@ FrameRenderer::FrameRenderer()
     numFrames = 0;
     curCanvas = -1;
     curFrame = -1;
+}
+
+void FrameRenderer::changeOnionSkinsSeen(int numPrev, int numNext){
+    if(numPrev >= 0 && numPrev < 10){
+        numBefore = numPrev;
+    }
+    if(numNext >= 0 && numNext < 10){
+        numAfter = numNext;
+    }
+}
+
+void FrameRenderer::changeFPS(int fps1){
+    if(fps1 > 0 && fps1 < 10000){
+        fps = fps1;
+    }
 }
 
 // called whenever a new canvas is made
@@ -310,7 +325,7 @@ void FrameRenderer::play(Canvas& canvas){
             while (i <= numFrames) {
                 canvas.setPixels(frames[i-1]);
                 i++;
-                std::this_thread::sleep_for(std::chrono::milliseconds(fps)); // 42 milliseconds is ~ 24 fps
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000/fps)); // ms = 1000/fps
             }
             canvas.setPixels(frames[curFrame - 1]);
             isPlaying = false;
