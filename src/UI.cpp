@@ -399,7 +399,7 @@ void UI::drawUI(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 
 	// compute the panel sizes
 	if (TopSize == 0) { TopSize = 20; }
-	if (BotSize == 0) { BotSize = static_cast<int>(0.05 * displayHeight); }
+	if (BotSize == 0) { BotSize = static_cast<int>(0.1 * displayHeight); }
 	if (LeftSize == 0) { LeftSize = static_cast<int>(0.1 * displayWidth); }
 	if (RightSize == 0) { RightSize = static_cast<int>(0.1 * displayWidth); }
 
