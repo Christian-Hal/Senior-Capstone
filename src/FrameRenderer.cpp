@@ -23,6 +23,7 @@ int FrameRenderer::numFrames = -1;
 int FrameRenderer::curCanvas = -1;
 int FrameRenderer::curFrame = -1;
 bool FrameRenderer::isPlaying = false;
+int FrameRenderer::fps = 84;
 int FrameRenderer::numBefore = 1;
 int FrameRenderer::numAfter = 1;
 bool FrameRenderer::onionSkinEnabled = false;
@@ -300,7 +301,7 @@ void FrameRenderer::play(Canvas& canvas){
             while (i <= numFrames) {
                 canvas.setPixels(frames[i-1]);
                 i++;
-                std::this_thread::sleep_for(std::chrono::milliseconds(84)); // 42 milliseconds is ~ 24 fps
+                std::this_thread::sleep_for(std::chrono::milliseconds(fps)); // 42 milliseconds is ~ 24 fps
             }
             canvas.setPixels(frames[curFrame - 1]);
             isPlaying = false;

@@ -16,18 +16,13 @@ struct Color {
     */
 
 	// Color == Color operation
-	friend bool operator==(const Color& lhs, const Color& rhs) {
-        return (lhs.r == rhs.r && 
-                lhs.g == rhs.g && 
-                lhs.b == rhs.b && 
-                lhs.a == rhs.a);
-		}
-
-	// print operation
-	friend std::ostream& operator<<(std::ostream& os, const Color& c) {
-        os << "(Red: " << (int)c.r << ", Green: " << (int)c.g << ", Blue: " << (int)c.b << ", Alpha: " << (int)c.a << ")";
-        return os;
+	 bool operator==(const Color& rhs) const {
+        return r == rhs.r &&
+               g == rhs.g &&
+               b == rhs.b &&
+               a == rhs.a;
     }
+
 };
 
 

@@ -12,6 +12,9 @@ using namespace std;
 class FrameRenderer{
     public:
         FrameRenderer();
+        // static void changeOnionSkinColor(Color colorPrev, Color& colorNext);
+        static void changeOnionSkinsSeen(int numPrev, int numNext);
+        static void changeFPS(int fps);
         static void newCanvas(Canvas* oldCanvas, Canvas* newCanvas);
         static void updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCanvasIndex);
         static void createFrame(Canvas& canvas);
@@ -44,6 +47,7 @@ class FrameRenderer{
         static bool isPlaying;
         static int numBefore;
         static int numAfter;
+        static int fps;
         static bool onionSkinEnabled;
 
         // functions that read from files
