@@ -279,7 +279,7 @@ void AppController::onMouseButton(const MouseState& m, int button, int action, i
 			glm::vec2 canvasCoords = mouseToCanvasCoords(m.x, m.y);
 			int canvasX = static_cast<int>(canvasCoords.x);
 			int canvasY = static_cast<int>(canvasCoords.y);
-			Color& uiColor = ui.getColor();
+			Color uiColor = ui.getColor();
 			fill(canvas, uiColor, uiColor, canvasX, canvasY);
 			canvas.endStrokeRecord();
 			break;
