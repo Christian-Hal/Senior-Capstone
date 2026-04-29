@@ -1203,24 +1203,46 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 
 		}
 		else if (settingsSection == 1) {
-			// text label that displays rebind status
 			ImGui::Text("Click a button, then press a key to rebind.");
-			if (isWaitingForRebindCb && isWaitingForRebindCb()) {
-				ImGui::Text("Press any key...");
-			}
+			
+			static InputAction waitingAction = static_cast<InputAction>(-1);
+
+			if (isWaitingForRebindCb && !isWaitingForRebindCb())
+				waitingAction = static_cast<InputAction>(-1);
 
 			auto hotkeyLabel = [this](InputAction action) {
 				return getHotkeyLabelCb ? getHotkeyLabelCb(action) : std::string{};
 				};
 			auto triggerRebind = [this](InputAction action) {
-				if (startRebindCb) startRebindCb(action);
-				};
+				if (startRebindCb)
+				{
+					startRebindCb(action);
+					waitingAction = action;
+				}
+			};
 			auto ShortcutRow = [&](const char* name, InputAction action) {
 				ImGui::Text("%s", name);
 				ImGui::SameLine(180);
 
-				if (ImGui::Button((hotkeyLabel(action) + "##" + name).c_str()))
-					triggerRebind(action);
+				if (isWaitingForRebindCb && isWaitingForRebindCb() && waitingAction == action)
+				{
+					// pulseing light effect for stating rebind status instead of text
+					float pulse = (sinf((float)ImGui::GetTime() * 4.0f) + 1.0f) * 0.5f;
+					ImVec4 waitColor = ImVec4(59 / 255.0f, 103 / 255.0f, 168 / 255.0f, 0.6f + pulse * 0.4f);
+					ImGui::PushStyleColor(ImGuiCol_Button, waitColor);
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, waitColor);
+					ImGui::PushStyleColor(ImGuiCol_ButtonActive, waitColor);
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+					std::string label = "Press any key...";
+					if (ImGui::Button(label.c_str()))
+						triggerRebind(action);
+
+					ImGui::PopStyleColor(4);
+				}
+				else
+					if (ImGui::Button((hotkeyLabel(action) + "##" + name).c_str()))
+						triggerRebind(action);
 
 				// buttons for unbinding hotkeys
 				ImGui::SameLine(350);
