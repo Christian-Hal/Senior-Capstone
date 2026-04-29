@@ -1675,7 +1675,7 @@ void UI::renderTimeline(CanvasManager& canvasManager) {
 	int currentLayerIdx = activeCanvas.getCurLayer();
 
 	// timeline flags
-	static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_ScrollX |
+	static ImGuiTableFlags flags = ImGuiTableFlags_ScrollX |
 		ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders |
 		ImGuiTableFlags_RowBg |
 		ImGuiTableFlags_SizingFixedFit;
