@@ -4,6 +4,7 @@
 #include "CanvasManipulation.h"
 
 #include <algorithm>
+#include <queue>
 
 static int SCR_WIDTH = 1280;
 static int SCR_HEIGHT = 720;
@@ -290,10 +291,19 @@ void AppController::onMouseButton(const MouseState& m, int button, int action, i
 			canvasManipulation.zooming(canvas, -1, 0.1f, m.x, m.y, window.handle());
 			break;
 		case CursorMode::Draw:
-		case CursorMode::Fill:
 		case CursorMode::Erase:
 			drawEngine.start();
 			break;
+		case CursorMode::Fill:
+			{
+			glm::vec2 canvasCoords = mouseToCanvasCoords(m.x, m.y);
+			int canvasX = static_cast<int>(canvasCoords.x);
+			int canvasY = static_cast<int>(canvasCoords.y);
+			Color uiColor = ui.getColor();
+			fill(canvas, uiColor, uiColor, canvasX, canvasY);
+			canvas.endStrokeRecord();
+			break;
+			}
 		case CursorMode::ColorPick:
 			pickColor(canvas, m.x, m.y);
 			break;
@@ -538,4 +548,35 @@ void AppController::pickColor(Canvas& canvas, double mouseX, double mouseY)
 	{
 		ui.setColor(canvas.getPixel(canvasX, canvasY));
 	}
+}
+
+void AppController::fill(Canvas& canvas, Color oldColor, Color newColor, int canvasX, int canvasY)
+{
+	oldColor = canvas.getLayerPixel(canvasX, canvasY);
+	if(oldColor == newColor) return;
+
+	std::queue<glm::ivec2> pixels;
+    pixels.push({canvasX, canvasY});
+
+    canvas.beginStrokeRecord();
+
+	while (!pixels.empty()) {
+        glm::ivec2 p = pixels.front();
+        pixels.pop();
+
+        // 1. Bounds Checking
+        if (p.x < 0 || p.x >= canvas.getWidth() || p.y < 0 || p.y >= canvas.getHeight()) continue;
+
+        // 2. Color Checking
+        if (canvas.getLayerPixel(p.x, p.y) == oldColor) {
+            canvas.setPixel(p.x, p.y, newColor); // Use setPixel to ensure it changes immediately
+
+            // 3. Add neighbors
+            pixels.push({p.x + 1, p.y});
+            pixels.push({p.x - 1, p.y});
+            pixels.push({p.x, p.y + 1});
+            pixels.push({p.x, p.y - 1});
+        }
+    }
+	
 }

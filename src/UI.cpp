@@ -6,6 +6,7 @@
 #include <utility>
 #include <map>
 #include <tuple>
+#include <unordered_map>
 
 #include "ImGuiFileDialog.h"
 
@@ -21,6 +22,17 @@
 
 #include "IconsFontAwesome6.h"
 
+
+std::string overwritePath;
+
+// for the draggable buttons
+struct DragState {
+    float offsetY = 0.0f;
+	int index = 0;
+	bool notActive = false;
+	int order = index;
+};
+static std::unordered_map<ImGuiID, DragState> dragStates;
 
 // variables to store info for UI declared up here 
 /// panel sizes
@@ -206,7 +218,7 @@ Color UI::getColor()
 {
 	const CursorMode mode = getCursorMode();
 
-	if (mode == CursorMode::Draw)
+	if (mode == CursorMode::Draw || mode == CursorMode::Fill)
 	{
 		return Color{
 			static_cast<unsigned char>(color[0] * 255.0f),
@@ -399,7 +411,7 @@ void UI::drawUI(CanvasManager& canvasManager, FrameRenderer frameRenderer)
 
 	// compute the panel sizes
 	if (TopSize == 0) { TopSize = 20; }
-	if (BotSize == 0) { BotSize = static_cast<int>(0.05 * displayHeight); }
+	if (BotSize == 0) { BotSize = static_cast<int>(0.12 * displayHeight); }
 	if (LeftSize == 0) { LeftSize = static_cast<int>(0.1 * displayWidth); }
 	if (RightSize == 0) { RightSize = static_cast<int>(0.1 * displayWidth); }
 
@@ -492,6 +504,37 @@ void UI::drawStartScreen(CanvasManager& canvasManager)
 		ImGuiFileDialog::Instance()->Close();
 	}
 
+	if (ImGuiFileDialog::Instance()->Display("LoadFileAnim"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string filePath = ImGuiFileDialog::Instance()->GetFilePathName();
+
+			std::string extension = ImGuiFileDialog::Instance()->GetCurrentFilter();
+
+			if (extension == ".ora")
+			{
+				canvasManager.loadORA(filePath);
+				// centering the loaded image 
+				resetCanvasPositionCb();
+			}
+			else
+			{
+				canvasManager.loadFromFile(filePath);
+				// centering the loaded image 
+				resetCanvasPositionCb();
+			}
+
+			// save to recent activity list
+			saveToRecentActivityCb(filePath);
+
+			// if the current UI state is the start menu then change it to the main screen
+			if (curState == UIState::start_menu) { curState = UIState::main_screen; }
+
+		}
+
+		ImGuiFileDialog::Instance()->Close();
+	}
 	// end step
 	ImGui::End();
 
@@ -731,6 +774,7 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	ImGui::Spacing();
 
 	// if there is a canvas then display the layer options
+	bool removeLayer = false;
 	if (canvasManager.hasActive())
 	{
 		renderLayerInfo(canvasManager);
@@ -743,6 +787,36 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 	// brush import system
 	renderBrushImports(canvasManager);
 
+	if(canvasManager.hasActive()){
+		std::vector<std::tuple<bool, float, int>> buttons;
+		int numDragStates = 0;
+		for (int i = 1; i < canvasManager.getActive().getNumLayers(); i++) {
+			std::string buttonName = "Canvas Layer " + std::to_string(i);
+			auto button = drawDraggableButton(canvasManager, buttonName.c_str(), i);
+			buttons.push_back(button);
+			numDragStates++;
+		}
+		for (int i = 0; i < buttons.size(); i++){
+			if(std::get<0>(buttons[i])){
+				canvasManager.getActive().selectLayer(std::get<2>(buttons[i]));
+			}
+		}
+		if(removeLayer){
+			canvasManager.getActive().removeLayer();
+			int maxIndex = -1;
+			ImGuiID maxId = 0;
+			for (auto& [id, state] : dragStates)
+			{
+				if (state.index > maxIndex)
+				{
+					maxIndex = state.index;
+					maxId = id;
+				}
+			}
+			dragStates.erase(maxId);
+		}
+	}
+	
 	// end step
 	RightSize = ImGui::GetWindowWidth();
 	ImVec2 size = ImGui::GetWindowSize();
@@ -1356,6 +1430,21 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 					config
 				);
 			}
+			
+			if (ImGui::MenuItem("Open Animation...", "")) {
+				IGFD::FileDialogConfig config;
+
+				// the  path the file explorer starts in. "." is the current active directory
+				if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
+				else config.path = ".";
+
+				ImGuiFileDialog::Instance()->OpenDialog(
+					"LoadAnimDlg",
+					"Choose File",
+					nullptr,
+					config
+				);
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Window")) {
@@ -1488,9 +1577,20 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 
 		ImGuiFileDialog::Instance()->Close();
 	}
+	if (ImGuiFileDialog::Instance()->Display("LoadAnimDlg"))
+	{
+		if (ImGuiFileDialog::Instance()->IsOk())
+		{
+			std::string folder = ImGuiFileDialog::Instance()->GetCurrentPath();
 
-	// attempting to place a second main menu bar 
+			canvasManager.loadAnimation(folder);
+			
+			// if the current UI state is the start menu then change it to the main screen
+			if (curState == UIState::start_menu) { curState = UIState::main_screen; }
+		}
 
+		ImGuiFileDialog::Instance()->Close();
+	}
 }
 
 // ----- drawing individual windows for modular UI -----
@@ -1976,6 +2076,98 @@ void UI::renderCursorModes(CanvasManager& canvasManager) {
 		setCursorMode(CursorMode::ZoomOut);
 	}
 	ImGui::SetItemTooltip("ZoomOut");
+}
+
+std::tuple<bool, float, int> UI::drawDraggableButton(CanvasManager& canvasManager, const char* buttonName, int index){
+	float buttonLoc = 400.0f;
+	float height = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f + 4;
+	
+	ImGuiID id = ImGui::GetID(buttonName);
+    DragState& state = dragStates[id];
+	state.index = index;
+	if(state.order == 0){
+		state.order = state.index;
+	}
+
+	int count = dragStates.size();
+
+	// Base position reacts to UI/layout changes
+	float baseX = displayWidth - (RightSize - 8);
+	float baseY = buttonLoc + (RightSize * .66f) + (index * height);
+	float finalY = baseY + state.offsetY;
+	
+
+	float boxTop = buttonLoc + (RightSize * .66f);
+	float boxBottom = boxTop + (count * height);
+
+	ImVec2 btnPos(baseX, finalY);
+
+	// Draw
+	ImGui::SetCursorScreenPos(btnPos);
+	bool isPressed = ImGui::Button(buttonName);
+	state.notActive = true;
+	float newOffset = 0;
+	if (ImGui::IsItemActive())
+	{
+		state.notActive = false;
+		float dy = ImGui::GetIO().MouseDelta.y;
+		newOffset = state.offsetY + dy;
+
+		if (finalY >= boxTop && finalY <= boxBottom)
+		{
+			state.offsetY = newOffset;
+		}
+	}
+
+	// If this button is now outside the valid region, shift it up
+	if(state.notActive){
+		while ((baseY + state.offsetY) > boxBottom + height)
+		{
+			state.offsetY -= height;
+		}
+		while ((baseY + state.offsetY) < boxTop){
+			state.offsetY += height;
+		} 	
+		for (auto& [idA, a] : dragStates){
+			if (idA == id || a.notActive == false) continue;
+			float aY = (400.0f + (RightSize * .66f)) + (a.index * height) + a.offsetY;
+			if (std::abs(aY - finalY) < height * 0.5f){
+				state.offsetY -= height;
+			}
+		}
+	}
+	if (!state.notActive){
+		for (auto& [otherID, other] : dragStates)
+		{
+			if (otherID == id) continue;
+			float otherFinalY = std::min(buttonLoc + (RightSize * .66f) + (other.index * height) + other.offsetY, displayHeight - 29.0f);
+			if (std::abs(finalY - otherFinalY) < height * 0.5f)
+			{
+				if(otherFinalY > finalY){
+					other.offsetY = std::round(((other.offsetY / height) * height) - height);
+					canvasManager.getActive().swapLayers(other.order, state.order);
+					int tempOrder = other.order;
+					other.order = state.order;
+					state.order = tempOrder;
+				}
+				else{
+					other.offsetY = std::round(((other.offsetY / height) * height) + height);
+					canvasManager.getActive().swapLayers(other.order, state.order);
+					int tempOrder = other.order;
+					other.order = state.order;
+					state.order = tempOrder;
+				}
+			}
+		}
+	}
+
+	// Snap on release
+	if (ImGui::IsItemDeactivated())
+	{
+		float snapped = std::round(state.offsetY / height) * height;
+		state.offsetY = snapped;
+	}
+	return {isPressed, finalY, index};
 }
 
 // ending and cleanup 

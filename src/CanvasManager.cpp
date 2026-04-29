@@ -12,7 +12,7 @@
 #include <miniz.h>
 #include <fstream>
 
-
+namespace fs = std::filesystem;
 
 Canvas& CanvasManager::createCanvas(int width, int height, std::string name, bool isAnimation, bool useAnimTemplate,
 	const ImVec4& paperColor)
@@ -255,6 +255,41 @@ void CanvasManager::saveToFile(const std::string& path)
 	else if (ext == "jpg")
 		stbi_write_jpg(path.c_str(), width, height, 4, pixels.data(), 100);
 
+}
+
+void CanvasManager::loadAnimation(const std::string& filePath){
+    std::cout << "function loadAnimation called" << std::endl;
+    fs::path path = filePath;
+    std::vector<fs::path> images;
+    for (const auto& files : fs::directory_iterator(filePath)) {
+        if (files.is_regular_file() && files.path().extension() == ".png") {
+            images.push_back(files.path());
+        }
+    }
+    if(images.size() == 0){
+        for (const auto& files : fs::directory_iterator(filePath)) {
+            if (files.is_regular_file() && files.path().extension() == ".jpg") {
+                images.push_back(files.path());
+            }
+        }
+    }
+    if(images.size() == 0){
+        std::cout << "no loadable images in this folder" << std::endl;
+        return;
+    }
+    // sort the images based on alphabetical order
+    std::sort(images.begin(), images.end(),
+        [](const fs::path& a, const fs::path& b) {
+            return a.filename() < b.filename();
+    });
+
+    int width, height, channels;
+    unsigned char* data = stbi_load(images[0].string().c_str(), &width, &height, &channels, 4);
+    std::cout << width << std::endl;
+    
+    
+    Canvas& canvas = createCanvas(width, height, path.stem().string(), true, false);
+    FrameRenderer::loadAnimation(canvas, images);
 }
 
 // loading function for png/jpg

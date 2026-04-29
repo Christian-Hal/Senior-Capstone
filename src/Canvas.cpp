@@ -316,6 +316,49 @@ void Canvas::setPixels(std::vector<Color> newPixels) {
 	pixels = newPixels;
 }
 
+void Canvas::reblendLayers(){
+	//initialize some needed variables for later
+	int pixelCount = pixels.size();
+	Color emptyColor = {0,0,0,0};
+	std::vector<const Color*> layerPtrs(numLayers);
+
+	// turn the 2d vector into a vector of pointers for faster access
+    for (int i = 0; i < numLayers; i++) layerPtrs[i] = layerData[i].data();
+	
+	// turn pixels into pointers for faster access (and funky shortcut later)
+	Color* outPixels = pixels.data();
+
+	// loop through each pixel and recalculate the 
+	for(int i = 0; i < pixelCount; i++){
+		// if the pixel is empty move on
+		if(pixels[i].a == 0) continue;
+		
+		// initialize the final color as the 0th layers color and begin to iterate through each layer
+		Color col = layerPtrs[0][i];
+		for(int j = 1; j < numLayers; j++){
+			if(col.a == 0 && layerPtrs[j][i].a != 0){
+				col = layerPtrs[j][i];
+			}
+		}
+		for(int j = 1; j < numLayers; j++){
+			// save the color of the curent layer for later computation
+			const Color& layCol = layerPtrs[j][i];
+			// if empty go to the next layer
+			if(layCol.a == 0) continue;
+			// grab the alpha value once, save and use to calculate the inverse alpha
+			float a = layCol.a * (1.0f / 255.0f);
+            float invA = 1.0f - a;
+
+			// blending function
+			col.r = uint8_t(layCol.r * a + col.r * invA);
+            col.g = uint8_t(layCol.g * a + col.g * invA);
+            col.b = uint8_t(layCol.b * a + col.b * invA);
+		}
+		// write the final color into the pixels array memory location
+		outPixels[i] = col;
+	}
+}
+
 
 
 void Canvas::setLayerData(std::vector<std::vector<Color>> newLayerData) {
@@ -419,6 +462,16 @@ const Color& Canvas::getPixel(int x, int y) const
 	return const_cast<Color&>(pixels[y * width + x]);
 }
 
+const Color& Canvas::getLayerPixel(int x, int y) 
+{
+	// making sure (x, y) is within bounds
+	if (x < 0 || x >= width || y < 0 || y >= height) {
+		// if its not, return the background color
+		return const_cast<Color&>(backgroundColor);
+	}
+	return layerData[curLayer][(y * width) + x];
+}
+
 
 
 // adds a layer to layerData
@@ -464,6 +517,14 @@ void Canvas::removeLayer(){
 
 void Canvas::selectLayer(int layerNum) {
 	curLayer = layerNum;
+}
+
+/*
+This function will swap the layers 
+*/
+void Canvas::swapLayers(int layerOne, int layerTwo){
+	layerData[layerOne].swap(layerData[layerTwo]);
+	reblendLayers();
 }
 
 

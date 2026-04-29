@@ -4,6 +4,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "Renderer.h"
 #include "CanvasManager.h"
@@ -144,6 +145,7 @@ private:
 	void drawBrushesWindow(CanvasManager& canvasManager);
 	void drawCursorModesWindow(CanvasManager& canvasManager);
 	void drawTimelineWindow(CanvasManager& canvasManager);
+	std::tuple<bool, float, int> drawDraggableButton(CanvasManager& canvasManager, const char* buttonName, int index);
 
 	// separate rendering functions for all components to unify the windows and panels 
 	void renderTimeline(CanvasManager& canvasManager);

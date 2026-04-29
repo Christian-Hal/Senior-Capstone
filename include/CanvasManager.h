@@ -45,6 +45,7 @@ class CanvasManager {
         void setPaperColor(const ImVec4& color);
 
         void saveToFile(const std::string& path);
+        void loadAnimation(const std::string& path);
         void loadFromFile(const std::string& filepath);
         void saveORA(const std::string& path);
         void loadORA(const std::string& filepath);

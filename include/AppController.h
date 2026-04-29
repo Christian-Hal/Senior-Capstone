@@ -47,4 +47,8 @@ private:
     // takes in a canvas and mouse position and updates the current color in the UI to the color of the pixel at that position on the canvas
     void pickColor(Canvas& canvas, double xPos, double yPos);
 
+    // fills in the canvas with the current color in all directions until there is nowhere else to go
+    void fill(Canvas& canvas, Color newColor, Color oldColor, int canvasX, int canvasY);
+
+
 };

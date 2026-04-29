@@ -14,10 +14,18 @@ struct Color {
 
     Is true if rgba values are equal for both Colors. 
     */
-    bool operator==(const Color& other) const {
-        return (r == other.r) && (g == other.g) && (b == other.b)  && (a == other.a);
+
+	// Color == Color operation
+	 bool operator==(const Color& rhs) const {
+        return r == rhs.r &&
+               g == rhs.g &&
+               b == rhs.b &&
+               a == rhs.a;
     }
+
 };
+
+
 
 struct Pixel {
     int index;
@@ -63,6 +71,7 @@ public:
 	void setPixel(int x, int y, const Color& color);
 	void blendPixel(int x, int y, const Color& srcColor, float brushAlpha);
 	const Color& getPixel(int x, int y) const;
+	const Color& getLayerPixel(int x, int y);
 	void setPixels(std::vector<Color> newPixels);
 	void setLayerData(std::vector<std::vector<Color>> newLayerData);
 	void recompositePixelsFromLayers();  // Recompute pixel composite from all layers
@@ -71,6 +80,8 @@ public:
 	void createLayer();
 	void removeLayer();
 	void selectLayer(int layerNum);
+	void swapLayers(int layerOne, int layerTwo);
+	void reblendLayers();
 
 	// rotation, zoom, and offset data for each canvas
 	glm::vec2 offset = { 0.0f, 0.0f };

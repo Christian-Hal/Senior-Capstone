@@ -12,6 +12,8 @@
 #include <array>
 #include <thread>
 #include <chrono>
+#include <stb_image.h>
+
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -22,6 +24,7 @@ int FrameRenderer::numFrames = -1;
 int FrameRenderer::curCanvas = -1;
 int FrameRenderer::curFrame = -1;
 bool FrameRenderer::isPlaying = false;
+int FrameRenderer::fps = 84;
 int FrameRenderer::numBefore = 1;
 int FrameRenderer::numAfter = 1;
 bool FrameRenderer::onionSkinEnabled = false;
@@ -76,7 +79,7 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
             numFrames,
             vector<vector<Color>>(
                 1,
-                vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), newCanvas->getBackgroundColor())
+                vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), {0,0,0,0})
             )
         )
     );
@@ -84,7 +87,7 @@ void FrameRenderer::newCanvas(Canvas* oldCanvas, Canvas* newCanvas){
     frameData.push_back(
         vector<vector<Color>>(
             numFrames,
-            vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), newCanvas->getBackgroundColor())
+            vector<Color>(newCanvas->getWidth() * newCanvas->getHeight(), {0,0,0,0})
         )
     );
     // save a blank "new canvas" in metaData
@@ -134,9 +137,9 @@ void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCa
 // loads new frame with blank canvas
 void FrameRenderer::createFrame(Canvas& canvas){
     // Save the old frame
-    timeFunction("removeOnionSkin", [&] { removeOnionSkin(canvas); });
+     removeOnionSkin(canvas);
     frames[curFrame - 1] =  vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
-    timeFunction("writeAllData", [&] { writeAllData(&canvas);; });
+    writeAllData(&canvas);
     numFrames++;
     curFrame++;
     // insert new frame
@@ -145,11 +148,11 @@ void FrameRenderer::createFrame(Canvas& canvas){
     // this ought to insert inbetween the oldCurrent frame
     frLayerData[curCanvas-1].insert(frLayerData[curCanvas-1].begin() + (curFrame-1), vector<vector<Color>>(
             canvas.getNumLayers(), vector<Color>(
-                meta[0] * meta[1], canvas.getBackgroundColor()
+                meta[0] * meta[1], {0,0,0,0}
             )
         )
     );
-    frameData[curCanvas-1].insert(frameData[curCanvas-1].begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], canvas.getBackgroundColor()));
+    frameData[curCanvas-1].insert(frameData[curCanvas-1].begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], {0,0,0,0}));
     vector<Color> backgroundLayer = canvas.getLayerData()[0];
     frames.insert(frames.begin() + (curFrame - 1), backgroundLayer);
 
@@ -160,16 +163,13 @@ void FrameRenderer::createFrame(Canvas& canvas){
     // normal behavior
     int numLayers = meta[2];
     layDat.resize(numLayers, vector<Color>(meta[0] * meta[1], {0,0,0,0}));
-    layDat[0] = backgroundLayer;
 
     canvas.setLayerData(layDat);
     canvas.recompositePixelsFromLayers();  // Ensure pixels are recomposited from layers
     
     // create function that renames any other frames that come after
     writeAllData(&canvas);
-    timeFunction("updateOnionSkins", [&] { updateOnionSkin(canvas); });
-
-    //curFrame = numFrames;
+    updateOnionSkin(canvas);
 }
 
 // remove current frame and update file names accordingly
@@ -195,6 +195,19 @@ void FrameRenderer::removeFrame(Canvas& canvas){
         canvas.setLayerData(readLayerData(meta));
         canvas.recompositePixelsFromLayers();  // Ensure pixels are recomposited from layers
         updateOnionSkin(canvas);
+    }
+}
+
+void FrameRenderer::reorderFrame(Canvas& canvas, int frameOne, int frameTwo){
+    if(frameOne >= 0 && frameOne < numFrames && frameTwo >= 0 && frameTwo < numFrames ){
+        selectFrame(canvas, 0);
+        frLayerData[curCanvas-1][frameOne].swap(frLayerData[curCanvas-1][frameTwo]);
+        frames[frameOne].swap(frames[frameTwo]);
+        frameData[curCanvas-1][frameOne].swap(frameData[curCanvas-1][frameTwo]);
+        canvas.setPixels(frames[curFrame-1]);
+        canvas.setLayerData(frLayerData[curCanvas-1][curFrame-1]);
+        selectFrame(canvas, 0);
+        canvas.reblendLayers();
     }
 }
 
@@ -259,12 +272,15 @@ void FrameRenderer::selectFrame(Canvas& canvas, int frameDelta){
         curFrame = curFrame + frameDelta;
         while(frLayerData[curCanvas-1][curFrame-1].size() < canvas.getNumLayers()){
             frLayerData[curCanvas-1][curFrame-1].push_back(vector<Color>(canvas.getWidth() * canvas.getHeight(), {0,0,0,0}));
+
         }
         int* meta = readMetaData();
+        
         canvas.setPixels(frames[curFrame-1]);
         canvas.setLayerData(readLayerData(meta));
         canvas.recompositePixelsFromLayers();
         updateOnionSkin(canvas);
+
     }
 }
 
@@ -288,7 +304,7 @@ void FrameRenderer::play(Canvas& canvas){
             while (i <= numFrames) {
                 canvas.setPixels(frames[i-1]);
                 i++;
-                std::this_thread::sleep_for(std::chrono::milliseconds(84)); // 42 milliseconds is ~ 24 fps
+                std::this_thread::sleep_for(std::chrono::milliseconds(fps)); // 42 milliseconds is ~ 24 fps
             }
             canvas.setPixels(frames[curFrame - 1]);
             isPlaying = false;
@@ -308,29 +324,27 @@ void FrameRenderer::updateOnionSkin(Canvas& canvas){
         Color red = {255, 0, 0, 128};
         Color bg = canvas.getBackgroundColor();
         Color blendedColor = canvas.colorTimes(bg, green);
-        cout << int(blendedColor.r) << ":r\n" << int(blendedColor.g) << ":g\n" << int(blendedColor.b) << ":b" << endl;
-
+        Color empty = {0,0,0,0};
         int oldLayer = canvas.getCurLayer();
         canvas.selectLayer(0);
         for(int i = 0; i < numBefore; i++){
             if(curFrame > 1 + i){
                 for(int j = 0; j < pixelCount; j++){
-                    if (*(uint32_t*)&frames[curFrame - 2 - i][j] == *(uint32_t*)&bg) continue;
+                    if (frames[curFrame - 2 - i][j] == empty) continue;
                     int x = j % width;
                     int y = j / width;
-                    canvas.blendPixel(x, y, blendedColor, blendedColor.a / 255.0f);
+                    canvas.setPixel(x, y, blendedColor);
                 }
             }
         }
-
         Color blendedColor2 = canvas.colorTimes(bg, red);
         for(int i = 0; i < numAfter; i++){
             if(curFrame < numFrames - i){ 
                 for(int j = 0; j < pixelCount; j++){
-                    if (*(uint32_t*)&frames[curFrame + i][j] == *(uint32_t*)&bg ) continue;
+                    if (frames[curFrame + i][j] == empty) continue;
                     int x = j % width;
                     int y = j / width;
-                    canvas.blendPixel(x, y, blendedColor2, blendedColor2.a / 255.0f);
+                    canvas.setPixel(x, y, blendedColor2);
 
                 }
             }
@@ -340,19 +354,25 @@ void FrameRenderer::updateOnionSkin(Canvas& canvas){
 }
 
 void FrameRenderer::removeOnionSkin(Canvas& canvas){
-    if(onionSkinEnabled){
-        int oldLayer = canvas.getCurLayer();
-        canvas.selectLayer(0);
-        int wid = canvas.getWidth();
-        int hei = canvas.getHeight();
-        Color bg = canvas.getBackgroundColor();
-        for(int i = 0; i < hei * wid; i++){
-            if (*(uint32_t*)&frames[curFrame-1][i] == *(uint32_t*)&bg) continue;
-            canvas.setPixel(i % wid, i / wid, bg);
-        }
-        canvas.selectLayer(oldLayer);
+    if(!onionSkinEnabled) return;
+    int oldLayer = canvas.getCurLayer();
+    vector<vector<Color>> background = canvas.getLayerData();
+    canvas.selectLayer(0);
+    int wid = canvas.getWidth();
+    int hei = canvas.getHeight();
+    Color bg = {0,0,0,0};
+    background[0] = vector<Color>(wid * hei, bg);
+    canvas.setLayerData(background);
+    for(int i = 0; i < hei * wid; i++){
+        int x = i % wid;
+        int y = i / wid;
+        if (frames[curFrame][i] == bg) continue;
+        canvas.setPixel(x, y, bg);
     }
+    canvas.selectLayer(oldLayer);
+    canvas.reblendLayers();
 }
+
 
 void FrameRenderer::toggleOnionSkin(){
     onionSkinEnabled = !onionSkinEnabled;
@@ -438,15 +458,33 @@ void FrameRenderer::saveAnimation(const string& path, Canvas& canvas){
                 swap(pixels[y * width + x], pixels[opposite * width + x]);
             }
         }
-
-        if (ext == "png")
-            stbi_write_png(finalPath.c_str(), width, height, 4, pixels.data(), width * 4);
+        // create the correct filepath
+        fs::path finalPath = fs::path(filePath) / (filePath.stem().string() + "-" + to_string(i) + ext);    // main save loop
+        
+        // saves either a png or jpg depending on the extension
+        if (ext == ".png")
+            stbi_write_png(finalPath.string().c_str(), width, height, 4, pixels.data(), width * 4);
     
-        else if (ext == "jpg")
-            stbi_write_jpg(finalPath.c_str(), width, height, 4, pixels.data(), 100);
-    }
+        else if (ext == ".jpg")
+            stbi_write_jpg(finalPath.string().c_str(), width, height, 4, pixels.data(), 100);
+    }    
 }
 
+void FrameRenderer::loadAnimation(Canvas& canvas, vector<filesystem::path> images){
+    stbi_set_flip_vertically_on_load(true);
+    int width1, height1, channels1;
+    unsigned char* data = stbi_load(images[0].string().c_str(), &width1, &height1, &channels1, 4);
+    for(int i = 0; i < images.size(); i++){
+        if(i != 0) FrameRenderer::createFrame(canvas);
+        int width2, height2, channels2;
+        unsigned char* data = stbi_load(images[i].string().c_str(), &width2, &height2, &channels2, 4);
+        if(width1 == width2 && height1 == height2){
+            canvas.loadImage(data, 1);
+        }
+    }
+    stbi_set_flip_vertically_on_load(false);
+
+}
 
 // gets the current frame (which is a number from 1-NumFrames)
 int FrameRenderer::getCurFrame(){
