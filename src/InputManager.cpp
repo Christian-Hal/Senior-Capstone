@@ -163,10 +163,7 @@ void InputManager::scrollCallBack(GLFWwindow* window, double xoffset, double yof
 // keyboard call back to work with virtual key system
 void InputManager::keyboardCallBack(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (ImGui::GetIO().WantCaptureKeyboard)
-		return;
-
-	// if statement that for rebind the hotkeys 
+	// if statement that for rebind the hotkeys - this must run BEFORE ImGui capture check
 	if (WaitingForRebind && action == GLFW_PRESS)
 	{
 		// if ESC key is presed cancel rebind
@@ -197,6 +194,9 @@ void InputManager::keyboardCallBack(GLFWwindow* window, int key, int scancode, i
 
 		return;
 	}
+
+	if (ImGui::GetIO().WantCaptureKeyboard)
+		return;
 
 	// regular check statement to see if pressed keys have a key bind
 	if (action == GLFW_PRESS)

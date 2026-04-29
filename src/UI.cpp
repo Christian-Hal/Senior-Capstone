@@ -1153,8 +1153,10 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 			auto ShortcutRow = [&](const char* name, InputAction action) {
 				ImGui::Text("%s", name);
 				ImGui::SameLine(180);
+
 				if (ImGui::Button((hotkeyLabel(action) + "##" + name).c_str()))
 					triggerRebind(action);
+
 				// buttons for unbinding hotkeys
 				ImGui::SameLine(350);
 				std::string unbindLabel = std::string("x##unbind_") + name;
@@ -1164,47 +1166,34 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 				ImGui::EndDisabled();
 			};
 
-			ImGui::SeparatorText("Navigation Shortcuts:");
 			ImGui::SeparatorText("Document Shortcuts:");
 			ShortcutRow("New File", InputAction::newFile);
-			ShortcutRow("Close Canvas", InputAction::closeCanvas);
-			ShortcutRow("Undo", InputAction::undo);
-			ShortcutRow("Redo", InputAction::redo);
+			ShortcutRow("Close File", InputAction::closeCanvas);
+			ShortcutRow("Save File", InputAction::saveFile);
+			ShortcutRow("Open File", InputAction::openFile);
 
 			ImGui::SeparatorText("Drawing Shortcuts:");
 			ShortcutRow("Draw", InputAction::setDraw);
-			ShortcutRow("Fill", InputAction::setFill);
-			ShortcutRow("Erase", InputAction::setErase);
-			ShortcutRow("Color Picker", InputAction::setColor);
-			
-			ShortcutRow("Draw", InputAction::setDraw);
 			ShortcutRow("Erase", InputAction::setErase);
 			ShortcutRow("Fill", InputAction::setFill);
 			ShortcutRow("Color Picker", InputAction::setColor);
+			ShortcutRow("Undo", InputAction::undo);
+			ShortcutRow("Redo", InputAction::redo);
+
+			ImGui::SeparatorText("Navigation Shortcuts:");
 			ShortcutRow("Rotate", InputAction::setRotate);
 			ShortcutRow("Pan", InputAction::setPan);
 			ShortcutRow("Zoom In", InputAction::setClickZoomIn);
 			ShortcutRow("Zoom Out", InputAction::setClickZoomOut);
 			ShortcutRow("Center Canvas", InputAction::resetView);
+
+			ImGui::SeparatorText("Animation Shortcuts:");
 			ShortcutRow("Previous Frame", InputAction::prevFrame);
 			ShortcutRow("Next Frame", InputAction::nextFrame);
 			ShortcutRow("Create Frame", InputAction::newFrame);
 			ShortcutRow("Remove Frame", InputAction::removeFrame);
 			ShortcutRow("Onion Skin Toggle", InputAction::onionSkinToggle);
 			ShortcutRow("Play animation", InputAction::quickPlay);
-			ShortcutRow("New File", InputAction::newFile);
-			ShortcutRow("Close File", InputAction::closeCanvas);
-			ShortcutRow("Undo", InputAction::undo);
-			ShortcutRow("Redo", InputAction::redo);
-
-			ShortcutRow("Save File", InputAction::saveFile);
-			ShortcutRow("Open File", InputAction::openFile);
-
-			ImGui::SeparatorText("Animation Shortcuts:");
-			ShortcutRow("New Frame", InputAction::newFrame);
-			ShortcutRow("Onion Skin Toggle", InputAction::onionSkinToggle);
-			ShortcutRow("Next Frame", InputAction::nextFrame);
-			ShortcutRow("Previous Frame", InputAction::prevFrame);
 		}
 
 		else if (settingsSection == 2) {
@@ -1924,17 +1913,6 @@ void UI::renderCursorModes(CanvasManager& canvasManager) {
 
 	else if (getCursorMode() == CursorMode::ColorPick) {
 		ImGui::Text("State: Color Pick");
-	}
-
-	// text label that displays rebind status
-	if (isWaitingForRebindCb && isWaitingForRebindCb())
-	{
-		ImGui::Text("Press any key...");
-	}
-
-	if (didRebindFailCb && didRebindFailCb())
-	{
-		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Key already bound!");
 	}
 
 	// buttons that change the current cursor mode
