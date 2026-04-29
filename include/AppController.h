@@ -48,7 +48,7 @@ private:
     void pickColor(Canvas& canvas, double xPos, double yPos);
 
     // fills in the canvas with the current color in all directions until there is nowhere else to go
-    void AppController::fill(Canvas& canvas, Color newColor, Color oldColor, int canvasX, int canvasY);
+    void fill(Canvas& canvas, Color newColor, Color oldColor, int canvasX, int canvasY);
 
 
 };
