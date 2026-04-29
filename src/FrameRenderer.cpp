@@ -458,16 +458,13 @@ void FrameRenderer::saveAnimation(const string& path, Canvas& canvas){
                 swap(pixels[y * width + x], pixels[opposite * width + x]);
             }
         }
-        // create the correct filepath
-        fs::path finalPath = fs::path(filePath) / (filePath.stem().string() + "-" + to_string(i) + ext);    // main save loop
-        
-        // saves either a png or jpg depending on the extension
-        if (ext == ".png")
-            stbi_write_png(finalPath.string().c_str(), width, height, 4, pixels.data(), width * 4);
+
+        if (ext == "png")
+            stbi_write_png(finalPath.c_str(), width, height, 4, pixels.data(), width * 4);
     
-        else if (ext == ".jpg")
-            stbi_write_jpg(finalPath.string().c_str(), width, height, 4, pixels.data(), 100);
-    }    
+        else if (ext == "jpg")
+            stbi_write_jpg(finalPath.c_str(), width, height, 4, pixels.data(), 100);
+    }
 }
 
 void FrameRenderer::loadAnimation(Canvas& canvas, vector<filesystem::path> images){
