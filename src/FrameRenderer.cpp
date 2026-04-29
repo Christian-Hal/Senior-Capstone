@@ -12,11 +12,17 @@
 #include <array>
 #include <thread>
 #include <chrono>
+#include <future>
 #include <stb_image.h>
 
 
 using namespace std;
 namespace fs = std::filesystem;
+
+struct LoadedImage {
+    int width, height, channels;
+    unsigned char* data;
+};
 
 // initalize the FrameRenderer variables
 int FrameRenderer::numCanvas = -1;
@@ -24,7 +30,7 @@ int FrameRenderer::numFrames = -1;
 int FrameRenderer::curCanvas = -1;
 int FrameRenderer::curFrame = -1;
 bool FrameRenderer::isPlaying = false;
-int FrameRenderer::fps = 84;
+int FrameRenderer::fps = 42;
 int FrameRenderer::numBefore = 1;
 int FrameRenderer::numAfter = 1;
 bool FrameRenderer::onionSkinEnabled = false;
@@ -462,17 +468,47 @@ void FrameRenderer::saveAnimation(const string& path, Canvas& canvas){
 }
 
 void FrameRenderer::loadAnimation(Canvas& canvas, vector<filesystem::path> images){
+
+    vector<future<LoadedImage>> futures;
+
     stbi_set_flip_vertically_on_load(true);
-    int width1, height1, channels1;
-    unsigned char* data = stbi_load(images[0].string().c_str(), &width1, &height1, &channels1, 4);
-    for(int i = 0; i < images.size(); i++){
-        if(i != 0) FrameRenderer::createFrame(canvas);
-        int width2, height2, channels2;
-        unsigned char* data = stbi_load(images[i].string().c_str(), &width2, &height2, &channels2, 4);
-        if(width1 == width2 && height1 == height2){
-            canvas.loadImage(data, 1);
-        }
+
+    for (auto& path : images) {
+    futures.push_back(std::async(std::launch::async, [path]() {
+        LoadedImage img{};
+        img.data = stbi_load(path.string().c_str(), &img.width, &img.height, &img.channels, 4);
+        return img;
+        }));
     }
+
+    vector<LoadedImage> loaded;
+    loaded.reserve(images.size());
+
+    for (auto& f : futures) {
+        loaded.push_back(f.get());
+    }
+
+    if (loaded.empty()) return;
+
+    int baseW = loaded[0].width;
+    int baseH = loaded[0].height;
+
+    canvas.loadImage(loaded[0].data, 1);
+    stbi_image_free(loaded[0].data);
+
+    for (size_t i = 1; i < loaded.size(); i++) {
+        auto& img = loaded[i];
+
+        if (img.data && img.width == baseW && img.height == baseH) {
+            FrameRenderer::createFrame(canvas);
+            canvas.loadImage(img.data, 1);
+
+            std::cout << "loaded image " << i << endl;
+        }
+
+        stbi_image_free(img.data);
+    }
+    
     stbi_set_flip_vertically_on_load(false);
 
 }
