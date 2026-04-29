@@ -5,6 +5,7 @@
 #include "stb_image.h"
 #include "imgui.h"
 
+#include <algorithm>
 #include <iostream>
 #include <filesystem>
 #include <vector>
@@ -60,11 +61,11 @@ FrameRenderer::FrameRenderer()
 }
 
 void FrameRenderer::changeOnionSkinsSeen(int numPrev, int numNext){
-    if(numPrev >= 0 && numPrev < 10){
-        numBefore = numPrev;
+    if(numPrev != -1){
+        numBefore = clamp(numPrev, 0, 10);
     }
-    if(numNext >= 0 && numNext < 10){
-        numAfter = numNext;
+    if(numNext != -1){
+        numAfter = clamp(numNext, 0, 10);
     }
 }
 

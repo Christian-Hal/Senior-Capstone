@@ -59,6 +59,9 @@ static int canvasHeight = 1080;
 
 // fps value
 int fpsValue = 24;
+// onion skin values before and after
+int framesBefore = 1;
+int framesAfter = 1;
 
 // the default starting frame
 static float curFrame = 1.0f;
@@ -1307,8 +1310,18 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 				if(canvasManager.getActive().isAnimation()){
 					ImGui::Text("Animation FPS value");
 					ImGui::SameLine();
-					ImGui::InputInt("##value", &fpsValue);
+					ImGui::InputInt("##FPSvalue", &fpsValue);
 					FrameRenderer::changeFPS(fpsValue);
+
+					ImGui::Text("Previous frames shown");
+					ImGui::SameLine();
+					ImGui::InputInt("##oSkBef", &framesBefore);
+					FrameRenderer::changeOnionSkinsSeen(framesBefore, -1);
+
+					ImGui::Text("Next frames shown");
+					ImGui::SameLine();
+					ImGui::InputInt("##oSkAft", &framesAfter);
+					FrameRenderer::changeOnionSkinsSeen(-1, framesAfter);
 				}
 			}
 			else
