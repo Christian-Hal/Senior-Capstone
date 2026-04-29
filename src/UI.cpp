@@ -794,36 +794,6 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 
 	// brush import system
 	renderBrushImports(canvasManager);
-
-	if(canvasManager.hasActive()){
-		std::vector<std::tuple<bool, float, int>> buttons;
-		int numDragStates = 0;
-		for (int i = 1; i < canvasManager.getActive().getNumLayers(); i++) {
-			std::string buttonName = "Canvas Layer " + std::to_string(i);
-			auto button = drawDraggableButton(canvasManager, buttonName.c_str(), i);
-			buttons.push_back(button);
-			numDragStates++;
-		}
-		for (int i = 0; i < buttons.size(); i++){
-			if(std::get<0>(buttons[i])){
-				canvasManager.getActive().selectLayer(std::get<2>(buttons[i]));
-			}
-		}
-		if(removeLayer){
-			canvasManager.getActive().removeLayer();
-			int maxIndex = -1;
-			ImGuiID maxId = 0;
-			for (auto& [id, state] : dragStates)
-			{
-				if (state.index > maxIndex)
-				{
-					maxIndex = state.index;
-					maxId = id;
-				}
-			}
-			dragStates.erase(maxId);
-		}
-	}
 	
 	// end step
 	RightSize = ImGui::GetWindowWidth();
@@ -833,28 +803,37 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 }
 
 void UI::drawBottomPanel(CanvasManager& canvasManager, FrameRenderer frameRenderer) {
+	float tempSize = displayHeight * 0.05f;
+
+	// had to reorder some or the checks because it was crashing when deleting the last canvasTab
+
+	// No active canvas — draw a minimal empty panel and return
+	if (!canvasManager.hasActive()) {
+		ImGui::SetNextWindowPos(ImVec2(LeftSize, displayHeight - tempSize), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, tempSize), ImGuiCond_Always);
+		ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+		ImGui::End();
+		return;
+	}
+
+	// Active canvas exists from here down
 	if (canvasManager.getActive().isAnimation()) {
 		ImGui::SetNextWindowPos(ImVec2(LeftSize, displayHeight - BotSize), ImGuiCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, BotSize), ImGuiCond_Always);
 		ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
-	} else {
-		float tempSize = displayHeight * 0.05f;
+	}
+	else {
 		ImGui::SetNextWindowPos(ImVec2(LeftSize, displayHeight - tempSize), ImGuiCond_Always);
 		ImGui::SetNextWindowSize(ImVec2(displayWidth - LeftSize - RightSize, tempSize), ImGuiCond_Always);
 		ImGui::Begin("Bottom Panel", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
 	}
 
-	// only draw if there is an animations
-	if (canvasManager.hasActive() && canvasManager.getActive().isAnimation()) {
-		// drawing the actual timeline 
+	if (canvasManager.getActive().isAnimation()) {
 		renderTimelineControls(canvasManager);
 		renderTimeline(canvasManager);
-	}
-
-	// end step
-	if (canvasManager.getActive().isAnimation()) {
 		BotSize = ImGui::GetWindowHeight();
 	}
+
 	ImGui::End();
 }
 
@@ -1983,14 +1962,120 @@ void UI::renderLayerInfo(CanvasManager& canvasManager) {
 	ImGui::PopStyleColor();
 	ImGui::SetItemTooltip("Remove Layer");
 
-	for (int i = 1; i < canvasManager.getActive().getNumLayers(); i++) {
-		std::string buttonName = ICON_FA_LAYER_GROUP + std::to_string(i);
-		if (ImGui::Button(buttonName.c_str())) {
-			canvasManager.getActive().selectLayer(i);
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	int numLayers = canvasManager.getActive().getNumLayers();
+	int curLayer = canvasManager.getActive().getCurLayer();
+
+	static int   draggedLayer = -1;
+	static float dragOffsetY = 0.0f;
+	static int   swapTarget = -1;
+
+	float buttonH = ImGui::GetFrameHeight() + ImGui::GetStyle().ItemSpacing.y;
+	float buttonW = 33.0f;
+
+	float listOriginY = ImGui::GetCursorScreenPos().y;
+
+	for (int i = 1; i < numLayers; i++) {
+		bool isDragging = (draggedLayer == i);
+		bool isSelected = (i == curLayer);
+
+		// Stable grid position
+		ImVec2 basePos = ImVec2(
+			ImGui::GetCursorScreenPos().x,
+			listOriginY + (i - 1) * buttonH
+		);
+
+		// Calculate this button's visual position
+		ImVec2 drawPos = basePos;
+
+		if (isDragging) {
+			// Clamp so it can't leave the list
+			float clampedOffset = std::clamp(
+				dragOffsetY,
+				-(float)(i - 1) * buttonH,
+				(float)(numLayers - 1 - i) * buttonH
+			);
+			drawPos.y = basePos.y + clampedOffset;
+
 		}
+		else if (swapTarget != -1 && draggedLayer != -1) {
+			// Shift ALL layers between draggedLayer and swapTarget by one slot
+			int lo = std::min(draggedLayer, swapTarget);
+			int hi = std::max(draggedLayer, swapTarget);
+
+			if (i >= lo && i <= hi) {
+				// Shift direction: opposite to drag direction
+				float shiftDir = (draggedLayer < swapTarget) ? -buttonH : buttonH;
+				drawPos.y = basePos.y + shiftDir;
+			}
+		}
+
+		// Draw the button visually at drawPos
+		ImDrawList* dl = ImGui::GetWindowDrawList();
+
+		ImU32 bgColor;
+		if (isDragging)
+			bgColor = IM_COL32(59, 103, 168, 255);
+		else if (swapTarget != -1 && i == swapTarget && draggedLayer != -1)
+			bgColor = IM_COL32(60, 100, 60, 255);
+		else if (isSelected) 
+			bgColor = IM_COL32(59, 103, 168, 255);
+		else
+			bgColor = IM_COL32(69, 69, 69, 255);
+		
+
+		ImVec2 btnMin = drawPos;
+		ImVec2 btnMax = ImVec2(drawPos.x + buttonW, drawPos.y + ImGui::GetFrameHeight());
+
+		dl->AddRectFilled(btnMin, btnMax, bgColor, 3.0f);
+		dl->AddRect(btnMin, btnMax, IM_COL32(80, 80, 80, 255), 3.0f);
+
+		std::string label = std::string(ICON_FA_LAYER_GROUP) + std::to_string(i);
+		ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+		ImVec2 textPos = ImVec2(btnMin.x + 6, btnMin.y + (ImGui::GetFrameHeight() - textSize.y) * 0.5f);
+		dl->AddText(textPos, IM_COL32(220, 220, 220, 255), label.c_str());
+
+		// InvisibleButton at stable grid position
+		ImGui::SetCursorScreenPos(basePos);
+		std::string btnID = "##layerbtn" + std::to_string(i);
+		ImGui::InvisibleButton(btnID.c_str(), ImVec2(buttonW, ImGui::GetFrameHeight()));
+
+		if (ImGui::IsItemClicked() && draggedLayer == -1)
+			canvasManager.getActive().selectLayer(i);
+
+		if (ImGui::IsItemActive() && ImGui::IsMouseDragging(0)) {
+			draggedLayer = i;
+			dragOffsetY = ImGui::GetMouseDragDelta(0).y;
+
+			int hoverSlot = i + (int)std::round(dragOffsetY / buttonH);
+			hoverSlot = std::clamp(hoverSlot, 1, numLayers - 1);
+			swapTarget = (hoverSlot != i) ? hoverSlot : -1;
+		}
+
+		// Always advance layout cursor by one fixed slot
+		ImGui::SetCursorScreenPos(ImVec2(basePos.x, basePos.y + buttonH));
 	}
-	ImGui::Text("Current Layer: %d", canvasManager.getActive().getCurLayer());
+
+	// Commit on release
+	if (draggedLayer != -1 && !ImGui::IsMouseDown(0)) {
+		if (swapTarget != -1)
+		{
+			canvasManager.getActive().swapLayers(draggedLayer, swapTarget);
+			canvasManager.getActive().selectLayer(swapTarget);
+		}
+			
+		draggedLayer = -1;
+		dragOffsetY = 0.0f;
+		swapTarget = -1;
+	}
+
+	ImGui::Spacing();
+	ImGui::Text("Current Layer: %d", curLayer);
 }
+
 
 void UI::renderBrushImports(CanvasManager& canvasManager) {
 	// brush import system, will probably get moved when I eventually do a UI overhaul
@@ -2118,98 +2203,6 @@ void UI::renderCursorModes(CanvasManager& canvasManager) {
 		setCursorMode(CursorMode::ZoomOut);
 	}
 	ImGui::SetItemTooltip("ZoomOut");
-}
-
-std::tuple<bool, float, int> UI::drawDraggableButton(CanvasManager& canvasManager, const char* buttonName, int index){
-	float buttonLoc = 400.0f;
-	float height = ImGui::GetFontSize() + ImGui::GetStyle().FramePadding.y * 2.0f + 4;
-	
-	ImGuiID id = ImGui::GetID(buttonName);
-    DragState& state = dragStates[id];
-	state.index = index;
-	if(state.order == 0){
-		state.order = state.index;
-	}
-
-	int count = dragStates.size();
-
-	// Base position reacts to UI/layout changes
-	float baseX = displayWidth - (RightSize - 8);
-	float baseY = buttonLoc + (RightSize * .66f) + (index * height);
-	float finalY = baseY + state.offsetY;
-	
-
-	float boxTop = buttonLoc + (RightSize * .66f);
-	float boxBottom = boxTop + (count * height);
-
-	ImVec2 btnPos(baseX, finalY);
-
-	// Draw
-	ImGui::SetCursorScreenPos(btnPos);
-	bool isPressed = ImGui::Button(buttonName);
-	state.notActive = true;
-	float newOffset = 0;
-	if (ImGui::IsItemActive())
-	{
-		state.notActive = false;
-		float dy = ImGui::GetIO().MouseDelta.y;
-		newOffset = state.offsetY + dy;
-
-		if (finalY >= boxTop && finalY <= boxBottom)
-		{
-			state.offsetY = newOffset;
-		}
-	}
-
-	// If this button is now outside the valid region, shift it up
-	if(state.notActive){
-		while ((baseY + state.offsetY) > boxBottom + height)
-		{
-			state.offsetY -= height;
-		}
-		while ((baseY + state.offsetY) < boxTop){
-			state.offsetY += height;
-		} 	
-		for (auto& [idA, a] : dragStates){
-			if (idA == id || a.notActive == false) continue;
-			float aY = (400.0f + (RightSize * .66f)) + (a.index * height) + a.offsetY;
-			if (std::abs(aY - finalY) < height * 0.5f){
-				state.offsetY -= height;
-			}
-		}
-	}
-	if (!state.notActive){
-		for (auto& [otherID, other] : dragStates)
-		{
-			if (otherID == id) continue;
-			float otherFinalY = std::min(buttonLoc + (RightSize * .66f) + (other.index * height) + other.offsetY, displayHeight - 29.0f);
-			if (std::abs(finalY - otherFinalY) < height * 0.5f)
-			{
-				if(otherFinalY > finalY){
-					other.offsetY = std::round(((other.offsetY / height) * height) - height);
-					canvasManager.getActive().swapLayers(other.order, state.order);
-					int tempOrder = other.order;
-					other.order = state.order;
-					state.order = tempOrder;
-				}
-				else{
-					other.offsetY = std::round(((other.offsetY / height) * height) + height);
-					canvasManager.getActive().swapLayers(other.order, state.order);
-					int tempOrder = other.order;
-					other.order = state.order;
-					state.order = tempOrder;
-				}
-			}
-		}
-	}
-
-	// Snap on release
-	if (ImGui::IsItemDeactivated())
-	{
-		float snapped = std::round(state.offsetY / height) * height;
-		state.offsetY = snapped;
-	}
-	return {isPressed, finalY, index};
 }
 
 // ending and cleanup 
