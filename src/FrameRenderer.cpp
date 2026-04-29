@@ -134,24 +134,22 @@ void FrameRenderer::updateCanvas(Canvas* oldCanvas, Canvas* newCanvas, int newCa
 // loads new frame with blank canvas
 void FrameRenderer::createFrame(Canvas& canvas){
     // Save the old frame
-     removeOnionSkin(canvas);
+    timeFunction("removeOnionSkin", [&] { removeOnionSkin(canvas); });
     frames[curFrame - 1] =  vector<Color>(canvas.getData(), canvas.getData() + (canvas.getWidth() * canvas.getHeight()));
-    writeAllData(&canvas);
+    timeFunction("writeAllData", [&] { writeAllData(&canvas);; });
     numFrames++;
     curFrame++;
     // insert new frame
     int* meta = readMetaData(); // meta[0] is width, meta[1] is height
 
     // this ought to insert inbetween the oldCurrent frame
-    frames.insert(frames.begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], {0,0,0,0}));
-    
     frLayerData[curCanvas-1].insert(frLayerData[curCanvas-1].begin() + (curFrame-1), vector<vector<Color>>(
             canvas.getNumLayers(), vector<Color>(
-                meta[0] * meta[1], {0,0,0,0}
+                meta[0] * meta[1], canvas.getBackgroundColor()
             )
         )
     );
-    frameData[curCanvas-1].insert(frameData[curCanvas-1].begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], {0,0,0,0}));
+    frameData[curCanvas-1].insert(frameData[curCanvas-1].begin() + (curFrame - 1), vector<Color>(meta[0] * meta[1], canvas.getBackgroundColor()));
     vector<Color> backgroundLayer = canvas.getLayerData()[0];
     frames.insert(frames.begin() + (curFrame - 1), backgroundLayer);
 
@@ -162,12 +160,16 @@ void FrameRenderer::createFrame(Canvas& canvas){
     // normal behavior
     int numLayers = meta[2];
     layDat.resize(numLayers, vector<Color>(meta[0] * meta[1], {0,0,0,0}));
+    layDat[0] = backgroundLayer;
 
     canvas.setLayerData(layDat);
+    canvas.recompositePixelsFromLayers();  // Ensure pixels are recomposited from layers
     
     // create function that renames any other frames that come after
     writeAllData(&canvas);
-    updateOnionSkin(canvas);
+    timeFunction("updateOnionSkins", [&] { updateOnionSkin(canvas); });
+
+    //curFrame = numFrames;
 }
 
 // remove current frame and update file names accordingly
