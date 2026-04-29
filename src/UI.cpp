@@ -1779,6 +1779,24 @@ void UI::renderTimelineControls(CanvasManager& canvasManager) {
 	ImGui::SetItemTooltip("Toggle Onion Skins");
 
 	ImGui::SameLine();
+
+	if (ImGui::Button("<<")) {
+		int curFrame = FrameRenderer::getCurFrame();
+		FrameRenderer::reorderFrame(canvasManager.getActive(), curFrame - 1, curFrame - 2);
+		FrameRenderer::selectFrame(canvasManager.getActive(), -1);
+	}
+	ImGui::SetItemTooltip("Play Animation");
+	ImGui::SameLine();
+
+	if (ImGui::Button(">>")) {
+		int curFrame = FrameRenderer::getCurFrame();
+		FrameRenderer::reorderFrame(canvasManager.getActive(), curFrame - 1, curFrame);
+		FrameRenderer::selectFrame(canvasManager.getActive(), 1);
+
+	}
+	ImGui::SetItemTooltip("Play Animation");
+	ImGui::SameLine();
+
 	ImGui::Text("Frame: %d / %d", FrameRenderer::getCurFrame(), FrameRenderer::getNumFrames());
 }
 
