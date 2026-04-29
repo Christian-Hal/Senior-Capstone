@@ -363,12 +363,6 @@ void FrameRenderer::removeOnionSkin(Canvas& canvas){
     Color bg = {0,0,0,0};
     background[0] = vector<Color>(wid * hei, bg);
     canvas.setLayerData(background);
-    for(int i = 0; i < hei * wid; i++){
-        int x = i % wid;
-        int y = i / wid;
-        if (frames[curFrame][i] == bg) continue;
-        canvas.setPixel(x, y, bg);
-    }
     canvas.selectLayer(oldLayer);
     canvas.reblendLayers();
 }
