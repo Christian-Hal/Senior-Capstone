@@ -500,6 +500,8 @@ void CanvasManager::loadORA(const std::string& path)
 	std::string name = std::filesystem::path(path).stem().string();
 	Canvas& canvas = createCanvas(width, height, name, false, false, getPaperColor());
 
+	stbi_set_flip_vertically_on_load(true);
+
 	// creating correct number of layers
 	while (canvas.getNumLayers() < (int)layers.size())
 		canvas.createLayer();
