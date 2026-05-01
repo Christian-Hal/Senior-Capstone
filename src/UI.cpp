@@ -28,7 +28,7 @@ std::string overwritePath;
 
 // for the draggable buttons
 struct DragState {
-    float offsetY = 0.0f;
+	float offsetY = 0.0f;
 	int index = 0;
 	bool notActive = false;
 	int order = index;
@@ -793,7 +793,7 @@ void UI::drawRightPanel(CanvasManager& canvasManager) {
 
 	// brush import system
 	renderBrushImports(canvasManager);
-	
+
 	// end step
 	RightSize = ImGui::GetWindowWidth();
 	ImVec2 size = ImGui::GetWindowSize();
@@ -917,8 +917,8 @@ void UI::drawCanvasTabs(CanvasManager& canvasManager)
 			IGFD::FileDialogConfig config;
 
 			if (getDefaultFolderPathCb) config.path = getDefaultFolderPathCb();
-				else config.path = ".";
-			
+			else config.path = ".";
+
 			config.fileName = canvasManager.getActive().getName();
 			config.flags = ImGuiFileDialogFlags_ConfirmOverwrite;
 
@@ -1203,7 +1203,7 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 		}
 		else if (settingsSection == 1) {
 			ImGui::Text("Click a button, then press a key to rebind.");
-			
+
 			static InputAction waitingAction = static_cast<InputAction>(-1);
 
 			if (isWaitingForRebindCb && !isWaitingForRebindCb())
@@ -1218,7 +1218,7 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 					startRebindCb(action);
 					waitingAction = action;
 				}
-			};
+				};
 			auto ShortcutRow = [&](const char* name, InputAction action) {
 				ImGui::Text("%s", name);
 				ImGui::SameLine(180);
@@ -1250,7 +1250,7 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 				if (ImGui::SmallButton(unbindLabel.c_str()))
 					InputManager::unbindAction(action);
 				ImGui::EndDisabled();
-			};
+				};
 
 			ImGui::SeparatorText("Document Shortcuts:");
 			ShortcutRow("New File", InputAction::newFile);
@@ -1299,7 +1299,7 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 					ImGui::SameLine();
 					ImGui::TextWrapped("Disabled while using animation template.");
 				}
-				
+
 				if (changePaperColor && !isAnimTemplate) {
 					ImGuiColorEditFlags flags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
 					static ImVec4 paperColor = { 1.0f, 1.0f, 1.0f, 1.0f }; // default white
@@ -1382,7 +1382,7 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 
 		if (canvasManager.getActive().isAnimation())
 			ImGuiFileDialog::Instance()->OpenDialog("SaveImageAnm", "Save Image", ".png,.jpg", config);
-		
+
 		else
 			ImGuiFileDialog::Instance()->OpenDialog("SaveImageDlg", "Save Image", ".png,.jpg,.ora", config);
 	}
@@ -1462,7 +1462,7 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 					config
 				);
 			}
-			
+
 			if (ImGui::MenuItem("Open Animation...", "")) {
 				IGFD::FileDialogConfig config;
 
@@ -1619,7 +1619,7 @@ void UI::drawMainMenu(CanvasManager& canvasManager) {
 			std::string folder = ImGuiFileDialog::Instance()->GetCurrentPath();
 
 			canvasManager.loadAnimation(folder);
-			
+
 			// if the current UI state is the start menu then change it to the main screen
 			if (curState == UIState::start_menu) { curState = UIState::main_screen; }
 		}
@@ -1699,7 +1699,7 @@ void UI::drawCanvasThumbnailWindow(CanvasManager& canvasManager)
 	ImGui::Begin("Canvas Thumbnail");
 	renderCanvasThumbnail(canvasManager);
 	ImGui::End();
-} 
+}
 
 
 // ---- separate methods to handle rendering all components ----- 
@@ -1777,6 +1777,12 @@ void UI::renderTimeline(CanvasManager& canvasManager) {
 					if (offset != 0) {
 						FrameRenderer::selectFrame(activeCanvas, offset);
 					}
+				}
+				// drawing a circle on the selected frame
+				if (isCurrentFrame && isLayerSelected) {
+					ImGui::GetWindowDrawList()->AddCircleFilled(
+						ImVec2(ImGui::GetItemRectMin().x + k_cellWidth / 2, ImGui::GetItemRectMin().y + k_cellHeight / 2),
+						4.0f, IM_COL32(200, 200, 200, 255));
 				}
 				ImGui::PopID();
 			}
@@ -2061,11 +2067,11 @@ void UI::renderLayerInfo(CanvasManager& canvasManager) {
 			bgColor = IM_COL32(59, 103, 168, 255);
 		else if (swapTarget != -1 && i == swapTarget && draggedLayer != -1)
 			bgColor = IM_COL32(60, 100, 60, 255);
-		else if (isSelected) 
+		else if (isSelected)
 			bgColor = IM_COL32(59, 103, 168, 255);
 		else
 			bgColor = IM_COL32(69, 69, 69, 255);
-		
+
 
 		ImVec2 btnMin = drawPos;
 		ImVec2 btnMax = ImVec2(drawPos.x + buttonW, drawPos.y + ImGui::GetFrameHeight());
@@ -2106,7 +2112,7 @@ void UI::renderLayerInfo(CanvasManager& canvasManager) {
 			canvasManager.getActive().swapLayers(draggedLayer, swapTarget);
 			canvasManager.getActive().selectLayer(swapTarget);
 		}
-			
+
 		draggedLayer = -1;
 		dragOffsetY = 0.0f;
 		swapTarget = -1;
@@ -2299,7 +2305,7 @@ void UI::renderCanvasThumbnail(CanvasManager& canvasManager) {
 
 	// draw the paper layer
 	ImGui::Image((void*)(intptr_t)paperTexture, ImVec2(width, height), ImVec2(0, 1), ImVec2(1, 0));
-	
+
 	ImGui::SetCursorScreenPos(pos);
 
 	// then draw the canvas layer on top
