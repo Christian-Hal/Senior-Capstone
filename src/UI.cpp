@@ -1029,12 +1029,11 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 				// presets as str and tuple of two ints 
 				const std::map<std::string, std::tuple<int, int>> canvasSizes = {
 					{"Custom", {temp_w, temp_h}},
-					{"A4", {2894, 4093}}, {"A5", {2039, 2894}}, {"A6", {1447, 2039}},
-					{"B4", {3541, 5016}}, {"B5", {3541, 5016}}, {"B6", {1764, 2508}},
-					{"Postcard", {1378, 2039}}
+					{"720 x 540", {720, 540}}, {"1280 x 720", {1280, 720}}, {"1920 x 1080", {1920, 1080}},
+					{"1080 x 1920", {1080, 1920}}, {"1080 x 1080", {1080, 1080}}
 				};
 				// initally selected combo box value
-				static std::string selectedPreset = canvasSizes.begin()->first;
+				static std::string selectedPreset = "1920 x 1080";
 				if (ImGui::InputInt("Width:", &temp_w)) { selectedPreset = "Custom"; }
 				if (ImGui::InputInt("Height:", &temp_h)) { selectedPreset = "Custom"; }
 				ImGui::InputText("File Name:", &temp_n);
@@ -1096,6 +1095,7 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 				ImGui::InputInt("Width:", &temp_w);
 				ImGui::InputInt("Height:", &temp_h);
 				ImGui::InputText("File Name:", &temp_n_a);
+
 
 				// checkbox for using anim template
 				ImGui::Checkbox("Use Animation Template", &animTemplate);
@@ -2122,7 +2122,6 @@ void UI::renderLayerInfo(CanvasManager& canvasManager) {
 	ImGui::Text("Current Layer: %d", curLayer);
 }
 
-
 void UI::renderBrushImports(CanvasManager& canvasManager) {
 	// brush import system, will probably get moved when I eventually do a UI overhaul
 	if (ImGui::Button(ICON_FA_PAINTBRUSH))
@@ -2251,6 +2250,33 @@ void UI::renderCursorModes(CanvasManager& canvasManager) {
 	ImGui::SetItemTooltip("ZoomOut");
 }
 
+void UI::renderCanvasThumbnail(CanvasManager& canvasManager) {
+	if (!canvasManager.hasActive()) return;
+
+	ImVec2 pos = ImGui::GetCursorScreenPos();
+
+	static unsigned int imageTexture = 0;
+	static unsigned int paperTexture = 0;
+
+	if (rendererPtr->textureDirty) {
+		imageTexture = rendererPtr->getCanvasTexture();
+		paperTexture = rendererPtr->getPaperTexture();
+
+		rendererPtr->textureDirty = false;
+	}
+
+	float width = ImGui::GetContentRegionAvail().x;
+	float height = width * canvasManager.getActive().getHeight() / canvasManager.getActive().getWidth();
+
+	// draw the paper layer
+	ImGui::Image((void*)(intptr_t)paperTexture, ImVec2(width, height), ImVec2(0, 1), ImVec2(1, 0));
+
+	ImGui::SetCursorScreenPos(pos);
+
+	// then draw the canvas layer on top
+	ImGui::Image((void*)(intptr_t)imageTexture, ImVec2(width, height), ImVec2(0, 1), ImVec2(1, 0));
+}
+
 // ending and cleanup 
 void UI::shutdown() {
 	ImGui_ImplOpenGL3_Shutdown();
@@ -2283,31 +2309,4 @@ void UI::requestAppClose(CanvasManager& canvasManager)
 	}
 	// no dirty canvases, just close immediately
 	glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
-}
-
-void UI::renderCanvasThumbnail(CanvasManager& canvasManager) {
-	if (!canvasManager.hasActive()) return;
-
-	ImVec2 pos = ImGui::GetCursorScreenPos();
-
-	static unsigned int imageTexture = 0;
-	static unsigned int paperTexture = 0;
-
-	if (rendererPtr->textureDirty) {
-		imageTexture = rendererPtr->getCanvasTexture();
-		paperTexture = rendererPtr->getPaperTexture();
-
-		rendererPtr->textureDirty = false;
-	}
-
-	float width = ImGui::GetContentRegionAvail().x;
-	float height = width * canvasManager.getActive().getHeight() / canvasManager.getActive().getWidth();
-
-	// draw the paper layer
-	ImGui::Image((void*)(intptr_t)paperTexture, ImVec2(width, height), ImVec2(0, 1), ImVec2(1, 0));
-
-	ImGui::SetCursorScreenPos(pos);
-
-	// then draw the canvas layer on top
-	ImGui::Image((void*)(intptr_t)imageTexture, ImVec2(width, height), ImVec2(0, 1), ImVec2(1, 0));
 }
