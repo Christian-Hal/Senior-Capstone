@@ -57,12 +57,38 @@ file(GLOB_RECURSE PROJECT_SOURCES
      src/*.c
 )
 
+
+
 if(WIN32)
-    add_executable(${PROJECT_NAME} WIN32)
+    set(APP_ICON resource.rc)
+
+    add_executable(${PROJECT_NAME} WIN32
+        ${PROJECT_SOURCES}
+        ${APP_ICON}
+    )
+    
     target_link_options(${PROJECT_NAME} PRIVATE "/ENTRY:mainCRTStartup")
 
+elseif(APPLE)
+    set(APP_ICON_MACOS macIcon.icns)
+
+    add_executable(${PROJECT_NAME} MACOSX_BUNDLE
+        ${PROJECT_SOURCES}
+        ${APP_ICON_MACOS}
+    )
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        MACOSX_BUNDLE_ICON_FILE macIcon.icns
+    )
+
+    set_source_files_properties(${APP_ICON_MACOS} PROPERTIES
+        MACOSX_PACKAGE_LOCATION "Resources"
+    )
+
 else()
-    add_executable(${PROJECT_NAME})
+    add_executable(${PROJECT_NAME}
+        ${PROJECT_SOURCES}    
+    )
 
 endif()
 
