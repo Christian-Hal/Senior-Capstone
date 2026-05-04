@@ -115,12 +115,13 @@ void UI::bindCanvasCallbacks(ResetCanvasPositionCallback resetPositionCb)
 	resetCanvasPositionCb = std::move(resetPositionCb);
 }
 
-void UI::bindBrushCallbacks(GetBrushListCallback getListCb, SetActiveBrushCallback setActiveCb, GetActiveBrushCallback getActiveCb, ImportBrushCallback importBrushCb, GenerateBrushDabCallback genDabCb)
+void UI::bindBrushCallbacks(GetBrushListCallback getListCb, SetActiveBrushCallback setActiveCb, GetActiveBrushCallback getActiveCb, ImportBrushCallback importBrushCb, DeleteBrushCallback deleteCb, GenerateBrushDabCallback genDabCb)
 {
 	getBrushListCb = std::move(getListCb);
 	setActiveBrushCb = std::move(setActiveCb);
 	getActiveBrushCb = std::move(getActiveCb);
 	importBrushFromFileCb = std::move(importBrushCb);
+	deleteBrushCb = std::move(deleteCb);
 	generateDabCb = std::move(genDabCb);
 }
 
@@ -2193,9 +2194,11 @@ void UI::renderBrushImports(CanvasManager& canvasManager) {
 		ImGui::SameLine();
 
 		// buttons for deleting brush imports
-		std::string label = std::string("x##unbind_") + name;
+		std::string label = std::string("x##delete_") + name;
 		if (ImGui::SmallButton(label.c_str())) {
-			// delete the brush
+			if (deleteBrushCb) {
+				deleteBrushCb(index);
+			}
 		}
 		ImGui::SetItemTooltip("Delete Brush");
 	};

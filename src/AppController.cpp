@@ -57,6 +57,7 @@ bool AppController::init()
 		[this](int index) { setActiveBrush(index); },
 		[this]() -> const BrushTool& { return getActiveBrush(); },
 		[this](const std::string& path) { importBrush(path); },
+		[this](int index) { deleteBrush(index); },
 		[this](int size) { return appState.getBrushManager().generateBrushDab(size); }
 	);
 
@@ -235,6 +236,12 @@ const BrushTool& AppController::getActiveBrush()
 {
 	auto& brushManager = appState.getBrushManager();
 	return brushManager.getActiveBrush();
+}
+
+void AppController::deleteBrush(int index)
+{
+	auto& brushManager = appState.getBrushManager();
+	brushManager.deleteBrush(index);
 }
 
 void AppController::setActiveBrush(int index)

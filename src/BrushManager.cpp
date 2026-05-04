@@ -98,6 +98,33 @@ void BrushManager::importBrush(const std::string& path)
     }
 }
 
+void BrushManager::deleteBrush(int index)
+{
+    // if the index is out of bounds then do nothing
+    if (index < 0 || index >= static_cast<int>(loaded_Brushes.size())) {
+        return;
+    }
+
+    try { // try and remove the brush file from the assets/brushes folder, if it exists there
+        std::string brushName = loaded_Brushes[index].brushName;
+        for (const auto& entry : std::filesystem::directory_iterator("assets/brushes")) {
+            // Check if it's a regular file and if the stem matches
+            if (entry.is_regular_file() && entry.path().stem() == brushName) {
+                if (std::filesystem::remove(entry.path())) {
+                    std::cout << "Deleted: " << entry.path().filename() << std::endl;
+                }
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Failed to delete brush: " << e.what() << std::endl;
+    }
+
+    // remove brush from the loaded brushes and reset active brush to default
+    loaded_Brushes.erase(loaded_Brushes.begin() + index);
+    activeBrushIndex = 0;
+    brushChange = true;
+}
+
 
 // generates and returns a brush dab of the active brush
 // the dab contains the width, height, and then the values of the tip alpha

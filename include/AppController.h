@@ -17,6 +17,7 @@ public:
 
     // brush engine actions
     void importBrush(const std::string& path);
+    void deleteBrush(int index);
     const std::vector<BrushTool>& getBrushList();
     const BrushTool& getActiveBrush();
     void setActiveBrush(int index);

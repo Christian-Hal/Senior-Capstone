@@ -19,11 +19,10 @@ class BrushManager
         void setActiveBrush(int index);
         bool brushChange = false;
 
-        // brush loader method
+        // various brush import / loading functions
         void loadBrush(const std::string& path);
-
-        // brush importer method, will add it the app's brush folder and then load it in
         void importBrush(const std::string& path);
+        void deleteBrush(int index);
 
         // various getter methods
         const std::vector<BrushTool>& getLoadedBrushes();
