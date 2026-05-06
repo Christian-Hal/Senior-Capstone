@@ -553,10 +553,29 @@ void Canvas::selectLayer(int layerNum) {
 }
 
 /*
-This function will swap the layers 
+This function will swap the layers and update the undo/redo stacks accordingly
 */
 void Canvas::swapLayers(int layerOne, int layerTwo){
 	layerData[layerOne].swap(layerData[layerTwo]);
+	
+	// Update undo stack to swap layer references
+	for (auto& stroke : undoStack) {
+		if (stroke.layerNum == layerOne) {
+			stroke.layerNum = layerTwo;
+		} else if (stroke.layerNum == layerTwo) {
+			stroke.layerNum = layerOne;
+		}
+	}
+	
+	// Update redo stack to swap layer references
+	for (auto& stroke : redoStack) {
+		if (stroke.layerNum == layerOne) {
+			stroke.layerNum = layerTwo;
+		} else if (stroke.layerNum == layerTwo) {
+			stroke.layerNum = layerOne;
+		}
+	}
+	
 	reblendLayers();
 }
 
