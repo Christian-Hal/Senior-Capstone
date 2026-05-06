@@ -1105,6 +1105,8 @@ void UI::drawNewCanvasPopup(CanvasManager& canvasManager)
 					ImGuiColorEditFlags flags = ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoInputs;
 					ImGui::SetNextItemWidth(180.0f);
 					ImGui::ColorPicker4("##papercolorpicker", (float*)&paperColor, flags);
+				} else { // reset to default white if not using custom paper color
+					paperColor = { 1.0f, 1.0f, 1.0f, 1.0f }; 
 				}
 
 				// setting up combo box for illustration presets 
@@ -1243,17 +1245,40 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 		if (ImGui::Button("Shortcut Settings##settings_shortcuts", ImVec2(-1, 0))) settingsSection = 1;
 		if (ImGui::Button("Canvas Settings##settings_canvases", ImVec2(-1, 0))) settingsSection = 2;
 
-		// push menu button to the bottom
+		// push extra buttons to the bottom
 		float availableHeight = ImGui::GetContentRegionAvail().y - ImGui::GetFrameHeight() - 2 * ImGui::GetStyle().ItemSpacing.y;
 		if (availableHeight > 0) {
 			ImGui::Dummy(ImVec2(0, availableHeight));
 		}
-		if (ImGui::Button("Return to Main Menu", ImVec2(-1, 0)) && curState != UIState::start_menu) {
+
+		// Button area - share and close buttons side by side
+		float buttonHeight = 0;
+		float shareButtonWidth = 25;
+		float spacing = ImGui::GetStyle().ItemSpacing.x;
+		float totalWidth = ImGui::GetContentRegionAvail().x;
+		float menuButtonWidth = totalWidth - shareButtonWidth - spacing;
+
+		// button to open github repo
+		if (ImGui::Button(ICON_FA_LINK, ImVec2(shareButtonWidth, 0))) {
+			#ifdef _WIN32
+				system("start https://github.com/Christian-Hal/MockUp");
+			#elif __APPLE__
+				system("open https://github.com/Christian-Hal/MockUp");
+			#else
+				system("xdg-open https://github.com/Christian-Hal/MockUp");
+			#endif
+		}
+		ImGui::SetItemTooltip("Visit GitHub Page");
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Main Menu", ImVec2(menuButtonWidth, 0)) && curState != UIState::start_menu) {
 			showSettingsPopup = false;
 			ImGui::CloseCurrentPopup();
 			mainMenuReturn = true;
 			closeAllTabs(canvasManager);
 		}
+		ImGui::SetItemTooltip("Return to Main Menu");
 
 		ImGui::EndChild();
 		ImGui::SameLine();
@@ -1444,7 +1469,10 @@ void UI::drawSettingsPopup(CanvasManager& canvasManager) {
 		ImGui::Separator();
 		ImGui::Spacing();
 
-		if (ImGui::Button("Close", ImVec2(-1, 0))) { // -1 width = full width
+		ImGui::SameLine();
+
+		// Close button
+		if (ImGui::Button("Close", ImVec2(-1, 0))) {
 			showSettingsPopup = false;
 			ImGui::CloseCurrentPopup();
 		}
@@ -2034,48 +2062,28 @@ void UI::renderColorWheel(CanvasManager& canvasManager, ImVec4* active_color) {
 
 void UI::renderBrushSize(CanvasManager& canvasManager) {
 	ImGui::Text("Brush Sizes:");
-	// * make these wrap with the panel like the color set does * 
+
 	ImGui::SliderInt("Size", &brushSize, 1, 500, "%d", ImGuiSliderFlags_Logarithmic);
-	// presets 
-	if (ImGui::Button("5"))  brushSize = 5;
-	ImGui::SameLine();
-	if (ImGui::Button("10")) brushSize = 10;
-	ImGui::SameLine();
-	if (ImGui::Button("20")) brushSize = 20;
+	
+	// brush size presets
+	static int sizes[] = { 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120, 150, 200, 250, 300, 350, 400, 450, 500 };
 
-	if (ImGui::Button("30"))  brushSize = 30;
-	ImGui::SameLine();
-	if (ImGui::Button("40")) brushSize = 40;
-	ImGui::SameLine();
-	if (ImGui::Button("50")) brushSize = 50;
+	// making it wrap with the panel
+	float windowMax_x = ImGui::GetWindowPos().x + ImGui::GetWindowContentRegionMax().x;
+	float spacing = ImGui::GetStyle().ItemSpacing.x;
+	float buttonSize = 20.0f;
 
-	if (ImGui::Button("60"))  brushSize = 60;
-	ImGui::SameLine();
-	if (ImGui::Button("70")) brushSize = 70;
-	ImGui::SameLine();
-	if (ImGui::Button("80")) brushSize = 80;
-
-	if (ImGui::Button("90"))  brushSize = 90;
-	ImGui::SameLine();
-	if (ImGui::Button("100")) brushSize = 100;
-	ImGui::SameLine();
-	if (ImGui::Button("120")) brushSize = 120;
-
-	if (ImGui::Button("150"))  brushSize = 150;
-	ImGui::SameLine();
-	if (ImGui::Button("200")) brushSize = 200;
-	ImGui::SameLine();
-	if (ImGui::Button("250")) brushSize = 250;
-
-	if (ImGui::Button("300")) brushSize = 300;
-	ImGui::SameLine();
-	if (ImGui::Button("350")) brushSize = 350;
-	ImGui::SameLine();
-	if (ImGui::Button("400")) brushSize = 400;
-
-	if (ImGui::Button("450")) brushSize = 450;
-	ImGui::SameLine();
-	if (ImGui::Button("500")) brushSize = 500;
+	for (int n = 0; n < 20; n++) {
+		if (ImGui::Button(std::to_string(sizes[n]).c_str())) {
+			brushSize = sizes[n];
+		}
+		// applying the panel wrapping 
+		float lastButton_X = ImGui::GetItemRectMax().x;
+		float nextButton_X = lastButton_X + spacing + buttonSize;
+		// push to next line if the button does not fit 
+		if (n < 19 && nextButton_X < windowMax_x)
+			ImGui::SameLine();
+	}
 }
 
 void UI::renderLayerInfo(CanvasManager& canvasManager) {
