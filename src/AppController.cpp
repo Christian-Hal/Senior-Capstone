@@ -554,7 +554,15 @@ void AppController::pickColor(Canvas& canvas, double mouseX, double mouseY)
 
 	if (canvasX >= 0 && canvasX < canvas.getWidth() && canvasY >= 0 && canvasY < canvas.getHeight())
 	{
-		ui.setColor(canvas.getPixel(canvasX, canvasY));
+		Color pickedColor = canvas.getPixel(canvasX, canvasY);
+		
+		// If the picked color is clear (alpha = 0), use the canvas' paper color instead
+		if (pickedColor.a == 0)
+		{
+			pickedColor = canvas.getBackgroundColor();
+		}
+		
+		ui.setColor(pickedColor);
 	}
 }
 
